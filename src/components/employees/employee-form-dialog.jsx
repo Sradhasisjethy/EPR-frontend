@@ -1,3 +1,4 @@
+import { Mail } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -88,7 +89,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
     } else {
       const payload = {
         email: form.email,
-        password: form.password,
+        password: form.password || undefined,
         firstName: form.firstName,
         lastName: form.lastName,
         organizationId: form.organizationId || undefined,
@@ -157,16 +158,14 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
           </div>
 
           {!isEditing && (
-            <div className="space-y-1.5">
-              <Label htmlFor="emp-password">Password</Label>
-              <Input
-                id="emp-password"
-                type="password"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                minLength={8}
-                required
-              />
+            <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs flex items-start gap-2.5">
+              <Mail className="w-4 h-4 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold block text-xs">Automated Onboarding Email</span>
+                <span className="opacity-90 leading-relaxed">
+                  An invitation email with a secure link will be sent to the employee so they can create their own password.
+                </span>
+              </div>
             </div>
           )}
 

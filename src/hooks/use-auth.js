@@ -12,6 +12,7 @@ export function useCurrentUser() {
         email: data.email,
         name: `${data.firstName} ${data.lastName}`,
         role: data.role,
+        permissions: data.permissions || [],
       };
     },
     retry: false,
@@ -40,6 +41,24 @@ export function useLogout() {
     onSettled: () => {
       queryClient.clear();
       window.location.href = '/login';
+    },
+  });
+}
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: async (data) => {
+      const response = await apiClient.post('/auth/forgot-password', data);
+      return response.data;
+    },
+  });
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: async (data) => {
+      const response = await apiClient.post('/auth/reset-password', data);
+      return response.data;
     },
   });
 }

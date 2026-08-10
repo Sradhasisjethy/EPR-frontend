@@ -22,7 +22,7 @@ const emptyForm = {
   status: 'active',
 };
 
-export function OfficeFormDialog({ open, onOpenChange, office }) {
+export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizationId = '' }) {
   const isEditing = !!office;
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
@@ -45,11 +45,11 @@ export function OfficeFormDialog({ open, onOpenChange, office }) {
               country: office.country || '',
               status: office.status || 'active',
             }
-          : emptyForm
+          : { ...emptyForm, organizationId: defaultOrganizationId || '' }
       );
       setError('');
     }
-  }, [open, office]);
+  }, [open, office, defaultOrganizationId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

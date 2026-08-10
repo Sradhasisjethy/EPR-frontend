@@ -106,13 +106,167 @@
   }
 }
 
-/* Glassmorphism */
-.glass-mode-active .glass-card {
-  @apply bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg;
+/* Adaptive Glassmorphism Design System (Light vs Dark Mode) */
+
+/* LIGHT MODE GLASS */
+html:not(.dark) body.wallpaper-active {
+  background-color: #f1f5f9 !important;
 }
 
-.glass-mode-active .glass-surface {
-  @apply bg-white/5 dark:bg-white/5 backdrop-blur-md border border-white/10 rounded-xl;
+html:not(.dark) body.wallpaper-active::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(241, 245, 249, 0.45) 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+html:not(.dark) .glass-card {
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 16px 40px 0 rgba(15, 23, 42, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .glass-card h1,
+html:not(.dark) .glass-card h2,
+html:not(.dark) .glass-card h3,
+html:not(.dark) .glass-card h4,
+html:not(.dark) .glass-card .text-white,
+html:not(.dark) .wallpaper-active h1,
+html:not(.dark) .wallpaper-active h2,
+html:not(.dark) .wallpaper-active h3,
+html:not(.dark) .wallpaper-active h4,
+html:not(.dark) .wallpaper-active .text-white {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .glass-card p,
+html:not(.dark) .glass-card span,
+html:not(.dark) .glass-card label,
+html:not(.dark) .glass-card .text-slate-300,
+html:not(.dark) .glass-card .text-slate-400 {
+  color: #334155 !important;
+}
+
+html:not(.dark) .wallpaper-active aside {
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-right: 1px solid rgba(203, 213, 225, 0.8) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .wallpaper-active aside a,
+html:not(.dark) .wallpaper-active aside button,
+html:not(.dark) .wallpaper-active aside span {
+  color: #334155 !important;
+}
+
+html:not(.dark) .wallpaper-active aside a:hover,
+html:not(.dark) .wallpaper-active aside button:hover {
+  color: #0f172a !important;
+  background-color: rgba(241, 245, 249, 0.8) !important;
+}
+
+html:not(.dark) .wallpaper-active header {
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(203, 213, 225, 0.8) !important;
+  color: #0f172a !important;
+}
+
+/* DARK MODE GLASS */
+html.dark body.wallpaper-active {
+  background-color: #090d16 !important;
+}
+
+html.dark body.wallpaper-active::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.78) 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+html.dark .glass-card {
+  background: rgba(15, 23, 42, 0.72) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 20px 50px 0 rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+}
+
+html.dark .glass-card p.text-muted-foreground,
+html.dark .glass-card span.text-muted-foreground {
+  color: rgba(226, 232, 240, 0.75) !important;
+}
+
+html.dark .wallpaper-active aside {
+  background: rgba(15, 23, 42, 0.82) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+html.dark .wallpaper-active header {
+  background: rgba(15, 23, 42, 0.72) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.wallpaper-active main {
+  background-color: transparent !important;
+}
+
+/* WebKit Chrome Autofill Dark Glass Override */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0px 1000px #0f172a inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Dedicated Auth Layout Contrast Scope (LoginPage & ResetPasswordPage) */
+.auth-card {
+  background: rgba(15, 23, 42, 0.88) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9) !important;
+  color: #ffffff !important;
+}
+
+.auth-card h1 {
+  color: #ffffff !important;
+}
+
+.auth-card label {
+  color: #e2e8f0 !important;
+}
+
+.auth-card input[type="email"],
+.auth-card input[type="password"],
+.auth-card input[type="text"] {
+  color: #ffffff !important;
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.auth-card input::placeholder {
+  color: #64748b !important;
 }
 
 /* Animations & Transitions */
