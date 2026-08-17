@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useLogout, useCurrentUser } from '@/hooks/use-auth';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import { findNavTrail } from '@/lib/nav-match';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export function TopNav() {
   const { pathname, search } = useLocation();

@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { usePaginated } from '@/hooks/use-paginated';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { TableSkeleton } from '@/components/ui/skeleton';
+import { RowActions } from '@/components/data-table/row-actions';
 import {
   useOrganizations,
-  useOffices,
-  useDepartments,
   useDeleteOrganization,
-  useDeleteOffice,
-  useDeleteDepartment,
 } from '@/hooks/use-organization';
 import { OrganizationFormDialog } from '@/components/organization/organization-form-dialog';
 import { OfficeFormDialog } from '@/components/organization/office-form-dialog';
@@ -44,10 +42,8 @@ export default function OrganizationPage() {
 
   const [orgDialogOpen, setOrgDialogOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState(null);
-  const [officeDialogOpen, setOfficeDialogOpen] = useState(false);
-  const [editingOffice, setEditingOffice] = useState(null);
-  const [deptDialogOpen, setDeptDialogOpen] = useState(false);
-  const [editingDept, setEditingDept] = useState(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [viewingData, setViewingData] = useState(null);
 
   const orgs = usePaginated(useOrganizations);
   const offices = usePaginated(useOffices);
@@ -60,38 +56,23 @@ export default function OrganizationPage() {
   const deleteOffice = useDeleteOffice();
   const deleteDept = useDeleteDepartment();
 
-  const handleDeleteOrg = (org) => {
+  const handleDelete = (org) => {
     if (window.confirm(`Delete organization "${org.name}"? This cannot be undone.`)) {
-      deleteOrg.mutate(org.id);
-    }
-  };
-  const handleDeleteOffice = (office) => {
-    if (window.confirm(`Delete office "${office.name}"? This cannot be undone.`)) {
-      deleteOffice.mutate(office.id);
-    }
-  };
-  const handleDeleteDept = (dept) => {
-    if (window.confirm(`Delete department "${dept.name}"? This cannot be undone.`)) {
-      deleteDept.mutate(dept.id);
+      deleteMutation.mutate(org.id);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Organization</h2>
-          <p className="text-muted-foreground">Manage companies, offices, and departments</p>
+          <h2 className="text-2xl font-bold tracking-tight font-sans">Organizations</h2>
+          <p className="text-muted-foreground text-sm">Manage companies and global organization entities</p>
         </div>
-        <Button
-          onClick={() => {
-            if (activeTab === 'organizations') { setEditingOrg(null); setOrgDialogOpen(true); }
-            if (activeTab === 'offices') { setEditingOffice(null); setOfficeDialogOpen(true); }
-            if (activeTab === 'departments') { setEditingDept(null); setDeptDialogOpen(true); }
-          }}
-        >
-          <Plus size={16} />
-          Add {activeTab === 'organizations' ? 'Organization' : activeTab === 'offices' ? 'Office' : 'Department'}
+        <Button onClick={() => { setEditingOrg(null); setDialogOpen(true); }}>
+          <Plus size={16} className="mr-1.5" />
+          Add Organization
         </Button>
       </div>
 

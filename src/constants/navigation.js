@@ -148,6 +148,7 @@ export const NAVIGATION = [
       { title: 'Ledger', href: '/ledger?tab=party-ledger', permission: WebPermissions.LEDGER_READ, alias: true },
       { title: 'Payments', href: '/payments?tab=payments', permission: WebPermissions.PAYMENT_READ, alias: true },
     ],
+    permission: 'EMPLOYEE_READ',
   },
   {
     title: 'Finance',
@@ -213,5 +214,6 @@ export const NAVIGATION = [
     title: 'Settings',
     icon: Settings,
     href: '/settings',
+    permission: 'SETTINGS_READ',
   },
 ];

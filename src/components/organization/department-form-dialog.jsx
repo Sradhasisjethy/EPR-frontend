@@ -11,19 +11,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   useOrganizations,
+  useOffices,
   useDepartments,
   useCreateDepartment,
   useUpdateDepartment,
 } from '@/hooks/use-organization';
 import { useEmployees } from '@/hooks/use-employees';
 
-const emptyForm = { organizationId: '', name: '', code: '', parentId: '', headId: '', status: 'active' };
+const emptyForm = { organizationId: '', officeId: '', name: '', code: '', parentId: '', headId: '', status: 'active' };
 
-export function DepartmentFormDialog({ open, onOpenChange, department }) {
+export function DepartmentFormDialog({ open, onOpenChange, department, defaultOrganizationId = '' }) {
   const isEditing = !!department;
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
   const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
+  const { data: officeData } = useOffices(1, 100, form.organizationId);
   const { data: deptData } = useDepartments({ page: 1, limit: 100 });
   const { data: empData } = useEmployees({ page: 1, limit: 100 });
   const createMutation = useCreateDepartment();
@@ -36,23 +38,25 @@ export function DepartmentFormDialog({ open, onOpenChange, department }) {
         department
           ? {
               organizationId: department.organizationId || '',
+              officeId: department.officeId || '',
               name: department.name || '',
               code: department.code || '',
               parentId: department.parentId || '',
               headId: department.headId || '',
               status: department.status || 'active',
             }
-          : emptyForm
+          : { ...emptyForm, organizationId: defaultOrganizationId || '' }
       );
       setError('');
     }
-  }, [open, department]);
+  }, [open, department, defaultOrganizationId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
     const payload = {
       organizationId: form.organizationId,
+      officeId: form.officeId || undefined,
       name: form.name,
       code: form.code || undefined,
       parentId: form.parentId || undefined,
@@ -98,6 +102,21 @@ export function DepartmentFormDialog({ open, onOpenChange, department }) {
               <option value="" disabled>Select an organization</option>
               {organizations.map((org) => (
                 <option key={org.id} value={org.id}>{org.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="dept-office">Primary Office Location (Optional)</Label>
+            <select
+              id="dept-office"
+              value={form.officeId}
+              onChange={(e) => setForm({ ...form, officeId: e.target.value })}
+              className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+            >
+              <option value="">All / Flexible Locations</option>
+              {(officeData?.rows || []).map((off) => (
+                <option key={off.id} value={off.id}>{off.name} ({off.city || 'HQ'})</option>
               ))}
             </select>
           </div>

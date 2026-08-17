@@ -63,6 +63,8 @@ const Skeleton = () => (
   </div>
 );
 
+import { DashboardSkeleton } from '@/components/ui/skeleton';
+
 export default function DashboardPage() {
   const [factoryId, setFactoryId] = useState('');
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });

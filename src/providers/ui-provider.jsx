@@ -1,8 +1,17 @@
 import { useEffect } from 'react';
 import { useUIStore } from '@/store/ui-store';
 
+export const WALLPAPERS = {
+  cement: '/cement-factory-bg.png',
+  aurora: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1920&auto=format&fit=crop',
+  nebula: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1920&auto=format&fit=crop',
+  cyberpunk: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1920&auto=format&fit=crop',
+  sunset: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1920&auto=format&fit=crop',
+  mesh: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=1920&auto=format&fit=crop',
+};
+
 export function UIProvider({ children }) {
-  const { colorScheme, glassMode } = useUIStore();
+  const { colorScheme, glassMode, bgWallpaper, customWallpaperUrl } = useUIStore();
 
   useEffect(() => {
     // Apply color scheme as a data attribute to the html tag
@@ -14,7 +23,30 @@ export function UIProvider({ children }) {
     } else {
       document.body.classList.remove('glass-mode-active');
     }
-  }, [colorScheme, glassMode]);
+
+    // Apply background wallpaper
+    let bgUrl = '';
+    if (bgWallpaper === 'custom' && customWallpaperUrl) {
+      bgUrl = customWallpaperUrl;
+    } else if (bgWallpaper && bgWallpaper !== 'none' && WALLPAPERS[bgWallpaper]) {
+      bgUrl = WALLPAPERS[bgWallpaper];
+    }
+
+    if (bgUrl && glassMode) {
+      document.body.style.backgroundImage = `url("${bgUrl}")`;
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center';
+      document.body.style.backgroundAttachment = 'fixed';
+      document.body.style.backgroundColor = 'transparent';
+      document.body.classList.add('wallpaper-active');
+      document.documentElement.classList.add('wallpaper-active');
+    } else {
+      document.body.style.backgroundImage = '';
+      document.body.style.backgroundColor = '';
+      document.body.classList.remove('wallpaper-active');
+      document.documentElement.classList.remove('wallpaper-active');
+    }
+  }, [colorScheme, glassMode, bgWallpaper, customWallpaperUrl]);
 
   return <>{children}</>;
 }

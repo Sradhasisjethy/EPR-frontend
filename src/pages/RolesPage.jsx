@@ -6,6 +6,8 @@ import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { useRoles, useDeleteRole } from '@/hooks/use-roles';
 
+import { TableSkeleton } from '@/components/ui/skeleton';
+
 export default function RolesPage() {
   const navigate = useNavigate();
   const { query, tableProps } = usePaginated(useRoles);
@@ -32,7 +34,7 @@ export default function RolesPage() {
       </div>
 
       {isLoading ? (
-        <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
+        <TableSkeleton rows={5} columns={4} />
       ) : isError ? (
         <div className="p-8 text-center glass-card rounded-xl border border-destructive/20 text-destructive">
           <p>Failed to load roles.</p>

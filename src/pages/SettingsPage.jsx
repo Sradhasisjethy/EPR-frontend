@@ -4,10 +4,9 @@ import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/api-client';
 import { Globe, Clock, Calendar, Lock, KeyRound, Timer } from 'lucide-react';
-import { useTabParam } from '@/hooks/use-tab-param';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useTabParam(['general', 'appearance', 'security'], 'appearance');
+  const [activeTab, setActiveTab] = useState('appearance');
   const { colorScheme, setColorScheme, glassMode, toggleGlassMode } = useUIStore();
   const { theme, setTheme } = useTheme();
   const [, setSettings] = useState([]);
@@ -108,10 +107,11 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            {/* Glassmorphism Toggle */}
             <div className="glass-card p-6 rounded-xl flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium">Glassmorphism</h3>
-                <p className="text-sm text-muted-foreground">Enable modern glass UI effects</p>
+                <p className="text-sm text-muted-foreground">Enable modern translucent frosted glass UI effects</p>
               </div>
               <button
                 className={cn(
@@ -124,6 +124,120 @@ export default function SettingsPage() {
               </button>
             </div>
 
+            {/* Background Image Upload for Glassmorphism */}
+            <div className="glass-card p-6 rounded-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">Background Image</h3>
+                  <p className="text-sm text-muted-foreground">Upload a custom wallpaper or use our AI generated glass wallpaper</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBgWallpaper('cement');
+                      setCustomWallpaperUrl('/cement-factory-bg.png');
+                    }}
+                    className="px-3.5 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+                  >
+                    🏭 Cement Factory
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomWallpaperUrl('/glass_wallpaper.png');
+                      setBgWallpaper('custom');
+                    }}
+                    className="px-3.5 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+                  >
+                    ✨ AI Glass
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-1">
+                {/* File Upload & URL Inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Upload Image File</label>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="wallpaper-upload"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setCustomWallpaperUrl(reader.result);
+                              setBgWallpaper('custom');
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor="wallpaper-upload"
+                        className="flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-input/60 bg-background/40 backdrop-blur-md hover:bg-muted/50 text-sm font-medium cursor-pointer transition-all shadow-sm"
+                      >
+                        <Upload size={16} className="text-primary" />
+                        <span>Choose File...</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Or Paste Image URL</label>
+                    <input
+                      type="url"
+                      placeholder="https://example.com/wallpaper.jpg"
+                      value={customWallpaperUrl && !customWallpaperUrl.startsWith('data:') ? customWallpaperUrl : ''}
+                      onChange={(e) => {
+                        const url = e.target.value;
+                        setCustomWallpaperUrl(url);
+                        if (url) {
+                          setBgWallpaper('custom');
+                        } else {
+                          setBgWallpaper('none');
+                        }
+                      }}
+                      className="w-full h-10 px-3 rounded-lg border border-input/60 bg-background/40 backdrop-blur-md text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Preview and Clear Button */}
+                {customWallpaperUrl && (
+                  <div className="relative rounded-xl border border-border overflow-hidden h-36 flex items-center justify-center group">
+                    <img
+                      src={customWallpaperUrl}
+                      alt="Background Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                      <span className="text-xs font-semibold text-white bg-black/60 px-3 py-1.5 rounded-full border border-white/20">
+                        Active Wallpaper
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomWallpaperUrl('');
+                          setBgWallpaper('none');
+                        }}
+                        className="px-3 py-1.5 bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-full text-xs font-medium transition-colors flex items-center gap-1"
+                      >
+                        <Trash2 size={14} />
+                        Remove Image
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Dark Mode Toggle */}
             <div className="glass-card p-6 rounded-xl flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium">Dark Mode</h3>
