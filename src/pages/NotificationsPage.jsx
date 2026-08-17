@@ -1,0 +1,133 @@
+import { useState } from 'react';
+import { Check, CheckCheck } from 'lucide-react';
+import { DataTable } from '@/components/data-table/data-table';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import { usePaginated } from '@/hooks/use-paginated';
+import { useCurrentUser } from '@/hooks/use-auth';
+import { canViewRates } from '@/lib/permissions';
+import { formatINR } from '@/lib/money';
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/use-notifications';
+
+const SEVERITIES = ['', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+
+const SEVERITY_BADGE = {
+  CRITICAL: 'bg-destructive/10 text-destructive border-destructive/20',
+  HIGH: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+  MEDIUM: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+  LOW: 'bg-muted text-muted-foreground border-border',
+};
+
+// Money that may appear in an alert's metadata bag; masked server-side for
+// users without VIEW_RATES, so this only decides how to *render* it.
+const MONEY_KEYS = ['outstandingPaise', 'balancePaise', 'valuePaise', 'amountPaise', 'creditLimitPaise'];
+
+const MetadataCell = ({ metadata, showRates }) => {
+  const entries = Object.entries(metadata || {}).filter(([, v]) => v !== null && v !== undefined);
+  if (!entries.length) return <span className="text-muted-foreground">—</span>;
+  return (
+    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
+      {entries.map(([key, value]) => (
+        <span key={key} className="text-muted-foreground">
+          {key.replace(/Paise$/, '').replace(/([A-Z])/g, ' $1').trim()}:{' '}
+          <span className="text-foreground">
+            {MONEY_KEYS.includes(key) ? (showRates ? formatINR(value) : '—') : String(value)}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+};
+
+export default function NotificationsPage() {
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  const [severity, setSeverity] = useState('');
+
+  const { data: user } = useCurrentUser();
+  const showRates = canViewRates(user);
+
+  const { query, tableProps } = usePaginated(useNotifications, {
+    ...(unreadOnly ? { unreadOnly: 'true' } : {}),
+    ...(severity ? { severity } : {}),
+  });
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Notifications</h2>
+          <p className="text-muted-foreground">Alerts raised by the nightly jobs — dead stock, overdue money, curing, data integrity (M24)</p>
+        </div>
+        <Button variant="outline" onClick={() => markAllRead.mutate()} disabled={markAllRead.isPending}>
+          <CheckCheck size={16} /> Mark all read
+        </Button>
+      </div>
+
+      <div className="flex items-end gap-4 flex-wrap">
+        <div className="space-y-1.5 w-44">
+          <Label>Severity</Label>
+          <select
+            value={severity}
+            onChange={(e) => setSeverity(e.target.value)}
+            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+          >
+            {SEVERITIES.map((s) => <option key={s} value={s}>{s || 'All severities'}</option>)}
+          </select>
+        </div>
+        <label className="flex items-center gap-2 text-sm h-9">
+          <input type="checkbox" checked={unreadOnly} onChange={(e) => setUnreadOnly(e.target.checked)} />
+          Unread only
+        </label>
+      </div>
+
+      {query.isError ? (
+        <div className="p-8 text-center rounded-xl border border-destructive/20 text-destructive">Failed to load notifications.</div>
+      ) : (
+        <DataTable
+          columns={[
+            {
+              id: 'severity', header: 'Severity',
+              cell: ({ row }) => (
+                <span className={cn('inline-flex px-2 py-0.5 rounded-full text-xs font-medium border', SEVERITY_BADGE[row.original.severity])}>
+                  {row.original.severity}
+                </span>
+              ),
+            },
+            { id: 'type', header: 'Type', cell: ({ row }) => row.original.type.replace(/_/g, ' ') },
+            {
+              id: 'message', header: 'Alert',
+              cell: ({ row }) => (
+                <div className={cn('space-y-0.5', !row.original.readAt && 'font-medium')}>
+                  <p>{row.original.title}</p>
+                  <p className="text-xs text-muted-foreground">{row.original.message}</p>
+                </div>
+              ),
+            },
+            { id: 'metadata', header: 'Detail', cell: ({ row }) => <MetadataCell metadata={row.original.metadata} showRates={showRates} /> },
+            { id: 'when', header: 'When', cell: ({ row }) => new Date(row.original.createdAt).toLocaleString() },
+            {
+              id: 'actions', header: '',
+              cell: ({ row }) => (
+                <div className="flex justify-end">
+                  {row.original.readAt ? (
+                    <span className="text-xs text-muted-foreground">Read</span>
+                  ) : (
+                    <button className="text-xs text-primary hover:underline flex items-center gap-1" onClick={() => markRead.mutate(row.original.id)}>
+                      <Check size={12} /> Mark read
+                    </button>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+          {...tableProps}
+          searchPlaceholder="Search alerts…"
+          emptyMessage="No notifications — nothing needs your attention."
+        />
+      )}
+    </div>
+  );
+}

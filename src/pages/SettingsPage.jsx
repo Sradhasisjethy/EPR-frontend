@@ -7,15 +7,14 @@ import { Globe, Clock, Calendar, Lock, KeyRound, Timer, Upload, Trash2 } from 'l
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('appearance');
-  const { 
-    colorScheme, 
-    setColorScheme, 
-    glassMode, 
-    toggleGlassMode, 
-    bgWallpaper, 
-    setBgWallpaper, 
-    customWallpaperUrl, 
-    setCustomWallpaperUrl 
+  const {
+    colorScheme,
+    setColorScheme,
+    glassMode,
+    toggleGlassMode,
+    customWallpaperUrl,
+    setCustomWallpaperUrl,
+    setBgWallpaper,
   } = useUIStore();
   const { theme, setTheme } = useTheme();
   const [, setSettings] = useState([]);

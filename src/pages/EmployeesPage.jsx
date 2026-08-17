@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePaginated } from '@/hooks/use-paginated';
 import { Plus, Pencil, Trash2, ShieldAlert } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
@@ -10,7 +11,8 @@ import { EmployeeFormDialog } from '@/components/employees/employee-form-dialog'
 import { TableSkeleton } from '@/components/ui/skeleton';
 
 export default function EmployeesPage() {
-  const { data, isLoading, isError, error: fetchError } = useEmployees(1, 100);
+  const { query, tableProps } = usePaginated(useEmployees);
+  const { isLoading, isError, error: fetchError } = query;
   const deleteMutation = useDeleteEmployee();
   const { hasPermission } = usePermissions();
   const canWrite = hasPermission('EMPLOYEE_WRITE');
@@ -113,7 +115,7 @@ export default function EmployeesPage() {
           </p>
         </div>
       ) : (
-        <DataTable columns={columns} data={data?.rows || []} searchKey="email" />
+        <DataTable columns={columns} {...tableProps} searchPlaceholder="Search employee…" />
       )}
 
       {canWrite && (

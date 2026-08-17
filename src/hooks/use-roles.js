@@ -1,13 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
-export function useRoles(page = 1, limit = 20) {
+export function useRoles(params = {}) {
   return useQuery({
-    queryKey: ['roles', page, limit],
-    queryFn: async () => {
-      const response = await apiClient.get(`/roles?page=${page}&limit=${limit}`);
-      return response.data.data;
-    },
+    queryKey: ['roles', params],
+    queryFn: async () => (await apiClient.get('/roles', { params })).data.data,
+    keepPreviousData: true,
   });
 }
 

@@ -1,19 +1,18 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { usePaginated } from '@/hooks/use-paginated';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { useRoles, useDeleteRole } from '@/hooks/use-roles';
-import { RoleFormDialog } from '@/components/roles/role-form-dialog';
 
 import { TableSkeleton } from '@/components/ui/skeleton';
 
 export default function RolesPage() {
-  const { data, isLoading, isError } = useRoles(1, 20);
+  const navigate = useNavigate();
+  const { query, tableProps } = usePaginated(useRoles);
+  const { isLoading, isError } = query;
   const deleteMutation = useDeleteRole();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingRole, setEditingRole] = useState(null);
 
   const handleDelete = (role) => {
     if (window.confirm(`Delete role "${role.name}"? This cannot be undone.`)) {
@@ -28,7 +27,7 @@ export default function RolesPage() {
           <h2 className="text-2xl font-bold tracking-tight">Roles & Permissions</h2>
           <p className="text-muted-foreground">Manage system access roles</p>
         </div>
-        <Button onClick={() => { setEditingRole(null); setDialogOpen(true); }}>
+        <Button onClick={() => navigate('/roles/new')}>
           <Plus size={16} />
           Add Role
         </Button>
@@ -53,7 +52,7 @@ export default function RolesPage() {
               cell: ({ row }) => (
                 <div className="flex items-center justify-end gap-1">
                   <button
-                    onClick={() => { setEditingRole(row.original); setDialogOpen(true); }}
+                    onClick={() => navigate(`/roles/${row.original.id}`)}
                     className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                     title="Edit"
                   >
@@ -70,12 +69,11 @@ export default function RolesPage() {
               ),
             },
           ]}
-          data={data?.rows || []}
-          searchKey="name"
+          {...tableProps}
+          searchPlaceholder="Search role…"
         />
       )}
 
-      <RoleFormDialog open={dialogOpen} onOpenChange={setDialogOpen} role={editingRole} />
     </div>
   );
 }
