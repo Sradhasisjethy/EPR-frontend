@@ -5,6 +5,7 @@ import { useUIStore } from '@/store/ui-store';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { useLogout, useCurrentUser } from '@/hooks/use-auth';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export function TopNav() {
   const { pathname } = useLocation();
@@ -27,11 +28,6 @@ export function TopNav() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const segments = pathname.split('/').filter(Boolean);
-  const title = segments.length > 0
-    ? segments[segments.length - 1].charAt(0).toUpperCase() + segments[segments.length - 1].slice(1).replace('-', ' ')
-    : 'Dashboard';
-
   const handleLogout = () => {
     setIsDropdownOpen(false);
     logoutMutation.mutate();
@@ -42,15 +38,7 @@ export function TopNav() {
       "h-16 flex items-center justify-between px-6 border-b border-border sticky top-0 z-30 transition-all",
       glassMode ? "bg-background/60 backdrop-blur-md" : "bg-card"
     )}>
-      <div className="flex items-center">
-        <h1 className="text-xl font-semibold">{title}</h1>
-        {segments.length > 0 && (
-          <div className="hidden md:flex ml-4 items-center text-sm text-muted-foreground">
-            <span className="mx-2">/</span>
-            <span>{segments.join(' / ')}</span>
-          </div>
-        )}
-      </div>
+      <Breadcrumb />
 
       <div className="flex items-center space-x-4">
         <button

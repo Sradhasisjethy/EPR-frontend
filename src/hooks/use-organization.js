@@ -11,21 +11,26 @@ export function useOrganizations(page = 1, limit = 20) {
   });
 }
 
-export function useOffices(page = 1, limit = 20) {
+export function useOffices(page = 1, limit = 20, organizationId = '') {
   return useQuery({
-    queryKey: ['offices', page, limit],
+    queryKey: ['offices', page, limit, organizationId],
     queryFn: async () => {
-      const response = await apiClient.get(`/offices?page=${page}&limit=${limit}`);
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (organizationId) params.append('organizationId', organizationId);
+      const response = await apiClient.get(`/offices?${params.toString()}`);
       return response.data.data;
     },
   });
 }
 
-export function useDepartments(page = 1, limit = 20) {
+export function useDepartments(page = 1, limit = 20, organizationId = '', officeId = '') {
   return useQuery({
-    queryKey: ['departments', page, limit],
+    queryKey: ['departments', page, limit, organizationId, officeId],
     queryFn: async () => {
-      const response = await apiClient.get(`/departments?page=${page}&limit=${limit}`);
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (organizationId) params.append('organizationId', organizationId);
+      if (officeId) params.append('officeId', officeId);
+      const response = await apiClient.get(`/departments?${params.toString()}`);
       return response.data.data;
     },
   });
