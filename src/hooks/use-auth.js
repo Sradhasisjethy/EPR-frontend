@@ -12,6 +12,7 @@ export function useCurrentUser() {
         email: data.email,
         name: `${data.firstName} ${data.lastName}`,
         role: data.role,
+        permissions: data.permissions || [],
       };
     },
     retry: false,

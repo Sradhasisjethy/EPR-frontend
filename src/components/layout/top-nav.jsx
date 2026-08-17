@@ -5,9 +5,11 @@ import { useUIStore } from '@/store/ui-store';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { useLogout, useCurrentUser } from '@/hooks/use-auth';
+import { NotificationBell } from '@/components/notifications/notification-bell';
+import { findNavTrail } from '@/lib/nav-match';
 
 export function TopNav() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { theme, setTheme } = useTheme();
   const { glassMode } = useUIStore();
   const [mounted, setMounted] = useState(false);
@@ -27,10 +29,15 @@ export function TopNav() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Titles come from the sidebar tree rather than the URL, so a shared route reads
+  // as its module ("Purchase / Returns"), not as a slug ("Returns").
+  const trail = findNavTrail(pathname, search);
   const segments = pathname.split('/').filter(Boolean);
-  const title = segments.length > 0
-    ? segments[segments.length - 1].charAt(0).toUpperCase() + segments[segments.length - 1].slice(1).replace('-', ' ')
-    : 'Dashboard';
+  const title = trail.length > 0
+    ? trail[trail.length - 1]
+    : segments.length > 0
+      ? segments[segments.length - 1].charAt(0).toUpperCase() + segments[segments.length - 1].slice(1).replace(/-/g, ' ')
+      : 'Dashboard';
 
   const handleLogout = () => {
     setIsDropdownOpen(false);
@@ -44,15 +51,17 @@ export function TopNav() {
     )}>
       <div className="flex items-center">
         <h1 className="text-xl font-semibold">{title}</h1>
-        {segments.length > 0 && (
+        {(trail.length > 1 || segments.length > 0) && (
           <div className="hidden md:flex ml-4 items-center text-sm text-muted-foreground">
             <span className="mx-2">/</span>
-            <span>{segments.join(' / ')}</span>
+            <span>{(trail.length > 0 ? trail : segments).join(' / ')}</span>
           </div>
         )}
       </div>
 
       <div className="flex items-center space-x-4">
+        <NotificationBell />
+
         <button
           className="p-2 rounded-full hover:bg-muted transition-colors relative"
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}

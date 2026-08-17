@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePaginated } from '@/hooks/use-paginated';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
@@ -8,7 +9,8 @@ import { useEmployees, useDeleteEmployee } from '@/hooks/use-employees';
 import { EmployeeFormDialog } from '@/components/employees/employee-form-dialog';
 
 export default function EmployeesPage() {
-  const { data, isLoading, isError } = useEmployees(1, 20);
+  const { query, tableProps } = usePaginated(useEmployees);
+  const { isLoading, isError } = query;
   const deleteMutation = useDeleteEmployee();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -88,7 +90,7 @@ export default function EmployeesPage() {
           <p>Failed to load employees.</p>
         </div>
       ) : (
-        <DataTable columns={columns} data={data?.rows || []} searchKey="email" />
+        <DataTable columns={columns} {...tableProps} searchPlaceholder="Search employee…" />
       )}
 
       <EmployeeFormDialog open={dialogOpen} onOpenChange={setDialogOpen} employee={editingEmployee} />

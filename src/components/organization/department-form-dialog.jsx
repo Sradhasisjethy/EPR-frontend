@@ -23,9 +23,9 @@ export function DepartmentFormDialog({ open, onOpenChange, department }) {
   const isEditing = !!department;
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
-  const { data: orgData } = useOrganizations(1, 100);
-  const { data: deptData } = useDepartments(1, 100);
-  const { data: empData } = useEmployees(1, 100);
+  const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
+  const { data: deptData } = useDepartments({ page: 1, limit: 100 });
+  const { data: empData } = useEmployees({ page: 1, limit: 100 });
   const createMutation = useCreateDepartment();
   const updateMutation = useUpdateDepartment();
   const isSaving = createMutation.isPending || updateMutation.isPending;

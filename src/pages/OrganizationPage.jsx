@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePaginated } from '@/hooks/use-paginated';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
@@ -15,6 +16,7 @@ import {
 import { OrganizationFormDialog } from '@/components/organization/organization-form-dialog';
 import { OfficeFormDialog } from '@/components/organization/office-form-dialog';
 import { DepartmentFormDialog } from '@/components/organization/department-form-dialog';
+import { useTabParam } from '@/hooks/use-tab-param';
 
 function RowActions({ onEdit, onDelete }) {
   return (
@@ -38,7 +40,7 @@ function RowActions({ onEdit, onDelete }) {
 }
 
 export default function OrganizationPage() {
-  const [activeTab, setActiveTab] = useState('organizations');
+  const [activeTab, setActiveTab] = useTabParam(['organizations', 'offices', 'departments'], 'organizations');
 
   const [orgDialogOpen, setOrgDialogOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState(null);
@@ -47,9 +49,12 @@ export default function OrganizationPage() {
   const [deptDialogOpen, setDeptDialogOpen] = useState(false);
   const [editingDept, setEditingDept] = useState(null);
 
-  const { data: orgData, isLoading: orgLoading, isError: orgError } = useOrganizations(1, 20);
-  const { data: offData, isLoading: offLoading, isError: offError } = useOffices(1, 20);
-  const { data: deptData, isLoading: deptLoading, isError: deptError } = useDepartments(1, 20);
+  const orgs = usePaginated(useOrganizations);
+  const offices = usePaginated(useOffices);
+  const depts = usePaginated(useDepartments);
+  const { isLoading: orgLoading, isError: orgError } = orgs.query;
+  const { isLoading: offLoading, isError: offError } = offices.query;
+  const { isLoading: deptLoading, isError: deptError } = depts.query;
 
   const deleteOrg = useDeleteOrganization();
   const deleteOffice = useDeleteOffice();
@@ -130,8 +135,8 @@ export default function OrganizationPage() {
                   ),
                 },
               ]}
-              data={orgData?.rows || []}
-              searchKey="name"
+              {...orgs.tableProps}
+              searchPlaceholder="Search by name…"
             />
           )}
         </>
@@ -163,8 +168,8 @@ export default function OrganizationPage() {
                   ),
                 },
               ]}
-              data={offData?.rows || []}
-              searchKey="name"
+              {...offices.tableProps}
+              searchPlaceholder="Search by name…"
             />
           )}
         </>
@@ -195,8 +200,8 @@ export default function OrganizationPage() {
                   ),
                 },
               ]}
-              data={deptData?.rows || []}
-              searchKey="name"
+              {...depts.tableProps}
+              searchPlaceholder="Search by name…"
             />
           )}
         </>

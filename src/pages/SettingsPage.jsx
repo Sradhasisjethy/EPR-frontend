@@ -4,9 +4,10 @@ import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/api-client';
 import { Globe, Clock, Calendar, Lock, KeyRound, Timer } from 'lucide-react';
+import { useTabParam } from '@/hooks/use-tab-param';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('appearance');
+  const [activeTab, setActiveTab] = useTabParam(['general', 'appearance', 'security'], 'appearance');
   const { colorScheme, setColorScheme, glassMode, toggleGlassMode } = useUIStore();
   const { theme, setTheme } = useTheme();
   const [, setSettings] = useState([]);

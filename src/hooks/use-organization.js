@@ -1,33 +1,27 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
-export function useOrganizations(page = 1, limit = 20) {
+export function useOrganizations(params = {}) {
   return useQuery({
-    queryKey: ['organizations', page, limit],
-    queryFn: async () => {
-      const response = await apiClient.get(`/organizations?page=${page}&limit=${limit}`);
-      return response.data.data;
-    },
+    queryKey: ['organizations', params],
+    queryFn: async () => (await apiClient.get('/organizations', { params })).data.data,
+    keepPreviousData: true,
   });
 }
 
-export function useOffices(page = 1, limit = 20) {
+export function useOffices(params = {}) {
   return useQuery({
-    queryKey: ['offices', page, limit],
-    queryFn: async () => {
-      const response = await apiClient.get(`/offices?page=${page}&limit=${limit}`);
-      return response.data.data;
-    },
+    queryKey: ['offices', params],
+    queryFn: async () => (await apiClient.get('/offices', { params })).data.data,
+    keepPreviousData: true,
   });
 }
 
-export function useDepartments(page = 1, limit = 20) {
+export function useDepartments(params = {}) {
   return useQuery({
-    queryKey: ['departments', page, limit],
-    queryFn: async () => {
-      const response = await apiClient.get(`/departments?page=${page}&limit=${limit}`);
-      return response.data.data;
-    },
+    queryKey: ['departments', params],
+    queryFn: async () => (await apiClient.get('/departments', { params })).data.data,
+    keepPreviousData: true,
   });
 }
 

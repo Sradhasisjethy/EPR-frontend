@@ -26,7 +26,7 @@ export function OfficeFormDialog({ open, onOpenChange, office }) {
   const isEditing = !!office;
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
-  const { data: orgData } = useOrganizations(1, 100);
+  const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
   const createMutation = useCreateOffice();
   const updateMutation = useUpdateOffice();
   const isSaving = createMutation.isPending || updateMutation.isPending;
