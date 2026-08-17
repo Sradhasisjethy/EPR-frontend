@@ -47,19 +47,24 @@ export function Sidebar() {
   const initials = displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
   const role = user?.role ? user.role.replace('_', ' ') : 'User';
 
-  const toggleExpand = (title) => {
-    setExpandedItems(prev =>
-      prev.includes(title) ? prev.filter(i => i !== title) : [...prev, title]
-    );
-  };
+  const rowBase = 'flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group';
+  const rowIdle = 'text-muted-foreground hover:bg-muted hover:text-foreground';
+
+  const filteredNavigation = NAVIGATION.filter((item) => {
+    if (!item.permission) return true;
+    return hasPermission(item.permission);
+  });
 
   return (
-    <aside className={cn(
-      "fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out border-r border-border",
-      glassMode ? "bg-background/80 backdrop-blur-xl" : "bg-card",
-      sidebarCollapsed ? "w-[80px]" : "w-[280px]"
-    )}>
-      <div className="flex items-center justify-between h-16 px-4 border-b border-border">
+    <aside
+      className={cn(
+        'fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out border-r border-border/70 shadow-xl',
+        glassMode ? 'bg-background/80 backdrop-blur-2xl' : 'bg-card',
+        sidebarCollapsed ? 'w-[80px]' : 'w-[280px]'
+      )}
+    >
+      {/* Header Branding */}
+      <div className="flex items-center justify-between h-16 px-4 border-b border-border/70">
         {!sidebarCollapsed && (
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary via-indigo-500 to-purple-500 flex items-center justify-center text-white font-black text-base shadow-md shadow-primary/25">
@@ -77,7 +82,9 @@ export function Sidebar() {
         )}
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="p-2 rounded-md hover:bg-muted transition-colors mx-auto"
+          className="p-2 rounded-xl hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all mx-auto shadow-sm border border-transparent hover:border-border/50"
+          title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
         </button>
@@ -85,57 +92,87 @@ export function Sidebar() {
 
       <div className="py-4 overflow-y-auto h-[calc(100vh-140px)]">
         <nav className="space-y-1 px-3">
-          {NAVIGATION.map((item) => {
-            const isActive = item.href ? pathname === item.href : pathname.startsWith(item.children?.[0].href?.split('/')[1] || '');
-            const isExpanded = expandedItems.includes(item.title);
+          {navigation.map((item) => {
+            if (!item.children) {
+              const isActive = isActiveHref(item.href);
+              return (
+                <Link
+                  key={item.title}
+                  to={item.href}
+                  title={sidebarCollapsed ? item.title : undefined}
+                  className={cn(
+                    rowBase,
+                    isActive ? 'bg-primary/10 text-primary font-medium' : rowIdle,
+                    sidebarCollapsed && 'justify-center'
+                  )}
+                >
+                  <item.icon
+                    size={20}
+                    className={cn('shrink-0', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')}
+                  />
+                  {!sidebarCollapsed && <span className="ml-3">{item.title}</span>}
+                </Link>
+              );
+            }
+
+            const isGroupActive = item.title === activeGroup;
+            const isExpanded = !sidebarCollapsed && openGroup === item.title;
 
             return (
               <div key={item.title}>
-                {item.href ? (
-                  <Link
-                    to={item.href}
-                    className={cn(
-                      "flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group",
-                      isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                      sidebarCollapsed ? "justify-center" : ""
-                    )}
-                  >
-                    <item.icon size={20} className={cn("shrink-0", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-                    {!sidebarCollapsed && <span className="ml-3">{item.title}</span>}
-                  </Link>
-                ) : (
-                  <div>
-                    <button
-                      onClick={() => toggleExpand(item.title)}
-                      className={cn(
-                        "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 group",
-                        isActive ? "text-primary font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
-                    >
-                      <div className="flex items-center">
-                        <item.icon size={20} className={cn("shrink-0", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-                        {!sidebarCollapsed && <span className="ml-3">{item.title}</span>}
-                      </div>
-                      {!sidebarCollapsed && (
-                        isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />
-                      )}
-                    </button>
+                <button
+                  onClick={() =>
+                    sidebarCollapsed
+                      ? openGroupFromRail(item.title)
+                      : setOpenGroup((prev) => (prev === item.title ? null : item.title))
+                  }
+                  title={sidebarCollapsed ? item.title : undefined}
+                  aria-expanded={isExpanded}
+                  className={cn(
+                    rowBase,
+                    'w-full justify-between',
+                    isGroupActive ? 'text-primary font-medium' : rowIdle,
+                    sidebarCollapsed && 'justify-center'
+                  )}
+                >
+                  <span className="flex items-center min-w-0">
+                    <item.icon
+                      size={20}
+                      className={cn('shrink-0', isGroupActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')}
+                    />
+                    {!sidebarCollapsed && <span className="ml-3 truncate">{item.title}</span>}
+                  </span>
+                  {!sidebarCollapsed && (isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
+                </button>
 
-                    {!sidebarCollapsed && isExpanded && item.children && (
-                      <div className="ml-9 mt-1 space-y-1 border-l border-border pl-2">
-                        {item.children.map((child) => (
-                          <Link
-                            key={child.title}
-                            to={child.href}
-                            className={cn(
-                              "block px-3 py-2 text-sm rounded-md transition-colors",
-                              pathname === child.href ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                            )}
-                          >
-                            {child.title}
-                          </Link>
-                        ))}
-                      </div>
+                {isExpanded && (
+                  <div className="ml-9 mt-1 space-y-1 border-l-2 border-primary/20 pl-2">
+                    {item.children.map((child) =>
+                      child.soon ? (
+                        <div
+                          key={child.title}
+                          title="Not built yet"
+                          className="flex items-center justify-between px-3 py-2 text-sm rounded-md text-muted-foreground/50 cursor-not-allowed"
+                        >
+                          <span className="truncate">{child.title}</span>
+                          <span className="ml-2 shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                            Soon
+                          </span>
+                        </div>
+                      ) : (
+                        <Link
+                          key={child.title}
+                          to={child.href}
+                          className={cn(
+                            'block px-3 py-2 text-xs rounded-lg font-medium transition-all truncate',
+                            isActiveHref(child.href)
+                              ? 'bg-primary/15 text-primary font-bold'
+                              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                          )}
+                        >
+                          {child.title}
+                        </Link>
+                      )
                     )}
                   </div>
                 )}
@@ -146,7 +183,7 @@ export function Sidebar() {
       </div>
 
       <div className="absolute bottom-0 w-full p-4 border-t border-border bg-inherit">
-        <div className={cn("flex items-center", sidebarCollapsed ? "justify-center" : "")}>
+        <div className={cn('flex items-center', sidebarCollapsed && 'justify-center')}>
           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-violet-500 flex items-center justify-center text-white font-bold shadow-sm">
             {initials}
           </div>
@@ -159,7 +196,9 @@ export function Sidebar() {
           {!sidebarCollapsed && (
             <button
               onClick={() => logoutMutation.mutate()}
-              className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+              className="p-2 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all shrink-0"
+              title="Sign Out"
+              title="Sign out"
             >
               <LogOut size={16} />
             </button>
