@@ -25,7 +25,7 @@ export function DepartmentFormDialog({ open, onOpenChange, department, defaultOr
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
   const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
-  const { data: officeData } = useOffices(1, 100, form.organizationId);
+  const { data: officeData } = useOffices({ page: 1, limit: 100, organizationId: form.organizationId || undefined });
   const { data: deptData } = useDepartments({ page: 1, limit: 100 });
   const { data: empData } = useEmployees({ page: 1, limit: 100 });
   const createMutation = useCreateDepartment();

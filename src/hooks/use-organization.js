@@ -9,28 +9,19 @@ export function useOrganizations(params = {}) {
   });
 }
 
-export function useOffices(params = {}, organizationId = '') {
+export function useOffices(params = {}) {
   return useQuery({
-    queryKey: ['offices', page, limit, organizationId],
-    queryFn: async () => {
-      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-      if (organizationId) params.append('organizationId', organizationId);
-      const response = await apiClient.get(`/offices?${params.toString()}`);
-      return response.data.data;
-    },
+    queryKey: ['offices', params],
+    queryFn: async () => (await apiClient.get('/offices', { params })).data.data,
+    keepPreviousData: true,
   });
 }
 
-export function useDepartments(params = {}, organizationId = '', officeId = '') {
+export function useDepartments(params = {}) {
   return useQuery({
-    queryKey: ['departments', page, limit, organizationId, officeId],
-    queryFn: async () => {
-      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-      if (organizationId) params.append('organizationId', organizationId);
-      if (officeId) params.append('officeId', officeId);
-      const response = await apiClient.get(`/departments?${params.toString()}`);
-      return response.data.data;
-    },
+    queryKey: ['departments', params],
+    queryFn: async () => (await apiClient.get('/departments', { params })).data.data,
+    keepPreviousData: true,
   });
 }
 

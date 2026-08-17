@@ -32,9 +32,9 @@ export default function OfficesPage() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [viewingData, setViewingData] = useState(null);
 
-  const { data: orgData } = useOrganizations(1, 100);
-  const { data: offData, isLoading: offLoading, isError: offError } = useOffices(1, 100, selectedOrgId);
-  const { data: deptData } = useDepartments(1, 100, selectedOrgId);
+  const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
+  const { data: offData, isLoading: offLoading, isError: offError } = useOffices({ page: 1, limit: 100, organizationId: selectedOrgId || undefined });
+  const { data: deptData } = useDepartments({ page: 1, limit: 100, organizationId: selectedOrgId || undefined });
   const deleteMutation = useDeleteOffice();
 
   const handleDelete = (office) => {

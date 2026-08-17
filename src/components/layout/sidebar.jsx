@@ -83,7 +83,6 @@ export function Sidebar() {
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           className="p-2 rounded-xl hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all mx-auto shadow-sm border border-transparent hover:border-border/50"
-          title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
@@ -197,7 +196,6 @@ export function Sidebar() {
             <button
               onClick={() => logoutMutation.mutate()}
               className="p-2 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all shrink-0"
-              title="Sign Out"
               title="Sign out"
             >
               <LogOut size={16} />

@@ -3,11 +3,19 @@ import { useUIStore } from '@/store/ui-store';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/api-client';
-import { Globe, Clock, Calendar, Lock, KeyRound, Timer } from 'lucide-react';
+import { Globe, Clock, Calendar, Lock, KeyRound, Timer, Upload, Trash2 } from 'lucide-react';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('appearance');
-  const { colorScheme, setColorScheme, glassMode, toggleGlassMode } = useUIStore();
+  const {
+    colorScheme,
+    setColorScheme,
+    glassMode,
+    toggleGlassMode,
+    customWallpaperUrl,
+    setCustomWallpaperUrl,
+    setBgWallpaper,
+  } = useUIStore();
   const { theme, setTheme } = useTheme();
   const [, setSettings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);

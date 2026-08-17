@@ -34,9 +34,14 @@ export default function DepartmentsPage() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [viewingData, setViewingData] = useState(null);
 
-  const { data: orgData } = useOrganizations(1, 100);
-  const { data: offData } = useOffices(1, 100, selectedOrgId);
-  const { data: deptData, isLoading: deptLoading, isError: deptError } = useDepartments(1, 100, selectedOrgId, selectedOfficeId);
+  const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
+  const { data: offData } = useOffices({ page: 1, limit: 100, organizationId: selectedOrgId || undefined });
+  const { data: deptData, isLoading: deptLoading, isError: deptError } = useDepartments({
+    page: 1,
+    limit: 100,
+    organizationId: selectedOrgId || undefined,
+    officeId: selectedOfficeId || undefined,
+  });
   const deleteMutation = useDeleteDepartment();
 
   const handleDelete = (dept) => {

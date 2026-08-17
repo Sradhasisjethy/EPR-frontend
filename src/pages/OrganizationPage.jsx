@@ -1,49 +1,33 @@
 import { useState } from 'react';
 import { usePaginated } from '@/hooks/use-paginated';
-import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
-import { TableSkeleton } from '@/components/ui/skeleton';
 import { RowActions } from '@/components/data-table/row-actions';
 import {
   useOrganizations,
+  useOffices,
+  useDepartments,
   useDeleteOrganization,
+  useDeleteOffice,
+  useDeleteDepartment,
 } from '@/hooks/use-organization';
 import { OrganizationFormDialog } from '@/components/organization/organization-form-dialog';
 import { OfficeFormDialog } from '@/components/organization/office-form-dialog';
 import { DepartmentFormDialog } from '@/components/organization/department-form-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 
-function RowActions({ onEdit, onDelete }) {
-  return (
-    <div className="flex items-center justify-end gap-1">
-      <button
-        onClick={onEdit}
-        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-        title="Edit"
-      >
-        <Pencil size={16} />
-      </button>
-      <button
-        onClick={onDelete}
-        className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-        title="Delete"
-      >
-        <Trash2 size={16} />
-      </button>
-    </div>
-  );
-}
-
 export default function OrganizationPage() {
   const [activeTab, setActiveTab] = useTabParam(['organizations', 'offices', 'departments'], 'organizations');
 
   const [orgDialogOpen, setOrgDialogOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState(null);
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [viewingData, setViewingData] = useState(null);
+  const [officeDialogOpen, setOfficeDialogOpen] = useState(false);
+  const [editingOffice, setEditingOffice] = useState(null);
+  const [deptDialogOpen, setDeptDialogOpen] = useState(false);
+  const [editingDept, setEditingDept] = useState(null);
 
   const orgs = usePaginated(useOrganizations);
   const offices = usePaginated(useOffices);
@@ -56,9 +40,42 @@ export default function OrganizationPage() {
   const deleteOffice = useDeleteOffice();
   const deleteDept = useDeleteDepartment();
 
-  const handleDelete = (org) => {
+  const handleDeleteOrg = (org) => {
     if (window.confirm(`Delete organization "${org.name}"? This cannot be undone.`)) {
-      deleteMutation.mutate(org.id);
+      deleteOrg.mutate(org.id);
+    }
+  };
+
+  const handleDeleteOffice = (office) => {
+    if (window.confirm(`Delete office "${office.name}"? This cannot be undone.`)) {
+      deleteOffice.mutate(office.id);
+    }
+  };
+
+  const handleDeleteDept = (dept) => {
+    if (window.confirm(`Delete department "${dept.name}"? This cannot be undone.`)) {
+      deleteDept.mutate(dept.id);
+    }
+  };
+
+  // One "Add" button serves all three tabs — it opens the dialog for whatever
+  // is currently on screen.
+  const addLabel = {
+    organizations: 'Add Organization',
+    offices: 'Add Office',
+    departments: 'Add Department',
+  }[activeTab];
+
+  const handleAdd = () => {
+    if (activeTab === 'offices') {
+      setEditingOffice(null);
+      setOfficeDialogOpen(true);
+    } else if (activeTab === 'departments') {
+      setEditingDept(null);
+      setDeptDialogOpen(true);
+    } else {
+      setEditingOrg(null);
+      setOrgDialogOpen(true);
     }
   };
 
@@ -70,9 +87,9 @@ export default function OrganizationPage() {
           <h2 className="text-2xl font-bold tracking-tight font-sans">Organizations</h2>
           <p className="text-muted-foreground text-sm">Manage companies and global organization entities</p>
         </div>
-        <Button onClick={() => { setEditingOrg(null); setDialogOpen(true); }}>
+        <Button onClick={handleAdd}>
           <Plus size={16} className="mr-1.5" />
-          Add Organization
+          {addLabel}
         </Button>
       </div>
 

@@ -12,7 +12,7 @@ import { TableSkeleton } from '@/components/ui/skeleton';
 
 export default function EmployeesPage() {
   const { query, tableProps } = usePaginated(useEmployees);
-  const { isLoading, isError } = query;
+  const { isLoading, isError, error: fetchError } = query;
   const deleteMutation = useDeleteEmployee();
   const { hasPermission } = usePermissions();
   const canWrite = hasPermission('EMPLOYEE_WRITE');
