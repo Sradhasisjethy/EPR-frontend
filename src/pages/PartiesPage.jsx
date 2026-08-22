@@ -11,6 +11,7 @@ import { formatINR } from '@/lib/money';
 import { useParties, useDeleteParty } from '@/hooks/use-parties';
 import { PartyFormDialog } from '@/components/parties/party-form-dialog';
 import { PartyAddressesDialog } from '@/components/parties/party-addresses-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { PartyType } from '@/constants/enums';
 import { useTabParam } from '@/hooks/use-tab-param';
 
@@ -30,6 +31,8 @@ export default function PartiesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingParty, setEditingParty] = useState(null);
   const [addressesFor, setAddressesFor] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [partyToDelete, setPartyToDelete] = useState(null);
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
 
@@ -37,8 +40,16 @@ export default function PartiesPage() {
   const { isLoading, isError } = query;
   const deleteParty = useDeleteParty();
 
-  const handleDelete = (party) => {
-    if (window.confirm(`Delete party "${party.name}"? This cannot be undone.`)) deleteParty.mutate(party.id);
+  const handleDeleteClick = (party) => {
+    setPartyToDelete(party);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (partyToDelete) {
+      deleteParty.mutate(partyToDelete.id);
+      setPartyToDelete(null);
+    }
   };
 
   return (
@@ -110,7 +121,7 @@ export default function PartiesPage() {
                     <Pencil size={16} />
                   </button>
                   <button
-                    onClick={() => handleDelete(row.original)}
+                    onClick={() => handleDeleteClick(row.original)}
                     className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                     title="Delete"
                   >
@@ -127,6 +138,15 @@ export default function PartiesPage() {
 
       <PartyAddressesDialog open={!!addressesFor} onOpenChange={(v) => !v && setAddressesFor(null)} party={addressesFor} />
       <PartyFormDialog open={dialogOpen} onOpenChange={setDialogOpen} party={editingParty} defaultPartyType={activeTab || PartyType.CUSTOMER} />
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Party"
+        description={`Delete party "${partyToDelete?.name}"? This cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

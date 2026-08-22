@@ -12,6 +12,7 @@ import { useParties } from '@/hooks/use-parties';
 import { useSavedReports, useCreateSavedReport, useDeleteSavedReport, useRunReport, useRunSavedReport, useExportReport } from '@/hooks/use-reports';
 import { useDocumentSearch } from '@/hooks/use-analytics';
 import { ReportTypes } from '@/constants/enums';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 
 /**
@@ -56,6 +57,8 @@ export default function SavedReportsPage() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [reportToDelete, setReportToDelete] = useState(null);
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
   const { data: partyData } = useParties({ page: 1, limit: 100 });
@@ -99,6 +102,18 @@ export default function SavedReportsPage() {
       .mutateAsync({ id: report.id, params: {} })
       .then(setResult)
       .catch((err) => setError(err.response?.data?.message || 'Failed to run saved report.'));
+  };
+
+  const handleDeleteClick = (report) => {
+    setReportToDelete(report);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (reportToDelete) {
+      deleteReport.mutate(reportToDelete.id);
+      setReportToDelete(null);
+    }
   };
 
   const renderField = (field) => {
@@ -243,7 +258,7 @@ export default function SavedReportsPage() {
                           <Play size={16} />
                         </button>
                         <button
-                          onClick={() => { if (window.confirm(`Delete report "${row.original.name}"?`)) deleteReport.mutate(row.original.id); }}
+                          onClick={() => handleDeleteClick(row.original)}
                           className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                           title="Delete"
                         >
@@ -258,6 +273,16 @@ export default function SavedReportsPage() {
               />
             )}
           </div>
+          
+          <ConfirmDialog
+            open={deleteConfirmOpen}
+            onOpenChange={setDeleteConfirmOpen}
+            title="Delete Saved Report"
+            description={`Delete report "${reportToDelete?.name}"?`}
+            onConfirm={handleConfirmDelete}
+            confirmText="Delete"
+            variant="destructive"
+          />
         </div>
       )}
 

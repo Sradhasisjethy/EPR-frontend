@@ -5,7 +5,7 @@ export function useCheques(params = {}) {
   return useQuery({
     queryKey: ['cheques', params],
     queryFn: async () => (await apiClient.get('/cheques', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 

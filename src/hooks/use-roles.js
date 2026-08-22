@@ -5,7 +5,7 @@ export function useRoles(params = {}) {
   return useQuery({
     queryKey: ['roles', params],
     queryFn: async () => (await apiClient.get('/roles', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 

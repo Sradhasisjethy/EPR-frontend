@@ -19,7 +19,7 @@ export function createResourceHooks(key, basePath) {
         const response = await apiClient.get(basePath, { params });
         return response.data.data; // { rows, count } from Sequelize findAndCountAll
       },
-      keepPreviousData: true,
+      placeholderData: (prev) => prev,
     });
 
   const useGet = (id, options = {}) =>

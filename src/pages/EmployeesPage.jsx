@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { usePaginated } from '@/hooks/use-paginated';
-import { Plus, Pencil, Trash2, ShieldAlert } from 'lucide-react';
+import { Plus, Pencil, Trash2, ShieldAlert, FileText } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,9 @@ import { formatDate } from '@/lib/utils';
 import { useEmployees, useDeleteEmployee } from '@/hooks/use-employees';
 import { usePermissions } from '@/hooks/use-permissions';
 import { EmployeeFormDialog } from '@/components/employees/employee-form-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { TableSkeleton } from '@/components/ui/skeleton';
+import { EmployeeDocumentsAdminDialog } from '@/components/employees/employee-documents-admin-dialog';
 
 export default function EmployeesPage() {
   const { query, tableProps } = usePaginated(useEmployees);
@@ -19,10 +21,18 @@ export default function EmployeesPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
+  const [docsDialogFor, setDocsDialogFor] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState(null);
 
   const handleDelete = (employee) => {
-    if (window.confirm(`Delete employee "${employee.firstName} ${employee.lastName}"? This cannot be undone.`)) {
-      deleteMutation.mutate(employee.id);
+    setEmployeeToDelete(employee);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (employeeToDelete) {
+      deleteMutation.mutate(employeeToDelete.id);
     }
   };
 
@@ -64,6 +74,13 @@ export default function EmployeesPage() {
       header: '',
       cell: ({ row }) => (
         <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={() => setDocsDialogFor(row.original)}
+            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title="View Documents"
+          >
+            <FileText size={16} />
+          </button>
           <button
             onClick={() => { setEditingEmployee(row.original); setDialogOpen(true); }}
             className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
@@ -121,6 +138,22 @@ export default function EmployeesPage() {
       {canWrite && (
         <EmployeeFormDialog open={dialogOpen} onOpenChange={setDialogOpen} employee={editingEmployee} />
       )}
+      
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Employee"
+        description={`Are you sure you want to delete employee "${employeeToDelete?.firstName || ''} ${employeeToDelete?.lastName || ''}"? This action cannot be undone.`}
+        onConfirm={confirmDelete}
+        confirmText="Delete"
+        variant="destructive"
+      />
+
+      <EmployeeDocumentsAdminDialog 
+        open={!!docsDialogFor} 
+        onOpenChange={(v) => !v && setDocsDialogFor(null)} 
+        employee={docsDialogFor} 
+      />
     </div>
   );
 }

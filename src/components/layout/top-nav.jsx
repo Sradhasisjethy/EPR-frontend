@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { Moon, Sun, User, LogOut } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useUIStore } from '@/store/ui-store';
@@ -8,6 +8,7 @@ import { useLogout, useCurrentUser } from '@/hooks/use-auth';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import { findNavTrail } from '@/lib/nav-match';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { GlobalSearch } from './global-search';
 
 export function TopNav() {
   const { pathname, search } = useLocation();
@@ -61,6 +62,7 @@ export function TopNav() {
       </div>
 
       <div className="flex items-center space-x-4">
+        <GlobalSearch />
         <NotificationBell />
 
         <button
@@ -85,6 +87,16 @@ export function TopNav() {
                   <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
                   <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                 </div>
+              )}
+              {user && user.role !== 'PLATFORM_ADMIN' && (
+                <Link
+                  to="/profile"
+                  onClick={() => setIsDropdownOpen(false)}
+                  className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted flex items-center transition-colors"
+                >
+                  <User size={16} className="mr-2" />
+                  My Profile
+                </Link>
               )}
               <button
                 onClick={handleLogout}

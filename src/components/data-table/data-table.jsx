@@ -38,6 +38,7 @@ export function DataTable({
   onSearchChange,
   isFetching = false,
   emptyMessage = 'No results.',
+  filtersNode,
 }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -79,25 +80,30 @@ export function DataTable({
 
   const handleSearch = (value) => {
     if (serverSearch) onSearchChange(value);
-    else table.getColumn(searchKey)?.setFilterValue(value);
+    else if (searchKey) table.getColumn(searchKey)?.setFilterValue(value);
   };
-  const currentSearch = serverSearch ? searchValue ?? '' : table.getColumn(searchKey)?.getFilterValue() ?? '';
+  const currentSearch = serverSearch ? searchValue ?? '' : (searchKey ? table.getColumn(searchKey)?.getFilterValue() ?? '' : '');
 
   return (
     <div className="w-full space-y-4">
-      {showSearch && (
+      {(showSearch || filtersNode) && (
         <div className="flex items-center justify-between">
-          <div className="relative w-72">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <input
-              placeholder={searchPlaceholder || 'Search...'}
-              value={currentSearch}
-              onChange={(event) => handleSearch(event.target.value)}
-              className={cn(
-                'h-9 w-full rounded-md border border-input pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-all',
-                glassMode ? 'glass-surface' : 'bg-background'
-              )}
-            />
+          <div className="flex items-center gap-4">
+            {showSearch && (
+              <div className="relative w-72">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <input
+                  placeholder={searchPlaceholder || 'Search...'}
+                  value={currentSearch}
+                  onChange={(event) => handleSearch(event.target.value)}
+                  className={cn(
+                    'h-9 w-full rounded-md border border-input pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-all',
+                    glassMode ? 'glass-surface' : 'bg-background'
+                  )}
+                />
+              </div>
+            )}
+            {filtersNode}
           </div>
           {isFetching && (
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">

@@ -5,7 +5,7 @@ export function useIndents(params = {}) {
   return useQuery({
     queryKey: ['purchase-indents', params],
     queryFn: async () => (await apiClient.get('/purchasing/indents', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 

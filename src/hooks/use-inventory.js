@@ -5,7 +5,7 @@ export function useStockLots(params = {}) {
   return useQuery({
     queryKey: ['stock-lots', params],
     queryFn: async () => (await apiClient.get('/inventory/lots', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -13,7 +13,7 @@ export function useStockLedger(params = {}) {
   return useQuery({
     queryKey: ['stock-ledger', params],
     queryFn: async () => (await apiClient.get('/inventory/ledger', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 

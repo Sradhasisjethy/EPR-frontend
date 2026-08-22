@@ -13,8 +13,9 @@ import SettingsPage from '@/pages/SettingsPage';
 import FactoriesPage from '@/pages/FactoriesPage';
 import ProductsPage from '@/pages/ProductsPage';
 import PartiesPage from '@/pages/PartiesPage';
-import PriceListsPage from '@/pages/PriceListsPage';
 import AuditLogPage from '@/pages/AuditLogPage';
+import MyProfilePage from '@/pages/MyProfilePage';
+import PriceListsPage from '@/pages/PriceListsPage';
 import InventoryPage from '@/pages/InventoryPage';
 import PurchasingPage from '@/pages/PurchasingPage';
 import TransfersPage from '@/pages/TransfersPage';
@@ -66,6 +67,11 @@ export default function App() {
           <Route path="/purchasing" element={<PurchasingPage />} />
           <Route path="/transfers" element={<TransfersPage />} />
           <Route path="/invoices" element={<InvoicingPage />} />
+
+          {/* Common User Pages */}
+          <Route path="/profile" element={<MyProfilePage />} />
+
+          {/* Reports */}
           <Route path="/returns" element={<ReturnsPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/workforce" element={<WorkforcePage />} />

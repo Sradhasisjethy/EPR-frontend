@@ -21,6 +21,7 @@ import {
 import { MasterFormDialog } from '@/components/products/master-form-dialog';
 import { ProductFormDialog } from '@/components/products/product-form-dialog';
 import { MixDesignFormDialog } from '@/components/products/mix-design-form-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 
 const TABS = ['Products', 'Mix Designs', 'UoM', 'UoM Conversions', 'Categories', 'HSN Codes'];
@@ -64,6 +65,8 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [mixDialogOpen, setMixDialogOpen] = useState(false);
   const [editingMix, setEditingMix] = useState(null);
+  
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, label: '', description: '', entity: null, mutation: null });
 
   const uomQuery = usePaginated(useUoms);
   const categoryQuery = usePaginated(useProductCategories);
@@ -78,8 +81,21 @@ export default function ProductsPage() {
   const deleteHsn = useDeleteHsnCode();
   const deleteProduct = useDeleteProduct();
 
-  const confirmDelete = (label, mutation, entity) => {
-    if (window.confirm(`Delete "${label}"? This cannot be undone.`)) mutation.mutate(entity.id);
+  const confirmDelete = (label, mutation, entity, customDesc) => {
+    setDeleteDialog({
+      open: true,
+      label,
+      description: customDesc || `Delete "${label}"? This cannot be undone.`,
+      entity,
+      mutation,
+    });
+  };
+
+  const executeDelete = () => {
+    if (deleteDialog.entity && deleteDialog.mutation) {
+      deleteDialog.mutation.mutate(deleteDialog.entity.id);
+      setDeleteDialog(prev => ({ ...prev, open: false }));
+    }
   };
 
   const addHandlers = {
@@ -295,11 +311,12 @@ export default function ProductsPage() {
                 cell: ({ row }) => (
                   <RowActions
                     onEdit={() => { setEditingConversion(row.original); setConversionDialogOpen(true); }}
-                    onDelete={() => {
-                      if (window.confirm('Delete this conversion? Anything relying on it will stop converting.')) {
-                        deleteConversion.mutate(row.original.id);
-                      }
-                    }}
+                    onDelete={() => confirmDelete(
+                      'Conversion',
+                      deleteConversion,
+                      row.original,
+                      'Delete this conversion? Anything relying on it will stop converting.'
+                    )}
                   />
                 ),
               },
@@ -317,6 +334,16 @@ export default function ProductsPage() {
 
       <ProductFormDialog open={productDialogOpen} onOpenChange={setProductDialogOpen} product={editingProduct} />
       <MixDesignFormDialog open={mixDialogOpen} onOpenChange={setMixDialogOpen} mixDesign={editingMix} />
+
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={(isOpen) => setDeleteDialog(prev => ({ ...prev, open: isOpen }))}
+        title={`Delete ${deleteDialog.label}`}
+        description={deleteDialog.description}
+        onConfirm={executeDelete}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

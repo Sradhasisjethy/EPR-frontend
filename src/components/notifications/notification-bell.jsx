@@ -34,7 +34,7 @@ export function NotificationBell() {
   const { data: countData } = useUnreadCount();
   // Only fetch the list while the panel is open — the bell itself only needs
   // the count, which is far cheaper to poll.
-  const { data } = useNotifications(open ? { limit: 8, unreadOnly: 'true' } : { limit: 0 });
+  const { data } = useNotifications({ limit: 8, unreadOnly: 'true' }, { enabled: open });
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
 

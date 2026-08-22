@@ -5,7 +5,7 @@ export function useSalesInvoices(params = {}) {
   return useQuery({
     queryKey: ['sales-invoices', params],
     queryFn: async () => (await apiClient.get('/invoices', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 

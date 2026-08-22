@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePaginated } from '@/hooks/use-paginated';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
@@ -5,18 +6,28 @@ import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { useRoles, useDeleteRole } from '@/hooks/use-roles';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 import { TableSkeleton } from '@/components/ui/skeleton';
 
 export default function RolesPage() {
   const navigate = useNavigate();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState(null);
+
   const { query, tableProps } = usePaginated(useRoles);
   const { isLoading, isError } = query;
   const deleteMutation = useDeleteRole();
 
-  const handleDelete = (role) => {
-    if (window.confirm(`Delete role "${role.name}"? This cannot be undone.`)) {
-      deleteMutation.mutate(role.id);
+  const handleDeleteClick = (role) => {
+    setRoleToDelete(role);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (roleToDelete) {
+      deleteMutation.mutate(roleToDelete.id);
+      setRoleToDelete(null);
     }
   };
 
@@ -59,7 +70,7 @@ export default function RolesPage() {
                     <Pencil size={16} />
                   </button>
                   <button
-                    onClick={() => handleDelete(row.original)}
+                    onClick={() => handleDeleteClick(row.original)}
                     className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                     title="Delete"
                   >
@@ -74,6 +85,15 @@ export default function RolesPage() {
         />
       )}
 
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Role"
+        description={`Delete role "${roleToDelete?.name}"? This cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }
