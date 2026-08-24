@@ -6,7 +6,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCurrentUser } from '@/hooks/use-auth';
-import { canViewRates } from '@/lib/permissions';
+import { canViewRates, hasPermission } from '@/lib/permissions';
 import { formatINR } from '@/lib/money';
 import { useParties, useDeleteParty } from '@/hooks/use-parties';
 import { PartyFormDialog } from '@/components/parties/party-form-dialog';
@@ -25,6 +25,11 @@ const TABS = [
 
 const TAB_KEYS = TABS.map((tab) => tab.key);
 
+// Must match the allow-list PartiesService.listParties passes to `toOrder`.
+// A column the API won't order by is left unsortable rather than rendering a
+// control that silently reorders one page.
+const SORTABLE_COLUMNS = ['name', 'partyType', 'status'];
+
 export default function PartiesPage() {
   const [activeTab, setActiveTab] = useTabParam(TAB_KEYS, '');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -33,12 +38,34 @@ export default function PartiesPage() {
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
 
-  const { query, tableProps } = usePaginated(useParties, { partyType: activeTab || undefined });
+  const canCreate = hasPermission(user, 'PARTY_CREATE');
+  const canModify = hasPermission(user, 'PARTY_MODIFY');
+  const canDelete = hasPermission(user, 'PARTY_DELETE');
+
+  const { query, tableProps } = usePaginated(
+    useParties,
+    { partyType: activeTab || undefined },
+    { sortableColumns: SORTABLE_COLUMNS }
+  );
   const { isLoading, isError } = query;
   const deleteParty = useDeleteParty();
+  const [deleteError, setDeleteError] = useState('');
 
+  // The API refuses to delete a party that any document references (409) —
+  // deactivating is the supported way to retire one. Say so up front, and
+  // surface the server's reason when it does refuse, instead of the mutation
+  // failing silently.
   const handleDelete = (party) => {
-    if (window.confirm(`Delete party "${party.name}"? This cannot be undone.`)) deleteParty.mutate(party.id);
+    setDeleteError('');
+    const confirmed = window.confirm(
+      `Delete party "${party.name}"?\n\n` +
+        'Only a party with no orders, invoices, payments or ledger entries can be deleted. ' +
+        'To retire one that has history, edit it and set its status to Inactive instead.'
+    );
+    if (!confirmed) return;
+    deleteParty.mutate(party.id, {
+      onError: (err) => setDeleteError(err.response?.data?.message || 'Failed to delete party.'),
+    });
   };
 
   return (
@@ -48,9 +75,11 @@ export default function PartiesPage() {
           <h2 className="text-2xl font-bold tracking-tight">Parties</h2>
           <p className="text-muted-foreground">Customers, vendors, contractors, labour and sales references (M04)</p>
         </div>
-        <Button onClick={() => { setEditingParty(null); setDialogOpen(true); }}>
-          <Plus size={16} /> Add Party
-        </Button>
+        {canCreate && (
+          <Button onClick={() => { setEditingParty(null); setDialogOpen(true); }}>
+            <Plus size={16} /> Add Party
+          </Button>
+        )}
       </div>
 
       <div className="flex border-b border-border mb-6">
@@ -68,6 +97,10 @@ export default function PartiesPage() {
         ))}
       </div>
 
+      {deleteError && (
+        <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">{deleteError}</div>
+      )}
+
       {isLoading ? (
         <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
       ) : isError ? (
@@ -76,6 +109,7 @@ export default function PartiesPage() {
         <DataTable
           columns={[
             { accessorKey: 'name', header: 'Name' },
+            { accessorKey: 'code', header: 'Code', cell: ({ row }) => row.original.code || '—' },
             { accessorKey: 'partyType', header: 'Type' },
             { id: 'contact', header: 'Contact', cell: ({ row }) => row.original.phone || row.original.email || 'N/A' },
             { id: 'location', header: 'Location', cell: ({ row }) => [row.original.city, row.original.state].filter(Boolean).join(', ') || 'N/A' },
@@ -102,26 +136,31 @@ export default function PartiesPage() {
                   >
                     <MapPin size={16} />
                   </button>
-                  <button
-                    onClick={() => { setEditingParty(row.original); setDialogOpen(true); }}
-                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                    title="Edit"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(row.original)}
-                    className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  {canModify && (
+                    <button
+                      onClick={() => { setEditingParty(row.original); setDialogOpen(true); }}
+                      className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                      title="Edit"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      onClick={() => handleDelete(row.original)}
+                      className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
               ),
             },
           ]}
           {...tableProps}
-          searchPlaceholder="Search party name…"
+          searchPlaceholder="Search name, code, GSTIN or phone…"
+          emptyMessage="No parties yet. Add a customer, vendor, contractor or labourer to get started."
         />
       )}
 

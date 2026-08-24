@@ -9,7 +9,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCurrentUser } from '@/hooks/use-auth';
-import { canViewRates } from '@/lib/permissions';
+import { canViewRates, hasPermission } from '@/lib/permissions';
 import { formatINR } from '@/lib/money';
 import {
   useUoms, useDeleteUom,
@@ -22,26 +22,36 @@ import { MasterFormDialog } from '@/components/products/master-form-dialog';
 import { ProductFormDialog } from '@/components/products/product-form-dialog';
 import { MixDesignFormDialog } from '@/components/products/mix-design-form-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { QueryState } from '@/components/query-state';
 
 const TABS = ['Products', 'Mix Designs', 'UoM', 'UoM Conversions', 'Categories', 'HSN Codes'];
 
-function RowActions({ onEdit, onDelete }) {
+// Each must match the allow-list the matching service passes to `toOrder` in
+// utils/pagination.js. Sorting is server-side because these lists are paged
+// server-side — sorting in the browser would only reorder the visible page.
+const SORTABLE = {
+  products: ['name', 'code', 'productType', 'status'],
+  mixDesigns: ['name', 'effectiveFrom'],
+  uoms: ['name', 'code', 'status'],
+  categories: ['name', 'code', 'status'],
+  hsn: ['code', 'status'],
+};
+
+function RowActions({ onEdit, onDelete, canModify, canDelete }) {
   return (
     <div className="flex items-center justify-end gap-1">
-      <button onClick={onEdit} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Edit">
-        <Pencil size={16} />
-      </button>
-      <button onClick={onDelete} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="Delete">
-        <Trash2 size={16} />
-      </button>
+      {canModify && (
+        <button onClick={onEdit} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Edit">
+          <Pencil size={16} />
+        </button>
+      )}
+      {canDelete && (
+        <button onClick={onDelete} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="Delete">
+          <Trash2 size={16} />
+        </button>
+      )}
     </div>
   );
-}
-
-function LoadingOrError({ isLoading, isError, label, children }) {
-  if (isLoading) return <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />;
-  if (isError) return <div className="p-8 text-center rounded-xl border border-destructive/20 text-destructive">Failed to load {label}.</div>;
-  return children;
 }
 
 export default function ProductsPage() {
@@ -52,6 +62,10 @@ export default function ProductsPage() {
   const [activateDialogFor, setActivateDialogFor] = useState(null);
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
+  const canCreate = hasPermission(user, 'PRODUCT_CREATE');
+  const canModify = hasPermission(user, 'PRODUCT_MODIFY');
+  const canDelete = hasPermission(user, 'PRODUCT_DELETE');
+  const [deleteError, setDeleteError] = useState('');
 
   // Dialog state
   const [uomDialogOpen, setUomDialogOpen] = useState(false);
@@ -65,11 +79,11 @@ export default function ProductsPage() {
   const [mixDialogOpen, setMixDialogOpen] = useState(false);
   const [editingMix, setEditingMix] = useState(null);
 
-  const uomQuery = usePaginated(useUoms);
-  const categoryQuery = usePaginated(useProductCategories);
-  const hsnQuery = usePaginated(useHsnCodes);
-  const productQuery = usePaginated(useProducts);
-  const mixQuery = usePaginated(useMixDesigns);
+  const uomQuery = usePaginated(useUoms, {}, { sortableColumns: SORTABLE.uoms });
+  const categoryQuery = usePaginated(useProductCategories, {}, { sortableColumns: SORTABLE.categories });
+  const hsnQuery = usePaginated(useHsnCodes, {}, { sortableColumns: SORTABLE.hsn });
+  const productQuery = usePaginated(useProducts, {}, { sortableColumns: SORTABLE.products });
+  const mixQuery = usePaginated(useMixDesigns, {}, { sortableColumns: SORTABLE.mixDesigns });
   const conversionQuery = usePaginated(useUomConversions);
   const deleteConversion = useDeleteUomConversion();
 
@@ -78,8 +92,19 @@ export default function ProductsPage() {
   const deleteHsn = useDeleteHsnCode();
   const deleteProduct = useDeleteProduct();
 
+  // The API refuses (409) to delete a master anything still references, and
+  // names what is holding it. Deactivating is the supported way to retire one.
   const confirmDelete = (label, mutation, entity) => {
-    if (window.confirm(`Delete "${label}"? This cannot be undone.`)) mutation.mutate(entity.id);
+    setDeleteError('');
+    const confirmed = window.confirm(
+      `Delete "${label}"?\n\n` +
+        'Only a record nothing references can be deleted. To retire one that is already in use, ' +
+        'edit it and set its status to Inactive instead.'
+    );
+    if (!confirmed) return;
+    mutation.mutate(entity.id, {
+      onError: (err) => setDeleteError(err.response?.data?.message || `Failed to delete "${label}".`),
+    });
   };
 
   const addHandlers = {
@@ -98,9 +123,11 @@ export default function ProductsPage() {
           <h2 className="text-2xl font-bold tracking-tight">Products & BOM</h2>
           <p className="text-muted-foreground">Product, category, UoM, HSN and mix design masters (M03)</p>
         </div>
-        <Button onClick={addHandlers[activeTab]}>
-          <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
-        </Button>
+        {canCreate && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
+          </Button>
+        )}
       </div>
 
       <div className="flex border-b border-border mb-6">
@@ -118,8 +145,12 @@ export default function ProductsPage() {
         ))}
       </div>
 
+      {deleteError && (
+        <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">{deleteError}</div>
+      )}
+
       {activeTab === 'Products' && (
-        <LoadingOrError isLoading={productQuery.query.isLoading} isError={productQuery.query.isError} label="products">
+        <QueryState query={productQuery.query} label="products">
           <DataTable
             columns={[
               { accessorKey: 'name', header: 'Name' },
@@ -133,6 +164,8 @@ export default function ProductsPage() {
                 id: 'actions', header: '',
                 cell: ({ row }) => (
                   <RowActions
+                    canModify={canModify}
+                    canDelete={canDelete}
                     onEdit={() => { setEditingProduct(row.original); setProductDialogOpen(true); }}
                     onDelete={() => confirmDelete(row.original.name, deleteProduct, row.original)}
                   />
@@ -140,13 +173,14 @@ export default function ProductsPage() {
               },
             ]}
             {...productQuery.tableProps}
+            emptyMessage="No products yet. Add a finished good or raw material to get started."
             searchPlaceholder="Search product name or code…"
           />
-        </LoadingOrError>
+        </QueryState>
       )}
 
       {activeTab === 'Mix Designs' && (
-        <LoadingOrError isLoading={mixQuery.query.isLoading} isError={mixQuery.query.isError} label="mix designs">
+        <QueryState query={mixQuery.query} label="mix designs">
           <DataTable
             columns={[
               { accessorKey: 'name', header: 'Design Name' },
@@ -162,7 +196,7 @@ export default function ProductsPage() {
                 cell: ({ row }) => (
                   <div className="flex items-center justify-end gap-1">
                     {/* Only a DRAFT is editable — an ACTIVE/SUPERSEDED version is history. */}
-                    {row.original.status === 'DRAFT' && (
+                    {row.original.status === 'DRAFT' && canModify && (
                       <button
                         onClick={() => { setEditingMix(row.original); setMixDialogOpen(true); }}
                         className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
@@ -181,13 +215,14 @@ export default function ProductsPage() {
               },
             ]}
             {...mixQuery.tableProps}
+            emptyMessage="No mix designs yet. Define one against a finished good so production knows what to consume."
             searchPlaceholder="Search mix design…"
           />
-        </LoadingOrError>
+        </QueryState>
       )}
 
       {activeTab === 'UoM' && (
-        <LoadingOrError isLoading={uomQuery.query.isLoading} isError={uomQuery.query.isError} label="UoMs">
+        <QueryState query={uomQuery.query} label="UoMs">
           <DataTable
             columns={[
               { accessorKey: 'name', header: 'Name' },
@@ -197,6 +232,8 @@ export default function ProductsPage() {
                 id: 'actions', header: '',
                 cell: ({ row }) => (
                   <RowActions
+                    canModify={canModify}
+                    canDelete={canDelete}
                     onEdit={() => { setEditingUom(row.original); setUomDialogOpen(true); }}
                     onDelete={() => confirmDelete(row.original.name, deleteUom, row.original)}
                   />
@@ -204,13 +241,14 @@ export default function ProductsPage() {
               },
             ]}
             {...uomQuery.tableProps}
+            emptyMessage="No units of measure yet. Add one before creating products."
             searchPlaceholder="Search UoM…"
           />
-        </LoadingOrError>
+        </QueryState>
       )}
 
       {activeTab === 'Categories' && (
-        <LoadingOrError isLoading={categoryQuery.query.isLoading} isError={categoryQuery.query.isError} label="categories">
+        <QueryState query={categoryQuery.query} label="categories">
           <DataTable
             columns={[
               { accessorKey: 'name', header: 'Name' },
@@ -220,6 +258,8 @@ export default function ProductsPage() {
                 id: 'actions', header: '',
                 cell: ({ row }) => (
                   <RowActions
+                    canModify={canModify}
+                    canDelete={canDelete}
                     onEdit={() => { setEditingCategory(row.original); setCategoryDialogOpen(true); }}
                     onDelete={() => confirmDelete(row.original.name, deleteCategory, row.original)}
                   />
@@ -227,13 +267,14 @@ export default function ProductsPage() {
               },
             ]}
             {...categoryQuery.tableProps}
+            emptyMessage="No categories yet. Categories group products for reporting and ageing thresholds."
             searchPlaceholder="Search category…"
           />
-        </LoadingOrError>
+        </QueryState>
       )}
 
       {activeTab === 'HSN Codes' && (
-        <LoadingOrError isLoading={hsnQuery.query.isLoading} isError={hsnQuery.query.isError} label="HSN codes">
+        <QueryState query={hsnQuery.query} label="HSN codes">
           <DataTable
             columns={[
               { accessorKey: 'code', header: 'HSN Code' },
@@ -244,6 +285,8 @@ export default function ProductsPage() {
                 id: 'actions', header: '',
                 cell: ({ row }) => (
                   <RowActions
+                    canModify={canModify}
+                    canDelete={canDelete}
                     onEdit={() => { setEditingHsn(row.original); setHsnDialogOpen(true); }}
                     onDelete={() => confirmDelete(row.original.code, deleteHsn, row.original)}
                   />
@@ -251,9 +294,10 @@ export default function ProductsPage() {
               },
             ]}
             {...hsnQuery.tableProps}
+            emptyMessage="No HSN codes yet. Add the codes your products are taxed under."
             searchPlaceholder="Search HSN code…"
           />
-        </LoadingOrError>
+        </QueryState>
       )}
 
       <MasterFormDialog
@@ -276,7 +320,7 @@ export default function ProductsPage() {
         createMutation={useCreateHsnCode()} updateMutation={useUpdateHsnCode()}
       />
       {activeTab === 'UoM Conversions' && (
-        <LoadingOrError isLoading={conversionQuery.query.isLoading} isError={conversionQuery.query.isError} label="UoM conversions">
+        <QueryState query={conversionQuery.query} label="UoM conversions">
           <DataTable
             columns={[
               {
@@ -294,6 +338,8 @@ export default function ProductsPage() {
                 id: 'actions', header: '',
                 cell: ({ row }) => (
                   <RowActions
+                    canModify={canModify}
+                    canDelete={canDelete}
                     onEdit={() => { setEditingConversion(row.original); setConversionDialogOpen(true); }}
                     onDelete={() => {
                       if (window.confirm('Delete this conversion? Anything relying on it will stop converting.')) {
@@ -305,10 +351,11 @@ export default function ProductsPage() {
               },
             ]}
             {...conversionQuery.tableProps}
+            emptyMessage="No conversions yet. Add one so a BOM can be written in a different unit from the stocking unit."
             searchPlaceholder="Search by unit…"
             emptyMessage="No conversions yet. Add one so BOM lines can be written in any unit."
           />
-        </LoadingOrError>
+        </QueryState>
       )}
 
       <UomConversionDialog open={conversionDialogOpen} onOpenChange={setConversionDialogOpen} conversion={editingConversion} />

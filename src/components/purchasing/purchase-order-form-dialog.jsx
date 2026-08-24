@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useCreatePurchaseOrder } from '@/hooks/use-purchasing';
+import { useCreatePurchaseOrder, useUpdatePurchaseOrder } from '@/hooks/use-purchasing';
 import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { useProducts } from '@/hooks/use-products';
@@ -13,7 +13,12 @@ import { toPaise } from '@/lib/money';
 
 const emptyLine = { productId: '', orderedQty: '', rateRupees: '' };
 
-export function PurchaseOrderFormDialog({ open, onOpenChange }) {
+/**
+ * Create and edit in one dialog. Editing is DRAFT-only, matching the API: once
+ * a purchase order is confirmed the vendor is committed and goods may already
+ * be arriving against its lines.
+ */
+export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
   const [form, setForm] = useState({ factoryId: '', vendorPartyId: '', orderDate: '' });
   const [lines, setLines] = useState([{ ...emptyLine }]);
   const [error, setError] = useState('');
@@ -22,11 +27,29 @@ export function PurchaseOrderFormDialog({ open, onOpenChange }) {
   const { data: vendorData } = useParties({ page: 1, limit: 100, partyType: PartyType.VENDOR });
   const { data: productData } = useProducts({ page: 1, limit: 100 });
   const createMutation = useCreatePurchaseOrder();
+  const updateMutation = useUpdatePurchaseOrder();
+  const isEditing = !!order;
+  const saving = createMutation.isPending || updateMutation.isPending;
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', vendorPartyId: '', orderDate: new Date().toISOString().slice(0, 10) });
-      setLines([{ ...emptyLine }]);
+      if (order) {
+        setForm({
+          factoryId: order.factoryId || '',
+          vendorPartyId: order.vendorPartyId || '',
+          orderDate: order.orderDate || '',
+        });
+        setLines(
+          (order.lines || []).map((l) => ({
+            productId: l.productId,
+            orderedQty: String(l.orderedQty ?? ''),
+            rateRupees: l.ratePaise === null || l.ratePaise === undefined ? '' : String(Number(l.ratePaise) / 100),
+          }))
+        );
+      } else {
+        setForm({ factoryId: '', vendorPartyId: '', orderDate: new Date().toISOString().slice(0, 10) });
+        setLines([{ ...emptyLine }]);
+      }
       setError('');
     }
   }, [open]);
@@ -42,6 +65,13 @@ export function PurchaseOrderFormDialog({ open, onOpenChange }) {
       setError('Every line needs a product, quantity, and rate.');
       return;
     }
+    // The API refuses a duplicate product outright; naming it here saves a round trip.
+    const ids = lines.map((l) => l.productId);
+    const dupe = ids.find((id, i) => ids.indexOf(id) !== i);
+    if (dupe) {
+      setError('The same product is on more than one line — combine them into a single quantity.');
+      return;
+    }
 
     const payload = {
       factoryId: form.factoryId,
@@ -50,13 +80,17 @@ export function PurchaseOrderFormDialog({ open, onOpenChange }) {
       lines: lines.map((l) => ({ productId: l.productId, orderedQty: Number(l.orderedQty), ratePaise: toPaise(l.rateRupees) })),
     };
 
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to create purchase order.'));
+    (isEditing ? updateMutation.mutateAsync({ id: order.id, ...payload }) : createMutation.mutateAsync(payload))
+      .then(() => onOpenChange(false))
+      .catch((err) => setError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} purchase order.`));
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
-        <DialogHeader><DialogTitle>New Purchase Order</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{isEditing ? `Edit ${order.poNumber}` : 'New Purchase Order'}</DialogTitle>
+        </DialogHeader>
 
         {error && <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">{error}</div>}
 
@@ -64,7 +98,7 @@ export function PurchaseOrderFormDialog({ open, onOpenChange }) {
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label>Factory</Label>
-              <select value={form.factoryId} onChange={(e) => setForm({ ...form, factoryId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
+              <select value={form.factoryId} onChange={(e) => setForm({ ...form, factoryId: e.target.value })} disabled={isEditing} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm disabled:opacity-60" required>
                 <option value="" disabled>Select factory</option>
                 {(factoryData?.rows || []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
@@ -104,7 +138,9 @@ export function PurchaseOrderFormDialog({ open, onOpenChange }) {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? 'Saving...' : 'Create Purchase Order'}</Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Purchase Order'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

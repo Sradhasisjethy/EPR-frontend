@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useCreateSalesOrder } from '@/hooks/use-sales';
+import { useCreateSalesOrder, useUpdateSalesOrder } from '@/hooks/use-sales';
 import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { useProducts } from '@/hooks/use-products';
@@ -14,7 +14,13 @@ import { LineAvailability } from '@/components/sales/line-availability';
 
 const emptyLine = { productId: '', orderedQty: '', rateRupees: '' };
 
-export function SalesOrderFormDialog({ open, onOpenChange }) {
+/**
+ * Create and edit in one dialog. Editing is DRAFT-only, matching the API:
+ * a CONFIRMED order holds stock reservations and may already have dispatches
+ * against it, so its lines can no longer be rewritten (see
+ * SalesService.updateSalesOrder).
+ */
+export function SalesOrderFormDialog({ open, onOpenChange, order }) {
   const [form, setForm] = useState({ factoryId: '', customerPartyId: '', orderDate: '', expectedDeliveryDate: '', poReferenceNumber: '' });
   const [lines, setLines] = useState([{ ...emptyLine }]);
   const [error, setError] = useState('');
@@ -25,14 +31,33 @@ export function SalesOrderFormDialog({ open, onOpenChange }) {
   const { data: customerData } = useParties({ page: 1, limit: 100, partyType: PartyType.CUSTOMER });
   const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.FINISHED_GOOD });
   const createMutation = useCreateSalesOrder();
+  const updateMutation = useUpdateSalesOrder();
+  const isEditing = !!order;
+  const saving = createMutation.isPending || updateMutation.isPending;
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    if (order) {
+      setForm({
+        factoryId: order.factoryId || '',
+        customerPartyId: order.customerPartyId || '',
+        orderDate: order.orderDate || '',
+        expectedDeliveryDate: order.expectedDeliveryDate || '',
+        poReferenceNumber: order.poReferenceNumber || '',
+      });
+      setLines(
+        (order.lines || []).map((l) => ({
+          productId: l.productId,
+          orderedQty: String(l.orderedQty ?? ''),
+          rateRupees: l.ratePaise === null || l.ratePaise === undefined ? '' : String(Number(l.ratePaise) / 100),
+        }))
+      );
+    } else {
       setForm({ factoryId: '', customerPartyId: '', orderDate: new Date().toISOString().slice(0, 10), expectedDeliveryDate: '', poReferenceNumber: '' });
       setLines([{ ...emptyLine }]);
-      setError(''); setWarning(''); setAllowOverride(false);
     }
-  }, [open]);
+    setError(''); setWarning(''); setAllowOverride(false);
+  }, [open, order]);
 
   const updateLine = (i, field, value) => setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, [field]: value } : l)));
   const addLine = () => setLines((prev) => [...prev, { ...emptyLine }]);
@@ -42,6 +67,19 @@ export function SalesOrderFormDialog({ open, onOpenChange }) {
     setError(''); setWarning('');
     if (lines.some((l) => !l.productId || !l.orderedQty || l.rateRupees === '')) {
       setError('Every line needs a product, quantity, and rate.');
+      return;
+    }
+    // The API rejects a duplicate product outright; catching it here says which
+    // product, before the round trip.
+    const ids = lines.map((l) => l.productId);
+    const dupe = ids.find((id, i) => ids.indexOf(id) !== i);
+    if (dupe) {
+      const name = (productData?.rows || []).find((p) => p.id === dupe)?.name || 'That product';
+      setError(`${name} is on more than one line — combine them into a single quantity.`);
+      return;
+    }
+    if (form.expectedDeliveryDate && form.expectedDeliveryDate < form.orderDate) {
+      setError('Expected delivery date cannot be earlier than the order date.');
       return;
     }
 
@@ -55,8 +93,7 @@ export function SalesOrderFormDialog({ open, onOpenChange }) {
       lines: lines.map((l) => ({ productId: l.productId, orderedQty: Number(l.orderedQty), ratePaise: toPaise(l.rateRupees) })),
     };
 
-    createMutation
-      .mutateAsync(payload)
+    (isEditing ? updateMutation.mutateAsync({ id: order.id, ...payload }) : createMutation.mutateAsync(payload))
       .then((order) => {
         if (order.creditWarning) {
           setWarning(order.creditWarning);
@@ -68,7 +105,7 @@ export function SalesOrderFormDialog({ open, onOpenChange }) {
           setError(`${err.response.data.message} Retry with credit override if you're authorized.`);
           setAllowOverride(true);
         } else {
-          setError(err.response?.data?.message || 'Failed to create sales order.');
+          setError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} sales order.`);
         }
       });
   };
@@ -81,7 +118,9 @@ export function SalesOrderFormDialog({ open, onOpenChange }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
-        <DialogHeader><DialogTitle>New Sales Order</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{isEditing ? `Edit ${order.orderNumber}` : 'New Sales Order'}</DialogTitle>
+        </DialogHeader>
 
         {error && (
           <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm space-y-2">
@@ -97,7 +136,7 @@ export function SalesOrderFormDialog({ open, onOpenChange }) {
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label>Factory</Label>
-              <select value={form.factoryId} onChange={(e) => setForm({ ...form, factoryId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
+              <select value={form.factoryId} onChange={(e) => setForm({ ...form, factoryId: e.target.value })} disabled={isEditing} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm disabled:opacity-60" required>
                 <option value="" disabled>Select factory</option>
                 {(factoryData?.rows || []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
@@ -150,7 +189,9 @@ export function SalesOrderFormDialog({ open, onOpenChange }) {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? 'Saving...' : 'Create Sales Order'}</Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Sales Order'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

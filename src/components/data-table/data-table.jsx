@@ -24,6 +24,13 @@ const DEFAULT_PAGE_SIZE = 10;
  *
  *  - Client mode (small, fully-loaded lists): pass `data` + `searchKey` and
  *    the table paginates/filters in the browser.
+ *
+ * Sorting follows pagination. When the table is server-paginated, sorting must
+ * be server-side too: a browser sort reorders only the ten rows currently
+ * fetched, so clicking "Name" on page 1 of 40 produces a column that looks
+ * sorted and isn't. `sortableColumns` names the columns the API will actually
+ * order by (its allow-list lives in utils/pagination.js `toOrder`); any column
+ * not listed is left unsortable rather than offering a control that lies.
  */
 export function DataTable({
   columns,
@@ -38,8 +45,11 @@ export function DataTable({
   onSearchChange,
   isFetching = false,
   emptyMessage = 'No results.',
+  sorting: serverSorting,
+  onSortingChange: onServerSortingChange,
+  sortableColumns,
 }) {
-  const [sorting, setSorting] = useState([]);
+  const [clientSorting, setClientSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
@@ -48,6 +58,11 @@ export function DataTable({
   const manualPagination = !!onPaginationChange;
   const serverSearch = typeof onSearchChange === 'function';
   const showSearch = serverSearch || !!searchKey;
+  const manualSorting = typeof onServerSortingChange === 'function';
+  const sorting = manualSorting ? serverSorting : clientSorting;
+  const setSorting = manualSorting ? onServerSortingChange : setClientSorting;
+  const sortableSet = sortableColumns ? new Set(sortableColumns) : null;
+  const canSortColumn = (column) => (sortableSet ? sortableSet.has(column.id) : column.getCanSort());
 
   const table = useReactTable({
     data,
@@ -58,7 +73,8 @@ export function DataTable({
     pageCount: manualPagination ? pageCount : undefined,
     onPaginationChange,
     onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
+    manualSorting,
+    getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -119,12 +135,12 @@ export function DataTable({
                         <div
                           className={cn(
                             'flex items-center space-x-1',
-                            header.column.getCanSort() ? 'cursor-pointer select-none' : ''
+                            canSortColumn(header.column) ? 'cursor-pointer select-none' : ''
                           )}
-                          onClick={header.column.getToggleSortingHandler()}
+                          onClick={canSortColumn(header.column) ? header.column.getToggleSortingHandler() : undefined}
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
-                          {header.column.getCanSort() && (
+                          {canSortColumn(header.column) && (
                             <div className="ml-1">
                               {{
                                 asc: <ChevronUp className="h-4 w-4" />,
