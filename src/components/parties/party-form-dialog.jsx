@@ -7,6 +7,10 @@ import { useCreateParty, useUpdateParty, useUpsertWageProfile } from '@/hooks/us
 import { PartyType } from '@/constants/enums';
 import { toPaise, fromPaise } from '@/lib/money';
 
+// Mirrors GSTIN_PATTERN in backend src/api/parties/parties.schema.js. The API
+// is the authority; this only saves a round trip and points at the field.
+const GSTIN_PATTERN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
 const emptyForm = {
   partyType: PartyType.CUSTOMER,
   name: '',
@@ -73,11 +77,17 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
     e.preventDefault();
     setError('');
 
+    const gstin = form.gstin.trim().toUpperCase();
+    if (gstin && !GSTIN_PATTERN.test(gstin)) {
+      setError('GSTIN must be 15 characters in the standard format, e.g. 21ABCDE1234F1Z5.');
+      return;
+    }
+
     const payload = {
       partyType: form.partyType,
       name: form.name,
       code: form.code || undefined,
-      gstin: form.gstin || undefined,
+      gstin: gstin || undefined,
       phone: form.phone || undefined,
       email: form.email || undefined,
       address: form.address || undefined,
@@ -140,6 +150,16 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
             </div>
           </div>
 
+          <div className="space-y-1.5">
+            <Label htmlFor="party-code">Code</Label>
+            <Input
+              id="party-code"
+              value={form.code}
+              onChange={(e) => setForm({ ...form, code: e.target.value })}
+              placeholder="Optional — must be unique across all parties"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="party-phone">Phone</Label>
@@ -154,7 +174,16 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
           {form.partyType !== PartyType.LABOUR && (
             <div className="space-y-1.5">
               <Label htmlFor="party-gstin">GSTIN</Label>
-              <Input id="party-gstin" value={form.gstin} onChange={(e) => setForm({ ...form, gstin: e.target.value })} />
+              <Input
+                id="party-gstin"
+                value={form.gstin}
+                onChange={(e) => setForm({ ...form, gstin: e.target.value.toUpperCase() })}
+                placeholder="21ABCDE1234F1Z5"
+                maxLength={15}
+              />
+              <p className="text-xs text-muted-foreground">
+                Drives the GST place of supply and the filed returns — one per party of each type.
+              </p>
             </div>
           )}
 

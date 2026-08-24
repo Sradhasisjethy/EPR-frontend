@@ -2,9 +2,19 @@ import { useState } from 'react';
 import { usePaginated } from '@/hooks/use-paginated';
 import { DataTable } from '@/components/data-table/data-table';
 import { cn } from '@/lib/utils';
-import { useStockLots, useStockLedger, useReleaseLotEarly } from '@/hooks/use-inventory';
+import { useStockLots, useStockLedger, useReleaseLotEarly, useStockAdjustments } from '@/hooks/use-inventory';
 import { useFactories } from '@/hooks/use-factory';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { useCurrentUser } from '@/hooks/use-auth';
+import { hasPermission } from '@/lib/permissions';
+import { StockAdjustmentDialog } from '@/components/inventory/stock-adjustment-dialog';
+
+// Must match the allow-lists StockLedgerService passes to `toOrder`.
+const SORTABLE = {
+  lots: ['lotNumber', 'originDate', 'status', 'qtyAvailable'],
+  ledger: ['movementType', 'quantity', 'createdAt'],
+  adjustments: ['adjustmentNumber', 'adjustmentDate', 'adjustmentQty'],
+};
 
 const LOT_STATUS_STYLES = {
   CURING: 'bg-amber-500/10 text-amber-600',
@@ -42,12 +52,20 @@ function AgeingBadge({ ageingClass, ageDays }) {
 }
 
 export default function InventoryPage() {
-  const [activeTab, setActiveTab] = useTabParam(['lots', 'ledger'], 'lots');
+  const [activeTab, setActiveTab] = useTabParam(['lots', 'ledger', 'adjustments'], 'lots');
   const [factoryFilter, setFactoryFilter] = useState('');
+  const [adjustingLot, setAdjustingLot] = useState(null);
+  const [actionError, setActionError] = useState('');
+
+  const { data: user } = useCurrentUser();
+  // A physical count correction writes stock with no business document behind
+  // it, so it takes INVENTORY_CREATE rather than plain read access.
+  const canAdjust = hasPermission(user, 'INVENTORY_CREATE');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const lotsQuery = usePaginated(useStockLots, { factoryId: factoryFilter || undefined });
-  const ledgerQuery = usePaginated(useStockLedger, { factoryId: factoryFilter || undefined });
+  const lotsQuery = usePaginated(useStockLots, { factoryId: factoryFilter || undefined }, { sortableColumns: SORTABLE.lots });
+  const ledgerQuery = usePaginated(useStockLedger, { factoryId: factoryFilter || undefined }, { sortableColumns: SORTABLE.ledger });
+  const adjustmentQuery = usePaginated(useStockAdjustments, { factoryId: factoryFilter || undefined }, { sortableColumns: SORTABLE.adjustments });
   const releaseEarly = useReleaseLotEarly();
 
   return (
@@ -70,7 +88,7 @@ export default function InventoryPage() {
       </div>
 
       <div className="flex border-b border-border mb-6">
-        {['Lots', 'Ledger'].map((tab) => {
+        {['Lots', 'Ledger', 'Adjustments'].map((tab) => {
           const key = tab.toLowerCase();
           return (
             <button
@@ -86,6 +104,10 @@ export default function InventoryPage() {
           );
         })}
       </div>
+
+      {actionError && (
+        <div className="p-3 mb-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">{actionError}</div>
+      )}
 
       {activeTab === 'lots' && (
         lotsQuery.query.isLoading ? (
@@ -106,32 +128,52 @@ export default function InventoryPage() {
               },
               {
                 id: 'actions', header: '',
-                cell: ({ row }) =>
-                  row.original.status === 'CURING' ? (
-                    <button
-                      className="text-xs text-primary hover:underline"
-                      onClick={() => {
-                        // BR-08 / AC-4.4: a reason is mandatory and is stored
-                        // permanently on the lot, so prompt rather than confirm.
-                        const reason = window.prompt(
-                          'Release this lot early, before curing completes?\nThis is logged against your name (BR-08).\n\nReason:'
-                        );
-                        if (reason && reason.trim()) releaseEarly.mutate({ lotId: row.original.id, reason });
-                      }}
-                    >
-                      Release early
-                    </button>
-                  ) : row.original.releasedEarlyAt ? (
-                    <span
-                      className="text-xs text-amber-600 dark:text-amber-400"
-                      title={`Released early: ${row.original.releasedEarlyReason || ''}`}
-                    >
-                      Early-released
-                    </span>
-                  ) : null,
+                cell: ({ row }) => (
+                  <div className="flex items-center justify-end gap-3">
+                    {row.original.status === 'CURING' && (
+                      <button
+                        className="text-xs text-primary hover:underline"
+                        onClick={() => {
+                          // BR-08 / AC-4.4: a reason is mandatory and is stored
+                          // permanently on the lot, so prompt rather than confirm.
+                          const reason = window.prompt(
+                            'Release this lot early, before curing completes?\nThis is logged against your name (BR-08).\n\nReason:'
+                          );
+                          if (reason && reason.trim()) {
+                            setActionError('');
+                            releaseEarly.mutate(
+                              { lotId: row.original.id, reason },
+                              { onError: (err) => setActionError(err.response?.data?.message || 'Could not release this lot.') }
+                            );
+                          }
+                        }}
+                      >
+                        Release early
+                      </button>
+                    )}
+                    {row.original.releasedEarlyAt && (
+                      <span
+                        className="text-xs text-amber-600 dark:text-amber-400"
+                        title={`Released early: ${row.original.releasedEarlyReason || ''}`}
+                      >
+                        Early-released
+                      </span>
+                    )}
+                    {canAdjust && Number(row.original.qtyAvailable) !== 0 && (
+                      <button
+                        className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                        title="Record a physical count against this lot"
+                        onClick={() => setAdjustingLot(row.original)}
+                      >
+                        Adjust
+                      </button>
+                    )}
+                  </div>
+                ),
               },
             ]}
             {...lotsQuery.tableProps}
+            emptyMessage="No stock lots here yet. Receiving goods or producing them is what creates one."
             searchPlaceholder="Search lot number…"
           />
         )
@@ -162,9 +204,41 @@ export default function InventoryPage() {
               },
             ]}
             {...ledgerQuery.tableProps}
+            emptyMessage="No stock movements recorded yet."
+            searchPlaceholder="Search lot number…"
           />
         )
       )}
+
+      {activeTab === 'adjustments' && (
+        adjustmentQuery.query.isLoading ? (
+          <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
+        ) : (
+          <DataTable
+            columns={[
+              { accessorKey: 'adjustmentNumber', header: 'Adjustment #' },
+              { accessorKey: 'adjustmentDate', header: 'Date' },
+              { id: 'product', header: 'Product', cell: ({ row }) => row.original.product?.name || row.original.productId },
+              { id: 'lot', header: 'Lot', cell: ({ row }) => row.original.lot?.lotNumber || row.original.lotId },
+              { id: 'previous', header: 'System Qty', cell: ({ row }) => Number(row.original.previousQty) },
+              { id: 'counted', header: 'Counted', cell: ({ row }) => Number(row.original.countedQty) },
+              {
+                id: 'delta', header: 'Difference',
+                cell: ({ row }) => {
+                  const d = Number(row.original.adjustmentQty);
+                  return <span className={d > 0 ? 'text-emerald-600' : 'text-destructive'}>{d > 0 ? `+${d}` : d}</span>;
+                },
+              },
+              { accessorKey: 'reason', header: 'Reason' },
+            ]}
+            {...adjustmentQuery.tableProps}
+            showSearch={false}
+            emptyMessage="No stock adjustments recorded. Use Adjust on a lot to record a physical count."
+          />
+        )
+      )}
+
+      <StockAdjustmentDialog open={!!adjustingLot} onOpenChange={(v) => !v && setAdjustingLot(null)} lot={adjustingLot} />
     </div>
   );
 }
