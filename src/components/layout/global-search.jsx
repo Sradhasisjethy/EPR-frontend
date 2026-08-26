@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Command } from 'lucide-react';
+import { Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -99,7 +99,6 @@ export function GlobalSearch() {
                     onClick={() => handleSelect(link.path)}
                     className="flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                   >
-                    <Command className="mr-2 h-4 w-4 opacity-50" />
                     <span>{link.name}</span>
                   </button>
                 ))}
