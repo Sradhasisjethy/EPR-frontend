@@ -23,6 +23,13 @@ export function useCreatePurchaseOrder() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['purchase-orders'] }),
   });
 }
+export function useUpdatePurchaseOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }) => (await apiClient.put(`/purchasing/orders/${id}`, data)).data.data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['purchase-orders'] }),
+  });
+}
 export function useConfirmPurchaseOrder() {
   const qc = useQueryClient();
   return useMutation({
@@ -75,10 +82,28 @@ export function useCreatePurchaseInvoice() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['purchase-invoices'] }),
   });
 }
-export function useUpdatePaymentStatus() {
+/**
+ * Reverses a posted goods receipt, taking its stock back out.
+ * There is deliberately no hook for setting an invoice's payment status: it is
+ * derived from allocations server-side, and the endpoint that used to accept it
+ * let an unpaid bill be marked PAID with no payment behind it.
+ */
+export function useCancelGoodsReceipt() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, paymentStatus }) => (await apiClient.put(`/purchasing/invoices/${id}/payment-status`, { paymentStatus })).data.data,
+    mutationFn: async ({ id, reason }) => (await apiClient.put(`/purchasing/receipts/${id}/cancel`, { reason })).data.data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['goods-receipts'] });
+      qc.invalidateQueries({ queryKey: ['purchase-orders'] });
+      qc.invalidateQueries({ queryKey: ['inventory'] });
+    },
+  });
+}
+
+export function useCancelPurchaseInvoice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, reason }) => (await apiClient.put(`/purchasing/invoices/${id}/cancel`, { reason })).data.data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['purchase-invoices'] }),
   });
 }

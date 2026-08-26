@@ -35,6 +35,20 @@ export function useCreateSalesOrder() {
     onSuccess: () => invalidateOrders(qc),
   });
 }
+export function useUpdateSalesOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }) => (await apiClient.put(`/sales/orders/${id}`, data)).data.data,
+    onSuccess: () => invalidateOrders(qc),
+  });
+}
+export function useMarkInProduction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => (await apiClient.put(`/sales/orders/${id}/in-production`)).data.data,
+    onSuccess: () => invalidateOrders(qc),
+  });
+}
 export function useConfirmSalesOrder() {
   const qc = useQueryClient();
   return useMutation({
