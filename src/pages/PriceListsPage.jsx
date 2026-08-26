@@ -6,17 +6,28 @@ import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { usePriceLists, useDeletePriceList } from '@/hooks/use-pricing';
 import { PriceListFormDialog } from '@/components/pricing/price-list-form-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export default function PriceListsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [priceListToDelete, setPriceListToDelete] = useState(null);
 
   const { query, tableProps } = usePaginated(usePriceLists);
   const { isLoading, isError } = query;
   const deletePriceList = useDeletePriceList();
 
-  const handleDelete = (priceList) => {
-    if (window.confirm(`Delete price list "${priceList.name}"? This cannot be undone.`)) deletePriceList.mutate(priceList.id);
+  const handleDeleteClick = (priceList) => {
+    setPriceListToDelete(priceList);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (priceListToDelete) {
+      deletePriceList.mutate(priceListToDelete.id);
+      setPriceListToDelete(null);
+    }
   };
 
   return (
@@ -55,7 +66,7 @@ export default function PriceListsPage() {
                     <Pencil size={16} />
                   </button>
                   <button
-                    onClick={() => handleDelete(row.original)}
+                    onClick={() => handleDeleteClick(row.original)}
                     className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                     title="Delete"
                   >
@@ -71,6 +82,15 @@ export default function PriceListsPage() {
       )}
 
       <PriceListFormDialog open={dialogOpen} onOpenChange={setDialogOpen} priceListId={editingId} />
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Price List"
+        description={`Delete price list "${priceListToDelete?.name}"? This cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

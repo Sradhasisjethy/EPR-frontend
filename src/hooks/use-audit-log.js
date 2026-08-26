@@ -8,6 +8,6 @@ export function useAuditLogs(params = {}) {
       const response = await apiClient.get('/audit-logs', { params });
       return response.data.data;
     },
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }

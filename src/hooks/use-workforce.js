@@ -10,7 +10,7 @@ const invalidateStock = (qc) => {
 
 // Contractor material issues
 export function useMaterialIssues(params = {}) {
-  return useQuery({ queryKey: ['contractor-material-issues', params], queryFn: async () => (await apiClient.get('/workforce/contractor/material-issues', { params })).data.data, keepPreviousData: true });
+  return useQuery({ queryKey: ['contractor-material-issues', params], queryFn: async () => (await apiClient.get('/workforce/contractor/material-issues', { params })).data.data, placeholderData: (prev) => prev });
 }
 export function useIssueMaterial() {
   const qc = useQueryClient();
@@ -22,7 +22,7 @@ export function useIssueMaterial() {
 
 // Contractor production entries
 export function useContractorEntries(params = {}) {
-  return useQuery({ queryKey: ['contractor-production-entries', params], queryFn: async () => (await apiClient.get('/workforce/contractor/production-entries', { params })).data.data, keepPreviousData: true });
+  return useQuery({ queryKey: ['contractor-production-entries', params], queryFn: async () => (await apiClient.get('/workforce/contractor/production-entries', { params })).data.data, placeholderData: (prev) => prev });
 }
 export function useCreateContractorEntry() {
   const qc = useQueryClient();
@@ -34,7 +34,7 @@ export function useCreateContractorEntry() {
 
 // Labour attendance
 export function useAttendance(params = {}) {
-  return useQuery({ queryKey: ['attendance', params], queryFn: async () => (await apiClient.get('/workforce/labour/attendance', { params })).data.data, keepPreviousData: true });
+  return useQuery({ queryKey: ['attendance', params], queryFn: async () => (await apiClient.get('/workforce/labour/attendance', { params })).data.data, placeholderData: (prev) => prev });
 }
 export function useMarkAttendance() {
   const qc = useQueryClient();
@@ -46,7 +46,7 @@ export function useMarkAttendance() {
 
 // Advances
 export function useAdvances(params = {}) {
-  return useQuery({ queryKey: ['advances', params], queryFn: async () => (await apiClient.get('/workforce/advances', { params })).data.data, keepPreviousData: true });
+  return useQuery({ queryKey: ['advances', params], queryFn: async () => (await apiClient.get('/workforce/advances', { params })).data.data, placeholderData: (prev) => prev });
 }
 export function useCreateAdvance() {
   const qc = useQueryClient();

@@ -24,7 +24,7 @@ export function usePartyLedger({ partyId, ...params } = {}) {
     queryKey: ['ledger', 'party', partyId, params],
     queryFn: async () => (await apiClient.get(`/ledger/party/${partyId}`, { params })).data.data,
     enabled: !!partyId,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 

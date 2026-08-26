@@ -5,7 +5,7 @@ export function useDeliveryChallans(params = {}) {
   return useQuery({
     queryKey: ['delivery-challans', params],
     queryFn: async () => (await apiClient.get('/dispatch/challans', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 

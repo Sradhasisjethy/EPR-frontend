@@ -6,7 +6,7 @@ export function usePurchaseOrders(params = {}) {
   return useQuery({
     queryKey: ['purchase-orders', params],
     queryFn: async () => (await apiClient.get('/purchasing/orders', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 export function usePurchaseOrder(id) {
@@ -50,7 +50,7 @@ export function useGoodsReceipts(params = {}) {
   return useQuery({
     queryKey: ['goods-receipts', params],
     queryFn: async () => (await apiClient.get('/purchasing/receipts', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 export function useCreateGoodsReceipt() {
@@ -72,7 +72,7 @@ export function usePurchaseInvoices(params = {}) {
   return useQuery({
     queryKey: ['purchase-invoices', params],
     queryFn: async () => (await apiClient.get('/purchasing/invoices', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 export function useCreatePurchaseInvoice() {

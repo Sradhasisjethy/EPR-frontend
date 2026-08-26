@@ -5,7 +5,7 @@ export function useTransfers(params = {}) {
   return useQuery({
     queryKey: ['transfers', params],
     queryFn: async () => (await apiClient.get('/transfers', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 

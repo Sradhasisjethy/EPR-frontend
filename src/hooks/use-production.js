@@ -6,7 +6,7 @@ export function useProductionPlans(params = {}) {
   return useQuery({
     queryKey: ['production-plans', params],
     queryFn: async () => (await apiClient.get('/production/plans', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 export function useGenerateProposal() {
@@ -29,7 +29,7 @@ export function useProductionEntries(params = {}) {
   return useQuery({
     queryKey: ['production-entries', params],
     queryFn: async () => (await apiClient.get('/production/entries', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 export function useCreateProductionEntry() {
@@ -52,7 +52,7 @@ export function usePendingApprovals(params = {}) {
   return useQuery({
     queryKey: ['production-pending-approvals', params],
     queryFn: async () => (await apiClient.get('/production/pending-approvals', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 export function useApproveVariance() {
@@ -68,7 +68,7 @@ export function useWastageRecords(params = {}) {
   return useQuery({
     queryKey: ['wastage-records', params],
     queryFn: async () => (await apiClient.get('/production/wastage', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 export function useCreateWastage() {

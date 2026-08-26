@@ -21,6 +21,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export default function OfficesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,15 +32,23 @@ export default function OfficesPage() {
   const [editingOffice, setEditingOffice] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [viewingData, setViewingData] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [officeToDelete, setOfficeToDelete] = useState(null);
 
   const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
   const { data: offData, isLoading: offLoading, isError: offError } = useOffices({ page: 1, limit: 100, organizationId: selectedOrgId || undefined });
   const { data: deptData } = useDepartments({ page: 1, limit: 100, organizationId: selectedOrgId || undefined });
   const deleteMutation = useDeleteOffice();
 
-  const handleDelete = (office) => {
-    if (window.confirm(`Delete office "${office.name}"? This cannot be undone.`)) {
-      deleteMutation.mutate(office.id);
+  const handleDeleteClick = (office) => {
+    setOfficeToDelete(office);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (officeToDelete) {
+      deleteMutation.mutate(officeToDelete.id);
+      setOfficeToDelete(null);
     }
   };
 
@@ -168,7 +177,7 @@ export default function OfficesPage() {
                   }}
                   onViewDepartments={() => navigate(`/departments?officeId=${row.original.id}&organizationId=${row.original.organizationId || ''}`)}
                   onEdit={() => { setEditingOffice(row.original); setDialogOpen(true); }}
-                  onDelete={() => handleDelete(row.original)}
+                  onDelete={() => handleDeleteClick(row.original)}
                 />
               ),
             },
@@ -180,6 +189,15 @@ export default function OfficesPage() {
 
       <OfficeFormDialog open={dialogOpen} onOpenChange={setDialogOpen} office={editingOffice} defaultOrganizationId={selectedOrgId} />
       <OrganizationDetailDialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen} data={viewingData} type="office" />
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Office"
+        description={`Delete office "${officeToDelete?.name}"? This cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

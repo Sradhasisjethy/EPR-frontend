@@ -21,6 +21,7 @@ import {
 import { MasterFormDialog } from '@/components/products/master-form-dialog';
 import { ProductFormDialog } from '@/components/products/product-form-dialog';
 import { MixDesignFormDialog } from '@/components/products/mix-design-form-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { QueryState } from '@/components/query-state';
 
@@ -78,6 +79,8 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [mixDialogOpen, setMixDialogOpen] = useState(false);
   const [editingMix, setEditingMix] = useState(null);
+  
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, label: '', description: '', entity: null, mutation: null });
 
   const uomQuery = usePaginated(useUoms, {}, { sortableColumns: SORTABLE.uoms });
   const categoryQuery = usePaginated(useProductCategories, {}, { sortableColumns: SORTABLE.categories });
@@ -92,19 +95,24 @@ export default function ProductsPage() {
   const deleteHsn = useDeleteHsnCode();
   const deleteProduct = useDeleteProduct();
 
-  // The API refuses (409) to delete a master anything still references, and
-  // names what is holding it. Deactivating is the supported way to retire one.
-  const confirmDelete = (label, mutation, entity) => {
-    setDeleteError('');
-    const confirmed = window.confirm(
-      `Delete "${label}"?\n\n` +
-        'Only a record nothing references can be deleted. To retire one that is already in use, ' +
-        'edit it and set its status to Inactive instead.'
-    );
-    if (!confirmed) return;
-    mutation.mutate(entity.id, {
-      onError: (err) => setDeleteError(err.response?.data?.message || `Failed to delete "${label}".`),
+  const confirmDelete = (label, mutation, entity, customDesc) => {
+    setDeleteDialog({
+      open: true,
+      label,
+      description: customDesc || `Delete "${label}"? Only a record nothing references can be deleted. To retire one that is already in use, edit it and set its status to Inactive instead.`,
+      entity,
+      mutation,
     });
+  };
+
+  const executeDelete = () => {
+    if (deleteDialog.entity && deleteDialog.mutation) {
+      setDeleteError('');
+      deleteDialog.mutation.mutate(deleteDialog.entity.id, {
+        onError: (err) => setDeleteError(err.response?.data?.message || `Failed to delete "${deleteDialog.label}".`),
+      });
+      setDeleteDialog(prev => ({ ...prev, open: false }));
+    }
   };
 
   const addHandlers = {
@@ -341,11 +349,12 @@ export default function ProductsPage() {
                     canModify={canModify}
                     canDelete={canDelete}
                     onEdit={() => { setEditingConversion(row.original); setConversionDialogOpen(true); }}
-                    onDelete={() => {
-                      if (window.confirm('Delete this conversion? Anything relying on it will stop converting.')) {
-                        deleteConversion.mutate(row.original.id);
-                      }
-                    }}
+                    onDelete={() => confirmDelete(
+                      'Conversion',
+                      deleteConversion,
+                      row.original,
+                      'Delete this conversion? Anything relying on it will stop converting.'
+                    )}
                   />
                 ),
               },
@@ -364,6 +373,16 @@ export default function ProductsPage() {
 
       <ProductFormDialog open={productDialogOpen} onOpenChange={setProductDialogOpen} product={editingProduct} />
       <MixDesignFormDialog open={mixDialogOpen} onOpenChange={setMixDialogOpen} mixDesign={editingMix} />
+
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={(isOpen) => setDeleteDialog(prev => ({ ...prev, open: isOpen }))}
+        title={`Delete ${deleteDialog.label}`}
+        description={deleteDialog.description}
+        onConfirm={executeDelete}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

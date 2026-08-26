@@ -11,6 +11,7 @@ import { formatINR } from '@/lib/money';
 import { useParties, useDeleteParty } from '@/hooks/use-parties';
 import { PartyFormDialog } from '@/components/parties/party-form-dialog';
 import { PartyAddressesDialog } from '@/components/parties/party-addresses-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { PartyType } from '@/constants/enums';
 import { useTabParam } from '@/hooks/use-tab-param';
 
@@ -35,6 +36,8 @@ export default function PartiesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingParty, setEditingParty] = useState(null);
   const [addressesFor, setAddressesFor] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [partyToDelete, setPartyToDelete] = useState(null);
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
 
@@ -51,21 +54,19 @@ export default function PartiesPage() {
   const deleteParty = useDeleteParty();
   const [deleteError, setDeleteError] = useState('');
 
-  // The API refuses to delete a party that any document references (409) —
-  // deactivating is the supported way to retire one. Say so up front, and
-  // surface the server's reason when it does refuse, instead of the mutation
-  // failing silently.
-  const handleDelete = (party) => {
-    setDeleteError('');
-    const confirmed = window.confirm(
-      `Delete party "${party.name}"?\n\n` +
-        'Only a party with no orders, invoices, payments or ledger entries can be deleted. ' +
-        'To retire one that has history, edit it and set its status to Inactive instead.'
-    );
-    if (!confirmed) return;
-    deleteParty.mutate(party.id, {
-      onError: (err) => setDeleteError(err.response?.data?.message || 'Failed to delete party.'),
-    });
+  const handleDeleteClick = (party) => {
+    setPartyToDelete(party);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (partyToDelete) {
+      setDeleteError('');
+      deleteParty.mutate(partyToDelete.id, {
+        onError: (err) => setDeleteError(err.response?.data?.message || 'Failed to delete party.'),
+      });
+      setPartyToDelete(null);
+    }
   };
 
   return (
@@ -147,7 +148,7 @@ export default function PartiesPage() {
                   )}
                   {canDelete && (
                     <button
-                      onClick={() => handleDelete(row.original)}
+                      onClick={() => handleDeleteClick(row.original)}
                       className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                       title="Delete"
                     >
@@ -166,6 +167,15 @@ export default function PartiesPage() {
 
       <PartyAddressesDialog open={!!addressesFor} onOpenChange={(v) => !v && setAddressesFor(null)} party={addressesFor} />
       <PartyFormDialog open={dialogOpen} onOpenChange={setDialogOpen} party={editingParty} defaultPartyType={activeTab || PartyType.CUSTOMER} />
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Party"
+        description={`Delete party "${partyToDelete?.name}"? Only a party with no orders, invoices, payments or ledger entries can be deleted. To retire one that has history, edit it and set its status to Inactive instead.`}
+        onConfirm={handleConfirmDelete}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

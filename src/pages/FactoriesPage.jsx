@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useFactories, useDeleteFactory, useFinancialYears, useSetCurrentFinancialYear } from '@/hooks/use-factory';
 import { FactoryFormDialog } from '@/components/factory/factory-form-dialog';
 import { FinancialYearFormDialog } from '@/components/factory/financial-year-form-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 
 function RowActions({ onEdit, onDelete }) {
@@ -28,6 +29,8 @@ export default function FactoriesPage() {
   const [factoryDialogOpen, setFactoryDialogOpen] = useState(false);
   const [editingFactory, setEditingFactory] = useState(null);
   const [fyDialogOpen, setFyDialogOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [factoryToDelete, setFactoryToDelete] = useState(null);
 
   const { query, tableProps } = usePaginated(useFactories);
   const { isLoading: factoryLoading, isError: factoryError } = query;
@@ -35,9 +38,15 @@ export default function FactoriesPage() {
   const deleteFactory = useDeleteFactory();
   const setCurrentFy = useSetCurrentFinancialYear();
 
-  const handleDelete = (factory) => {
-    if (window.confirm(`Delete factory "${factory.name}"? This cannot be undone.`)) {
-      deleteFactory.mutate(factory.id);
+  const handleDeleteClick = (factory) => {
+    setFactoryToDelete(factory);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (factoryToDelete) {
+      deleteFactory.mutate(factoryToDelete.id);
+      setFactoryToDelete(null);
     }
   };
 
@@ -91,7 +100,7 @@ export default function FactoriesPage() {
                 cell: ({ row }) => (
                   <RowActions
                     onEdit={() => { setEditingFactory(row.original); setFactoryDialogOpen(true); }}
-                    onDelete={() => handleDelete(row.original)}
+                    onDelete={() => handleDeleteClick(row.original)}
                   />
                 ),
               },
@@ -136,6 +145,15 @@ export default function FactoriesPage() {
 
       <FactoryFormDialog open={factoryDialogOpen} onOpenChange={setFactoryDialogOpen} factory={editingFactory} />
       <FinancialYearFormDialog open={fyDialogOpen} onOpenChange={setFyDialogOpen} />
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Factory"
+        description={`Delete factory "${factoryToDelete?.name}"? This cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

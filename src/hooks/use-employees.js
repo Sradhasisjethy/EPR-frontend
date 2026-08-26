@@ -5,7 +5,7 @@ export function useEmployees(params = {}) {
   return useQuery({
     queryKey: ['users', params],
     queryFn: async () => (await apiClient.get('/users', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -28,6 +28,7 @@ export function useCreateEmployee() {
       return response.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
     },
   });
@@ -41,6 +42,7 @@ export function useUpdateEmployee() {
       return response.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
     },
   });
@@ -53,7 +55,61 @@ export function useDeleteEmployee() {
       await apiClient.delete(`/users/${id}`);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
+    },
+  });
+}
+
+export function useEmployeeDocuments(id) {
+  return useQuery({
+    queryKey: ['employees', id, 'documents'],
+    queryFn: async () => {
+      const response = await apiClient.get(`/users/${id}/documents`);
+      return response.data.data;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useUploadEmployeeDocument(employeeId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (formData) => {
+      const response = await apiClient.post(`/users/${employeeId}/documents`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees', employeeId, 'documents'] });
+    },
+  });
+}
+
+export function useDeleteEmployeeDocument(employeeId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (documentId) => {
+      await apiClient.delete(`/users/${employeeId}/documents/${documentId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees', employeeId, 'documents'] });
+    },
+  });
+}
+
+export function useVerifyEmployeeDocument(employeeId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ documentId, isVerified }) => {
+      const response = await apiClient.patch(`/users/${employeeId}/documents/${documentId}/verify`, { isVerified });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees', employeeId, 'documents'] });
     },
   });
 }

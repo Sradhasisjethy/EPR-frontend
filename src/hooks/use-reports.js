@@ -5,7 +5,7 @@ export function useSavedReports(params = {}) {
   return useQuery({
     queryKey: ['saved-reports', params],
     queryFn: async () => (await apiClient.get('/reports', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 
