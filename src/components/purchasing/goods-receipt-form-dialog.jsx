@@ -12,7 +12,7 @@ import { useProducts } from '@/hooks/use-products';
 import { PartyType } from '@/constants/enums';
 import { fromPaise, toPaise } from '@/lib/money';
 
-const emptyLine = { productId: '', receivedQty: '', rateRupees: '', purchaseOrderLineId: '' };
+const emptyLine = { productId: '', receivedQty: '', rejectedQty: '', rejectionReason: '', rateRupees: '', purchaseOrderLineId: '' };
 
 export function GoodsReceiptFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', vendorPartyId: '', purchaseOrderId: '', receiptDate: '' });
@@ -64,6 +64,14 @@ export function GoodsReceiptFormDialog({ open, onOpenChange }) {
       setError('Every line needs a product, quantity, and rate.');
       return;
     }
+    if (lines.some((l) => Number(l.rejectedQty || 0) > Number(l.receivedQty || 0))) {
+      setError('A line cannot reject more than was received.');
+      return;
+    }
+    if (lines.some((l) => Number(l.rejectedQty || 0) > 0 && !l.rejectionReason.trim())) {
+      setError('Say why the material was rejected — it is recorded against the supplier.');
+      return;
+    }
 
     const payload = {
       factoryId: form.factoryId,
@@ -73,6 +81,10 @@ export function GoodsReceiptFormDialog({ open, onOpenChange }) {
       lines: lines.map((l) => ({
         productId: l.productId,
         receivedQty: Number(l.receivedQty),
+        // Omitted entirely when nothing was rejected, so an ordinary receipt
+        // sends exactly the payload it always did.
+        rejectedQty: Number(l.rejectedQty || 0) > 0 ? Number(l.rejectedQty) : undefined,
+        rejectionReason: Number(l.rejectedQty || 0) > 0 ? l.rejectionReason.trim() : undefined,
         ratePaise: toPaise(l.rateRupees),
         purchaseOrderLineId: l.purchaseOrderLineId || undefined,
       })),
@@ -129,7 +141,8 @@ export function GoodsReceiptFormDialog({ open, onOpenChange }) {
               )}
             </div>
             {lines.map((line, i) => (
-              <div key={i} className="grid grid-cols-[1fr_100px_120px_32px] gap-2 items-center">
+              <div key={i} className="space-y-2">
+              <div className="grid grid-cols-[1fr_90px_90px_110px_32px] gap-2 items-center">
                 <select
                   value={line.productId}
                   onChange={(e) => updateLine(i, 'productId', e.target.value)}
@@ -140,13 +153,31 @@ export function GoodsReceiptFormDialog({ open, onOpenChange }) {
                   <option value="" disabled>Product</option>
                   {(productData?.rows || []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
-                <Input type="number" step="0.01" min="0" placeholder="Qty" value={line.receivedQty} onChange={(e) => updateLine(i, 'receivedQty', e.target.value)} required />
+                <Input type="number" step="0.01" min="0" placeholder="Received" value={line.receivedQty} onChange={(e) => updateLine(i, 'receivedQty', e.target.value)} required />
+                {/* Only the accepted quantity is stocked. Rejected material is
+                    recorded against the supplier and never becomes a lot. */}
+                <Input type="number" step="0.01" min="0" placeholder="Rejected" value={line.rejectedQty} onChange={(e) => updateLine(i, 'rejectedQty', e.target.value)} />
                 <Input type="number" step="0.01" min="0" placeholder="Rate (₹)" value={line.rateRupees} onChange={(e) => updateLine(i, 'rateRupees', e.target.value)} required />
                 {!form.purchaseOrderId && (
                   <button type="button" onClick={() => removeLine(i)} disabled={lines.length === 1} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive disabled:opacity-30">
                     <Trash2 size={16} />
                   </button>
                 )}
+              </div>
+              {Number(line.rejectedQty || 0) > 0 && (
+                <div className="pl-1 space-y-1">
+                  <Input
+                    placeholder="Why was it rejected?"
+                    value={line.rejectionReason}
+                    onChange={(e) => updateLine(i, 'rejectionReason', e.target.value)}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {Math.max(0, Number(line.receivedQty || 0) - Number(line.rejectedQty || 0))} will be taken into stock;{' '}
+                    {Number(line.rejectedQty)} will not.
+                  </p>
+                </div>
+              )}
               </div>
             ))}
           </div>

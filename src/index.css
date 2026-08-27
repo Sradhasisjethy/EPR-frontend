@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -302,4 +302,148 @@ input:-webkit-autofill:active {
 }
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-muted-foreground/50;
+}
+
+/* ============================================================================
+   INFIDEEP Auth Experience  —  login / reset-password / forgot-password
+   ----------------------------------------------------------------------------
+   Dark-only by design. Every value here is a literal rather than a CSS var so
+   the auth screens render identically whether the app theme is light or dark;
+   they sit outside the themed shell and must not inherit its tokens.
+   ========================================================================== */
+
+.infideep-auth {
+  color-scheme: dark;
+}
+
+/* Brand gradient — pink-red to orange-yellow, the system's high-visibility
+   engine. Fills for CTAs, hairlines for card highlights. */
+.id-gradient {
+  background: linear-gradient(135deg, #ff0055 0%, #ff8c00 100%);
+}
+
+.id-text-gradient {
+  background: linear-gradient(135deg, #ff0055 0%, #ff8c00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Level-1 tonal surface with a diffused ambient shadow, per the elevation
+   model — surfaces lift by getting lighter, not by casting hard shadows. */
+.id-glass-card {
+  background: rgba(30, 32, 32, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(255, 0, 85, 0.05);
+}
+
+/* Inputs sit on a Level-2 charcoal; focus is a gradient-adjacent glow rather
+   than the default ring so the brand reads through on interaction. */
+.id-input {
+  background-color: #1e2020;
+  border: 1px solid rgba(93, 63, 68, 0.6);
+  color: #e2e2e2;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.id-input::placeholder {
+  color: rgba(230, 188, 194, 0.45);
+}
+
+.id-input:focus {
+  outline: none;
+  border-color: #ff0055;
+  box-shadow:
+    0 0 0 1px #ff0055,
+    0 0 10px rgba(255, 0, 85, 0.2);
+}
+
+.id-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Ambient brand glow behind the brand panel. */
+.id-bg-glow {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 0, 85, 0.15) 0%,
+    rgba(255, 140, 0, 0.05) 40%,
+    transparent 70%
+  );
+}
+
+/* Faint blueprint grid, masked to fade out toward the panel edges. */
+.id-grid-lines {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(circle at 50% 30%, black, transparent 60%);
+  mask-image: radial-gradient(circle at 50% 30%, black, transparent 60%);
+}
+
+/* Native checkbox tinted to the brand without pulling in a Radix control —
+   the login form is intentionally dependency-light. */
+.id-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(93, 63, 68, 0.9);
+  background-color: #1e2020;
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.id-checkbox::after {
+  content: '';
+  width: 0.55rem;
+  height: 0.3rem;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(-45deg) scale(0);
+  transition: transform 0.15s ease;
+}
+
+.id-checkbox:checked {
+  background: linear-gradient(135deg, #ff0055 0%, #ff8c00 100%);
+  border-color: transparent;
+}
+
+.id-checkbox:checked::after {
+  transform: rotate(-45deg) scale(1);
+}
+
+.id-checkbox:focus-visible {
+  outline: 2px solid #ff0055;
+  outline-offset: 2px;
+}
+
+/* Respect users who have asked the OS to tone motion down. */
+@media (prefers-reduced-motion: reduce) {
+  .infideep-auth *,
+  .infideep-auth *::before,
+  .infideep-auth *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Neon bloom for the brand lockup on dark grounds — two tinted drop-shadows
+   so the halo picks up both ends of the gradient rather than one flat colour. */
+.id-logo-glow {
+  filter:
+    drop-shadow(0 0 10px rgba(255, 0, 85, 0.45))
+    drop-shadow(0 0 26px rgba(255, 90, 40, 0.28))
+    drop-shadow(0 0 48px rgba(255, 140, 0, 0.16));
 }

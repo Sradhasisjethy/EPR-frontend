@@ -1,8 +1,5 @@
 import { useState } from 'react';
 import { useForgotPassword } from '@/hooks/use-auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -10,13 +7,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { KeyRound, Mail, CheckCircle2, AlertCircle } from 'lucide-react';
+import { KeyRound, Mail, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 export function ForgotPasswordDialog({ open, onOpenChange }) {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [devResetUrl, setDevResetUrl] = useState('');
   const forgotPasswordMutation = useForgotPassword();
+  const isLoading = forgotPasswordMutation.isPending;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -38,90 +36,126 @@ export function ForgotPasswordDialog({ open, onOpenChange }) {
   const handleClose = (val) => {
     onOpenChange(val);
     if (!val) {
+      // Clear after the close animation so the content doesn't flicker on the
+      // way out; reset the mutation too, or a stale error greets the reopen.
       setTimeout(() => {
         setEmail('');
         setSubmitted(false);
         setDevResetUrl('');
+        forgotPasswordMutation.reset();
       }, 300);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[420px] glass-card border-border shadow-2xl rounded-2xl p-6">
-        <DialogHeader className="space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold mb-1">
-            <KeyRound size={24} />
+      <DialogContent className="infideep-auth sm:max-w-[440px] id-glass-card border-white/10 rounded-[24px] p-7 text-infideep-on-surface font-sans overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-[2px] id-gradient opacity-90" />
+
+        <DialogHeader className="space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-infideep-surface-high border border-infideep-outline-variant/40 flex items-center justify-center">
+            <KeyRound size={22} className="text-infideep-primary" aria-hidden="true" />
           </div>
-          <DialogTitle className="text-xl font-bold">Forgot Password?</DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
-            Enter your account email address. We will send you a link to reset your password.
+          <DialogTitle className="font-display text-[24px] leading-[32px] font-semibold text-left">
+            Forgot password?
+          </DialogTitle>
+          <DialogDescription className="text-[14px] leading-[20px] text-infideep-on-surface-variant/90 text-left">
+            Enter your account email address and we will send you a link to reset your password.
           </DialogDescription>
         </DialogHeader>
 
         {submitted ? (
-          <div className="space-y-4 pt-2">
-            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 space-y-2">
-              <div className="flex items-center gap-2 font-semibold text-sm">
-                <CheckCircle2 size={18} /> Email Sent!
+          <div className="space-y-5 pt-2">
+            <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 space-y-2">
+              <div className="flex items-center gap-2 text-emerald-400 font-semibold text-[14px]">
+                <CheckCircle2 size={18} aria-hidden="true" /> Email sent
               </div>
-              <p className="text-xs leading-relaxed opacity-90">
-                We have sent password reset instructions to <strong>{email}</strong>. Please check your inbox.
+              <p className="text-[13px] leading-[20px] text-infideep-on-surface/90">
+                We have sent password reset instructions to <strong>{email}</strong>. Please check
+                your inbox.
               </p>
             </div>
 
             {devResetUrl && (
-              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 space-y-1 text-xs">
-                <span className="font-bold text-primary flex items-center gap-1">
-                  ✨ Local Dev Quick Reset Link:
+              <div className="p-3 rounded-lg bg-infideep-surface-high border border-infideep-outline-variant/40 space-y-1">
+                <span className="block text-[12px] font-semibold uppercase tracking-[0.05em] text-infideep-secondary">
+                  Local dev quick reset link
                 </span>
                 <a
                   href={devResetUrl}
-                  className="text-primary hover:underline break-all font-mono text-[11px]"
+                  className="text-infideep-primary hover:underline break-all font-mono text-[11px]"
                 >
                   {devResetUrl}
                 </a>
               </div>
             )}
 
-            <Button onClick={() => handleClose(false)} className="w-full">
-              Back to Login
-            </Button>
+            <button
+              type="button"
+              onClick={() => handleClose(false)}
+              className="w-full flex justify-center items-center py-3.5 px-4 rounded-lg shadow-md text-[12px] font-semibold uppercase tracking-[0.05em] text-white id-gradient hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-infideep-primary focus-visible:ring-offset-infideep-bg active:scale-[0.98] transition-all duration-200"
+            >
+              Back to sign in
+            </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <form onSubmit={handleSubmit} className="space-y-5 pt-2">
             {forgotPasswordMutation.isError && (
-              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
-                <AlertCircle size={15} />
+              <div
+                role="alert"
+                className="flex items-start gap-2 p-3 rounded-lg bg-[#93000a]/25 border border-infideep-error/40 text-infideep-error text-[13px] font-medium"
+              >
+                <AlertCircle size={16} className="shrink-0 mt-px" aria-hidden="true" />
                 <span>Failed to send reset link. Please try again.</span>
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-xs font-semibold">
+            <div>
+              {/* Scoped id — the login form behind this dialog already owns
+                  "email", and duplicate ids break label association. */}
+              <label
+                htmlFor="forgot-email"
+                className="block text-[14px] leading-[20px] mb-2 ml-1"
+              >
                 Email Address
-              </Label>
+              </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="email"
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail size={18} className="text-infideep-outline-variant" aria-hidden="true" />
+                </div>
+                <input
+                  id="forgot-email"
+                  name="email"
                   type="email"
-                  placeholder="john.smith@acme.corp"
+                  autoComplete="email"
+                  placeholder="name@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-9"
+                  disabled={isLoading}
                   required
+                  className="id-input block w-full pl-10 pr-3 py-3.5 rounded-lg text-[14px] shadow-inner"
                 />
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => handleClose(false)} className="w-full">
+            <div className="flex gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => handleClose(false)}
+                className="w-full py-3.5 px-4 rounded-lg border border-infideep-outline-variant/70 bg-infideep-surface/80 hover:bg-infideep-surface-high text-[12px] font-semibold uppercase tracking-[0.05em] transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-infideep-grad-start"
+              >
                 Cancel
-              </Button>
-              <Button type="submit" disabled={forgotPasswordMutation.isPending} className="w-full">
-                {forgotPasswordMutation.isPending ? 'Sending...' : 'Send Reset Link'}
-              </Button>
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex justify-center items-center py-3.5 px-4 rounded-lg shadow-md text-[12px] font-semibold uppercase tracking-[0.05em] text-white id-gradient hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-infideep-primary focus-visible:ring-offset-infideep-bg active:scale-[0.98] transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed disabled:active:scale-100"
+              >
+                <span>{isLoading ? 'Sending…' : 'Send Link'}</span>
+                {isLoading && (
+                  <Loader2 size={16} className="ml-2 animate-spin" aria-hidden="true" />
+                )}
+              </button>
             </div>
           </form>
         )}

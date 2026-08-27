@@ -6,6 +6,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['Plus Jakarta Sans', 'Inter', '-apple-system', 'Segoe UI', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -40,6 +41,26 @@ export default {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+        },
+        /* INFIDEEP auth palette. Namespaced so it never shadows the
+           shadcn tokens the rest of the app themes through CSS vars. */
+        infideep: {
+          bg: '#121414',
+          'surface-lowest': '#0c0f0f',
+          'surface-low': '#1a1c1c',
+          surface: '#1e2020',
+          'surface-high': '#282a2b',
+          'surface-highest': '#333535',
+          'on-surface': '#e2e2e2',
+          'on-surface-variant': '#e6bcc2',
+          outline: '#ad878d',
+          'outline-variant': '#5d3f44',
+          primary: '#ffb2be',
+          'primary-container': '#ff4d7e',
+          secondary: '#ffb77a',
+          error: '#ffb4ab',
+          'grad-start': '#ff0055',
+          'grad-end': '#ff8c00',
         },
       },
       borderRadius: {

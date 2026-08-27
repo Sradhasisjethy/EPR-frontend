@@ -63,6 +63,12 @@ export function usePaginated(useListHook, filters = {}, { pageSize = DEFAULT_PAG
       onSortingChange: setSorting,
       sortableColumns,
       isFetching: query.isFetching,
+      // Surfaced here rather than per page so every list screen distinguishes
+      // "the request failed" from "there is no data". Without it a 500 or a
+      // 403 renders as the empty message, and the user concludes the records
+      // do not exist.
+      isError: query.isError,
+      onRetry: query.refetch,
     },
   };
 }

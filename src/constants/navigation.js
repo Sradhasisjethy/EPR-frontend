@@ -14,6 +14,7 @@ import {
   History,
   FolderOpen,
   Settings,
+  Gauge,
 } from 'lucide-react';
 import { WebPermissions } from './enums';
 
@@ -43,14 +44,30 @@ export const NAVIGATION = [
     href: '/',
   },
   {
+    // Distinct from Reports > Analytics, which is a category of three printed
+    // reports. This is the live operational view — alerts, ageing, costing and
+    // cancellations — and it had no sidebar entry at all: the only ways in were
+    // the search palette and a dead-stock notification. Two destinations both
+    // called "Analytics" and one of them unreachable.
+    title: 'Insights',
+    icon: Gauge,
+    href: '/analytics',
+    permission: WebPermissions.ANALYTICS_READ,
+  },
+  {
     title: 'Administration',
     icon: ShieldCheck,
     children: [
       { title: 'Users', href: '/employees' },
       { title: 'Roles & Permissions', href: '/roles' },
       { title: 'Organization', href: '/organization' },
+      // Both screens were fully built but nothing linked to them — the only way
+      // in was the global search palette, and their breadcrumbs pointed at each
+      // other, which only helps once you have already arrived.
+      { title: 'Offices', href: '/offices' },
+      { title: 'Departments', href: '/departments' },
       { title: 'Locations', href: '/factories', permission: WebPermissions.FACTORY_READ },
-      { title: 'Navigation', soon: true },
+      { title: 'Navigation', href: '/navigation', permission: 'SETTINGS_MODIFY' },
       { title: 'System Settings', href: '/settings?tab=general' },
       { title: 'Data Migration', href: '/migration', permission: WebPermissions.MIGRATION_RUN },
     ],
@@ -70,7 +87,7 @@ export const NAVIGATION = [
       { title: 'HSN Codes', href: '/products?tab=hsn-codes', permission: WebPermissions.PRODUCT_READ },
       { title: 'Price Lists', href: '/price-lists', permission: WebPermissions.PRICING_READ },
       { title: 'Sales References', href: '/parties?tab=sales-ref', permission: WebPermissions.PARTY_READ },
-      { title: 'Vehicles', soon: true },
+      { title: 'Vehicles', href: '/vehicles', permission: WebPermissions.VEHICLE_READ },
     ],
   },
   {
@@ -104,13 +121,15 @@ export const NAVIGATION = [
     icon: Factory,
     children: [
       { title: 'Production Planning', href: '/production', permission: WebPermissions.PRODUCTION_READ },
-      { title: 'Production Orders', soon: true },
-      { title: 'Production Sheets', soon: true },
-      { title: 'Material Consumption', soon: true },
+      { title: 'Production Orders', href: '/production?tab=orders', permission: WebPermissions.PRODUCTION_READ },
+      // The job card prints from a confirmed plan, so its home is the plans tab.
+      { title: 'Production Sheets', href: '/production?tab=plans', permission: WebPermissions.PRODUCTION_READ, alias: true },
+      { title: 'Material Consumption', href: '/production?tab=consumption', permission: WebPermissions.PRODUCTION_READ },
       { title: 'Finished Goods', href: '/inventory', permission: WebPermissions.INVENTORY_READ, alias: true },
       { title: 'Production History', href: '/production?tab=entries', permission: WebPermissions.PRODUCTION_READ },
       { title: 'Variance Approvals', href: '/production?tab=approvals', permission: WebPermissions.PRODUCTION_APPROVE_VARIANCE },
       { title: 'Wastage', href: '/production?tab=wastage', permission: WebPermissions.WASTAGE_READ },
+      { title: 'Quality Control', href: '/quality', permission: WebPermissions.QUALITY_READ },
     ],
   },
   {
@@ -121,7 +140,7 @@ export const NAVIGATION = [
       { title: 'Stock Movement', href: '/inventory?tab=ledger', permission: WebPermissions.INVENTORY_READ },
       { title: 'Stock Transfer', href: '/transfers', permission: WebPermissions.TRANSFER_READ },
       { title: 'Stock Adjustment', href: '/reports/inventory/adjustments', permission: WebPermissions.REPORT_INVENTORY_READ },
-      { title: 'Reservations', soon: true },
+      { title: 'Reservations', href: '/reservations', permission: WebPermissions.INVENTORY_READ },
       { title: 'Stock Ageing', href: '/reports/ageing/stock-ageing', permission: WebPermissions.REPORT_INVENTORY_READ, alias: true },
       { title: 'Dead Stock', href: '/reports/ageing/dead-stock', permission: WebPermissions.REPORT_INVENTORY_READ, alias: true },
     ],

@@ -39,6 +39,27 @@ export const {
   useDelete: useDeleteMixDesign,
 } = createResourceHooks('mix-designs', '/mix-designs');
 
+/**
+ * The mix design in force for a product on a given date.
+ *
+ * Production consumes the DATE-EFFECTIVE recipe, not whichever version happens
+ * to be active today, so any screen that lets the user choose a production date
+ * has to ask the same question the posting code asks. Picking the `isActive`
+ * row instead silently disagrees the moment an entry is backdated past a recipe
+ * change — the operator keys overrides against materials the server will not use.
+ */
+export function useResolvedMixDesign(productId, onDate) {
+  return useQuery({
+    queryKey: ['mix-designs', 'resolve', productId, onDate],
+    queryFn: async () => {
+      const res = await apiClient.get('/mix-designs/resolve', { params: { productId, onDate } });
+      return res.data.data;
+    },
+    enabled: Boolean(productId && onDate),
+    retry: false,
+  });
+}
+
 // --- BOM version lifecycle (FR-M03-6..11) ---
 const invalidateBoms = (queryClient) => queryClient.invalidateQueries({ queryKey: ['mix-designs'] });
 

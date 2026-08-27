@@ -362,7 +362,6 @@ export default function ProductsPage() {
             {...conversionQuery.tableProps}
             emptyMessage="No conversions yet. Add one so a BOM can be written in a different unit from the stocking unit."
             searchPlaceholder="Search by unit…"
-            emptyMessage="No conversions yet. Add one so BOM lines can be written in any unit."
           />
         </QueryState>
       )}

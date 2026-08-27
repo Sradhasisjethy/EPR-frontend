@@ -61,3 +61,19 @@ export function useCreateStockAdjustment() {
     },
   });
 }
+
+/**
+ * Stock holds. Defaults to live (ACTIVE) holds server-side — a released hold is
+ * history, and listing it beside live ones makes far more stock look tied up
+ * than actually is.
+ */
+export function useStockReservations(params = {}) {
+  return useQuery({
+    queryKey: ['inventory', 'reservations', params],
+    queryFn: async () => {
+      const res = await apiClient.get('/inventory/reservations', { params });
+      return res.data.data;
+    },
+    placeholderData: (prev) => prev,
+  });
+}
