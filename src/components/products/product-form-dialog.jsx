@@ -15,6 +15,7 @@ const emptyForm = {
   hsnId: '',
   productType: ProductType.FINISHED_GOOD,
   curingDays: '0',
+  qcRequired: false,
   standardCostRupees: '',
   status: 'active',
 };
@@ -42,6 +43,7 @@ export function ProductFormDialog({ open, onOpenChange, product }) {
               hsnId: product.hsnId || '',
               productType: product.productType || ProductType.FINISHED_GOOD,
               curingDays: String(product.curingDays ?? 0),
+              qcRequired: !!product.qcRequired,
               standardCostRupees: fromPaise(product.standardCostPaise),
               status: product.status || 'active',
             }
@@ -62,6 +64,7 @@ export function ProductFormDialog({ open, onOpenChange, product }) {
       hsnId: form.hsnId || undefined,
       productType: form.productType,
       curingDays: Number(form.curingDays) || 0,
+      qcRequired: form.qcRequired,
       standardCostPaise: toPaise(form.standardCostRupees),
     };
 
@@ -167,6 +170,24 @@ export function ProductFormDialog({ open, onOpenChange, product }) {
                 />
               </div>
             </div>
+          )}
+
+          {form.productType === ProductType.FINISHED_GOOD && (
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={form.qcRequired}
+                onChange={(e) => setForm({ ...form, qcRequired: e.target.checked })}
+              />
+              <span>
+                Requires a passing quality test before sale
+                <span className="block text-xs text-muted-foreground">
+                  Separate from curing days, which is about age rather than strength. Only takes
+                  effect at locations where quality holds are switched on.
+                </span>
+              </span>
+            </label>
           )}
 
           <div className="space-y-1.5">
