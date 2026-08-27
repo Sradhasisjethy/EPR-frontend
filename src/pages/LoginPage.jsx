@@ -28,6 +28,16 @@ const HIGHLIGHTS = [
   { icon: Factory, label: 'Operations', tone: 'text-infideep-primary-container' },
 ];
 
+/**
+ * Hidden until there is an OAuth endpoint to point them at.
+ *
+ * The buttons, provider marks and layout below are kept rather than deleted:
+ * they match the comp and work, and showing a user three sign-in options that
+ * cannot sign anyone in is worse than not offering them. Flip to true once
+ * /auth has a provider route.
+ */
+const SSO_ENABLED = false;
+
 /** Marks placed by the comp that have no endpoint behind them yet. */
 function notConfigured(feature) {
   toast.info(`${feature} is not configured yet.`, {
@@ -346,8 +356,7 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {/* SSO — rendered per the comp. No OAuth endpoint exists on the API
-                yet, so each provider explains itself rather than failing. */}
+            {SSO_ENABLED && (
             <div className="mt-6 tall:mt-8">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center" aria-hidden="true">
@@ -377,6 +386,7 @@ export default function LoginPage() {
                 ))}
               </div>
             </div>
+            )}
 
             <div className="hidden tall:block mt-6 pt-5 tall:mt-8 tall:pt-6 border-t border-infideep-outline-variant/30 text-center">
               <div className="flex items-center justify-center gap-2">
