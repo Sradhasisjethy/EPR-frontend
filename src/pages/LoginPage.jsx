@@ -69,10 +69,12 @@ function GoogleMark() {
   );
 }
 
+// `short` is used when the card is compacted for a short viewport, where three
+// full-width rows cost ~140px that a 620px-tall screen simply does not have.
 const SSO_PROVIDERS = [
-  { key: 'google', label: 'Continue with Google', Mark: GoogleMark, feature: 'Google sign-in' },
-  { key: 'microsoft', label: 'Continue with Microsoft', Mark: MicrosoftMark, feature: 'Microsoft sign-in' },
-  { key: 'sso', label: 'Continue with SSO', Mark: () => <Building2 size={18} className="shrink-0" />, feature: 'Enterprise SSO' },
+  { key: 'google', label: 'Continue with Google', short: 'Google', Mark: GoogleMark, feature: 'Google sign-in' },
+  { key: 'microsoft', label: 'Continue with Microsoft', short: 'Microsoft', Mark: MicrosoftMark, feature: 'Microsoft sign-in' },
+  { key: 'sso', label: 'Continue with SSO', short: 'SSO', Mark: () => <Building2 size={18} className="shrink-0" />, feature: 'Enterprise SSO' },
 ];
 
 const FOOTER_LINKS = [
@@ -156,15 +158,15 @@ export default function LoginPage() {
 
           <div className="relative z-10 flex flex-col h-full">
             <div className="mb-auto pt-2 tall:pt-8">
-              <InfideepLogo glow className="h-[52px] tall:h-[68px] w-auto" />
+              <InfideepLogo glow className="h-[52px] tall:h-[68px] 2xl:h-[124px] w-auto" />
             </div>
 
-            <div className="mt-auto max-w-2xl mb-8 tall:mb-16">
-              <h1 className="font-display text-[34px] leading-[42px] tall:text-[48px] tall:leading-[56px] font-bold tracking-[-0.02em] mb-4 tall:mb-6 drop-shadow-md">
+            <div className="mt-auto max-w-2xl 2xl:max-w-4xl mb-8 tall:mb-16">
+              <h1 className="font-display text-[34px] leading-[42px] tall:text-[48px] tall:leading-[56px] 2xl:text-[84px] 2xl:leading-[96px] font-bold tracking-[-0.02em] mb-4 tall:mb-6 drop-shadow-md">
                 Powering Smarter <br />
                 <span className="id-text-gradient">Enterprise Operations</span>
               </h1>
-              <p className="text-[15px] leading-[24px] tall:text-[18px] tall:leading-[28px] max-w-xl opacity-90">
+              <p className="text-[15px] leading-[24px] tall:text-[18px] tall:leading-[28px] 2xl:text-[26px] 2xl:leading-[38px] max-w-xl 2xl:max-w-[42ch] opacity-90">
                 Manage your people, processes, and business operations from one intelligent
                 platform designed for scale and performance.
               </p>
@@ -174,10 +176,10 @@ export default function LoginPage() {
               {HIGHLIGHTS.map(({ icon: Icon, label, tone }) => (
                 <div
                   key={label}
-                  className="flex items-center gap-2 tall:gap-3 bg-infideep-surface-low/60 backdrop-blur-md p-2.5 tall:p-3.5 rounded-lg border border-infideep-outline-variant/30 shadow-lg"
+                  className="flex items-center gap-2 tall:gap-3 bg-infideep-surface-low/60 backdrop-blur-md p-2.5 tall:p-3.5 2xl:p-6 rounded-lg border border-infideep-outline-variant/30 shadow-lg"
                 >
                   <Icon size={20} className={tone} aria-hidden="true" />
-                  <span className="text-[12px] font-semibold uppercase tracking-[0.05em]">
+                  <span className="text-[12px] 2xl:text-[16px] font-semibold uppercase tracking-[0.05em]">
                     {label}
                   </span>
                 </div>
@@ -201,14 +203,14 @@ export default function LoginPage() {
             </h1>
           </div>
 
-          <div className="w-full max-w-[440px] id-glass-card rounded-[24px] p-6 sm:p-7 tall:p-10 relative overflow-hidden">
+          <div className="w-full max-w-[440px] 2xl:max-w-[720px] id-glass-card rounded-[24px] p-6 sm:p-7 tall:p-10 2xl:p-16 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-[2px] id-gradient opacity-90" />
 
             <div className="mb-6 tall:mb-8">
-              <h2 className="font-display text-[22px] leading-[30px] tall:text-[24px] tall:leading-[32px] font-semibold mb-2">
+              <h2 className="font-display text-[22px] leading-[30px] tall:text-[24px] tall:leading-[32px] 2xl:text-[40px] 2xl:leading-[50px] font-semibold mb-2">
                 Welcome back
               </h2>
-              <p className="text-[14px] leading-[20px] text-infideep-on-surface-variant/90">
+              <p className="text-[14px] 2xl:text-[19px] leading-[20px] 2xl:leading-[24px] text-infideep-on-surface-variant/90">
                 Enter your credentials to access your workspace.
               </p>
             </div>
@@ -223,9 +225,9 @@ export default function LoginPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4 tall:space-y-6" noValidate={false}>
+            <form onSubmit={handleSubmit} className="space-y-4 tall:space-y-6 2xl:space-y-7" noValidate={false}>
               <div>
-                <label htmlFor="email" className="block text-[14px] leading-[20px] mb-2 ml-1">
+                <label htmlFor="email" className="block text-[14px] 2xl:text-[19px] leading-[20px] mb-2 ml-1">
                   Work Email
                 </label>
                 <div className="relative">
@@ -242,13 +244,13 @@ export default function LoginPage() {
                     placeholder="name@company.com"
                     disabled={isLoading}
                     required
-                    className="id-input block w-full pl-10 pr-3 py-3 tall:py-3.5 rounded-lg text-[14px] shadow-inner"
+                    className="id-input block w-full pl-10 pr-3 py-3 tall:py-3.5 2xl:py-5 rounded-lg text-[14px] 2xl:text-[18px] shadow-inner"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-[14px] leading-[20px] mb-2 ml-1">
+                <label htmlFor="password" className="block text-[14px] 2xl:text-[19px] leading-[20px] mb-2 ml-1">
                   Password
                 </label>
                 <div className="relative">
@@ -269,7 +271,7 @@ export default function LoginPage() {
                     disabled={isLoading}
                     required
                     aria-describedby={capsLockOn ? 'caps-lock-warning' : undefined}
-                    className={`id-input block w-full pl-10 py-3 tall:py-3.5 rounded-lg text-[14px] shadow-inner ${
+                    className={`id-input block w-full pl-10 py-3 tall:py-3.5 2xl:py-5 rounded-lg text-[14px] 2xl:text-[18px] shadow-inner ${
                       capsLockOn ? 'pr-20' : 'pr-11'
                     }`}
                   />
@@ -320,7 +322,7 @@ export default function LoginPage() {
                   />
                   <label
                     htmlFor="remember-me"
-                    className="ml-2 block text-[14px] leading-[20px] cursor-pointer select-none"
+                    className="ml-2 block text-[14px] 2xl:text-[18px] leading-[20px] cursor-pointer select-none"
                   >
                     Remember me
                   </label>
@@ -337,7 +339,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center py-3 tall:py-3.5 px-4 rounded-lg shadow-md text-[12px] font-semibold uppercase tracking-[0.05em] text-white id-gradient hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-infideep-primary focus-visible:ring-offset-infideep-bg active:scale-[0.98] transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed disabled:active:scale-100"
+                className="w-full flex justify-center items-center py-3 tall:py-3.5 2xl:py-5 px-4 rounded-lg shadow-md text-[12px] 2xl:text-[17px] font-semibold uppercase tracking-[0.05em] text-white id-gradient hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-infideep-primary focus-visible:ring-offset-infideep-bg active:scale-[0.98] transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 <span>{isLoading ? 'Signing in…' : 'Sign In'}</span>
                 {isLoading && <Loader2 size={18} className="ml-2 animate-spin" aria-hidden="true" />}
@@ -358,22 +360,25 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="mt-5 tall:mt-6 flex flex-col gap-2.5 tall:gap-3.5">
-                {SSO_PROVIDERS.map(({ key, label, Mark, feature }) => (
+              <div className="mt-5 tall:mt-6 grid grid-cols-1 sm:grid-cols-3 tall:grid-cols-1 gap-2 tall:gap-3.5">
+                {SSO_PROVIDERS.map(({ key, label, short, Mark, feature }) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => notConfigured(feature)}
-                    className="w-full inline-flex justify-center items-center gap-3 py-2.5 tall:py-3 px-4 border border-infideep-outline-variant/70 rounded-lg bg-infideep-surface/80 hover:bg-infideep-surface-high focus:outline-none focus-visible:ring-1 focus-visible:ring-infideep-grad-start focus-visible:border-infideep-grad-start transition-colors duration-200 text-[12px] font-semibold uppercase tracking-[0.05em] shadow-sm"
+                    aria-label={label}
+                    title={label}
+                    className="w-full inline-flex justify-center items-center gap-2 tall:gap-3 py-2.5 tall:py-3 2xl:py-4 px-2 tall:px-4 border border-infideep-outline-variant/70 rounded-lg bg-infideep-surface/80 hover:bg-infideep-surface-high focus:outline-none focus-visible:ring-1 focus-visible:ring-infideep-grad-start focus-visible:border-infideep-grad-start transition-colors duration-200 text-[11px] tall:text-[12px] 2xl:text-[15px] font-semibold uppercase tracking-[0.03em] tall:tracking-[0.05em] shadow-sm"
                   >
                     <Mark />
-                    {label}
+                    <span className="hidden sm:inline tall:hidden truncate">{short}</span>
+                    <span className="inline sm:hidden tall:inline">{label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="mt-6 pt-5 tall:mt-8 tall:pt-6 border-t border-infideep-outline-variant/30 text-center">
+            <div className="hidden tall:block mt-6 pt-5 tall:mt-8 tall:pt-6 border-t border-infideep-outline-variant/30 text-center">
               <div className="flex items-center justify-center gap-2">
                 <ShieldCheck size={16} className="text-infideep-primary/80 shrink-0" aria-hidden="true" />
                 <p className="text-[12px] leading-[18px]">
@@ -383,7 +388,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="mt-6 tall:mt-10 flex flex-wrap justify-center gap-4 tall:gap-6 text-[13px]">
+          <div className="mt-6 tall:mt-10 flex flex-wrap justify-center gap-4 tall:gap-6 text-[13px] 2xl:text-[17px]">
             {FOOTER_LINKS.map(({ label, feature }) => (
               <button
                 key={label}
