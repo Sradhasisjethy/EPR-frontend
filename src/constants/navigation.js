@@ -67,7 +67,7 @@ export const NAVIGATION = [
       { title: 'Offices', href: '/offices' },
       { title: 'Departments', href: '/departments' },
       { title: 'Locations', href: '/factories', permission: WebPermissions.FACTORY_READ },
-      { title: 'Navigation', href: '/navigation', permission: 'SETTINGS_MODIFY' },
+      { title: 'Navigation', href: '/navigation', permission: WebPermissions.SETTINGS_MODIFY },
       { title: 'System Settings', href: '/settings?tab=general' },
       { title: 'Data Migration', href: '/migration', permission: WebPermissions.MIGRATION_RUN },
     ],
@@ -167,7 +167,6 @@ export const NAVIGATION = [
       { title: 'Ledger', href: '/ledger?tab=party-ledger', permission: WebPermissions.LEDGER_READ, alias: true },
       { title: 'Payments', href: '/payments?tab=payments', permission: WebPermissions.PAYMENT_READ, alias: true },
     ],
-    permission: 'EMPLOYEE_READ',
   },
   {
     title: 'Finance',
@@ -233,6 +232,6 @@ export const NAVIGATION = [
     title: 'Settings',
     icon: Settings,
     href: '/settings',
-    permission: 'SETTINGS_READ',
+    permission: WebPermissions.SETTINGS_READ,
   },
 ];

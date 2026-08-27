@@ -1,39 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import { NAVIGATION } from '@/constants/navigation';
 import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
 
-const SEARCH_LINKS = [
-  { name: 'Dashboard', path: '/' },
-  { name: 'Employees', path: '/employees' },
-  { name: 'Organization', path: '/organization' },
-  { name: 'Offices', path: '/offices' },
-  { name: 'Departments', path: '/departments' },
-  { name: 'Roles', path: '/roles' },
-  { name: 'Factories', path: '/factories' },
-  { name: 'Products', path: '/products' },
-  { name: 'Parties', path: '/parties' },
-  { name: 'Price Lists', path: '/price-lists' },
-  { name: 'Sales Orders', path: '/sales-orders' },
-  { name: 'Production', path: '/production' },
-  { name: 'Dispatch', path: '/dispatch' },
-  { name: 'Inventory', path: '/inventory' },
-  { name: 'Purchasing', path: '/purchasing' },
-  { name: 'Transfers', path: '/transfers' },
-  { name: 'Invoices', path: '/invoices' },
-  { name: 'Returns', path: '/returns' },
-  { name: 'Payments', path: '/payments' },
-  { name: 'Workforce', path: '/workforce' },
-  { name: 'Expenses', path: '/expenses' },
-  { name: 'Ledger', path: '/ledger' },
-  { name: 'GSTR', path: '/gstr' },
-  { name: 'Insights', path: '/analytics' },
-  { name: 'Reports', path: '/reports' },
-  { name: 'Settings', path: '/settings' },
-];
+const SEARCH_LINKS = NAVIGATION.flatMap((item) => {
+  if (item.children) {
+    return item.children.map((child) => ({
+      name: `${item.title} > ${child.title}`,
+      path: child.href,
+    }));
+  }
+  return [{ name: item.title, path: item.href }];
+});
 
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);

@@ -5,7 +5,6 @@ import { useUIStore } from '@/store/ui-store';
 import { useCurrentUser, useLogout } from '@/hooks/use-auth';
 import { usePermissions } from '@/hooks/use-permissions';
 import { NAVIGATION } from '@/constants/navigation';
-import { hasPermission } from '@/lib/permissions';
 import { applyNavPreferences } from '@/lib/nav-preferences';
 import { isNavHrefActive } from '@/lib/nav-match';
 import { cn } from '@/lib/utils';
@@ -23,7 +22,7 @@ export function Sidebar() {
 
   // Hide what the user can't reach, then drop any group left with nothing in it.
   const navigation = useMemo(() => {
-    const allowed = (item) => !item.permission || hasPermission(user, item.permission);
+    const allowed = (item) => !item.permission || hasPermission(item.permission);
     const permitted = NAVIGATION.filter(allowed)
       .map((item) => (item.children ? { ...item, children: item.children.filter(allowed) } : item))
       .filter((item) => !item.children || item.children.length > 0);
@@ -34,7 +33,7 @@ export function Sidebar() {
     // (see AuthService.getMe) so every user sees the same menu, not just the
     // administrators who can edit it.
     return applyNavPreferences(permitted, user?.navigationPreferences);
-  }, [user]);
+  }, [user, hasPermission]);
 
   // One group open at a time — with a dozen modules an accordion stays readable
   // where a free-for-all turns back into the flat list this replaced.
@@ -57,11 +56,6 @@ export function Sidebar() {
 
   const rowBase = 'flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group';
   const rowIdle = 'text-muted-foreground hover:bg-muted hover:text-foreground';
-
-  const filteredNavigation = NAVIGATION.filter((item) => {
-    if (!item.permission) return true;
-    return hasPermission(item.permission);
-  });
 
   return (
     <aside
