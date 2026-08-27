@@ -69,10 +69,12 @@ function GoogleMark() {
   );
 }
 
+// `short` is used when the card is compacted for a short viewport, where three
+// full-width rows cost ~140px that a 620px-tall screen simply does not have.
 const SSO_PROVIDERS = [
-  { key: 'google', label: 'Continue with Google', Mark: GoogleMark, feature: 'Google sign-in' },
-  { key: 'microsoft', label: 'Continue with Microsoft', Mark: MicrosoftMark, feature: 'Microsoft sign-in' },
-  { key: 'sso', label: 'Continue with SSO', Mark: () => <Building2 size={18} className="shrink-0" />, feature: 'Enterprise SSO' },
+  { key: 'google', label: 'Continue with Google', short: 'Google', Mark: GoogleMark, feature: 'Google sign-in' },
+  { key: 'microsoft', label: 'Continue with Microsoft', short: 'Microsoft', Mark: MicrosoftMark, feature: 'Microsoft sign-in' },
+  { key: 'sso', label: 'Continue with SSO', short: 'SSO', Mark: () => <Building2 size={18} className="shrink-0" />, feature: 'Enterprise SSO' },
 ];
 
 const FOOTER_LINKS = [
@@ -358,22 +360,25 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="mt-5 tall:mt-6 flex flex-col gap-2.5 tall:gap-3.5">
-                {SSO_PROVIDERS.map(({ key, label, Mark, feature }) => (
+              <div className="mt-5 tall:mt-6 grid grid-cols-1 sm:grid-cols-3 tall:grid-cols-1 gap-2 tall:gap-3.5">
+                {SSO_PROVIDERS.map(({ key, label, short, Mark, feature }) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => notConfigured(feature)}
-                    className="w-full inline-flex justify-center items-center gap-3 py-2.5 tall:py-3 px-4 border border-infideep-outline-variant/70 rounded-lg bg-infideep-surface/80 hover:bg-infideep-surface-high focus:outline-none focus-visible:ring-1 focus-visible:ring-infideep-grad-start focus-visible:border-infideep-grad-start transition-colors duration-200 text-[12px] font-semibold uppercase tracking-[0.05em] shadow-sm"
+                    aria-label={label}
+                    title={label}
+                    className="w-full inline-flex justify-center items-center gap-2 tall:gap-3 py-2.5 tall:py-3 px-2 tall:px-4 border border-infideep-outline-variant/70 rounded-lg bg-infideep-surface/80 hover:bg-infideep-surface-high focus:outline-none focus-visible:ring-1 focus-visible:ring-infideep-grad-start focus-visible:border-infideep-grad-start transition-colors duration-200 text-[11px] tall:text-[12px] font-semibold uppercase tracking-[0.03em] tall:tracking-[0.05em] shadow-sm"
                   >
                     <Mark />
-                    {label}
+                    <span className="hidden sm:inline tall:hidden truncate">{short}</span>
+                    <span className="inline sm:hidden tall:inline">{label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="mt-6 pt-5 tall:mt-8 tall:pt-6 border-t border-infideep-outline-variant/30 text-center">
+            <div className="hidden tall:block mt-6 pt-5 tall:mt-8 tall:pt-6 border-t border-infideep-outline-variant/30 text-center">
               <div className="flex items-center justify-center gap-2">
                 <ShieldCheck size={16} className="text-infideep-primary/80 shrink-0" aria-hidden="true" />
                 <p className="text-[12px] leading-[18px]">
