@@ -11,6 +11,11 @@ export default {
         // viewport height. Keying the generous spacing to width therefore gave
         // the tightest screens the roomiest layout, which is backwards.
         tall: { raw: '(min-height: 880px)' },
+        // A genuinely large display: wide AND tall. Keyed on both because the
+        // upscale must not fire on a wide-but-short laptop — 1920x1080 at 125%
+        // scaling reports 1536x864, which is wide enough for a width-only query
+        // while having no vertical room to spare.
+        big: { raw: '(min-width: 1536px) and (min-height: 900px)' },
       },
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
