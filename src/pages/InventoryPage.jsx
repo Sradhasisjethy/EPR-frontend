@@ -52,7 +52,7 @@ function AgeingBadge({ ageingClass, ageDays }) {
 }
 
 export default function InventoryPage() {
-  const [activeTab, setActiveTab] = useTabParam(['lots', 'ledger', 'adjustments'], 'lots');
+  const [activeTab, setActiveTab] = useTabParam(['lots', 'ledger', 'adjustments'], 'lots', 'subtab');
   const [factoryFilter, setFactoryFilter] = useState('');
   const [adjustingLot, setAdjustingLot] = useState(null);
   const [actionError, setActionError] = useState('');
@@ -70,22 +70,7 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Inventory</h2>
-          <p className="text-muted-foreground">Lot-wise stock ledger and balances (M13, BR-01..BR-05)</p>
-        </div>
-        <select
-          value={factoryFilter}
-          onChange={(e) => setFactoryFilter(e.target.value)}
-          className="h-9 px-3 rounded-md border border-input bg-background text-sm"
-        >
-          <option value="">All Factories</option>
-          {(factoryData?.rows || []).map((f) => (
-            <option key={f.id} value={f.id}>{f.name}</option>
-          ))}
-        </select>
-      </div>
+      
 
       <div className="flex border-b border-border mb-6">
         {['Lots', 'Ledger', 'Adjustments'].map((tab) => {
@@ -174,6 +159,18 @@ export default function InventoryPage() {
             ]}
             {...lotsQuery.tableProps}
             emptyMessage="No stock lots here yet. Receiving goods or producing them is what creates one."
+          actionsNode={
+            <select
+          value={factoryFilter}
+          onChange={(e) => setFactoryFilter(e.target.value)}
+          className="h-9 px-3 rounded-md border border-input bg-background text-sm"
+        >
+          <option value="">All Factories</option>
+          {(factoryData?.rows || []).map((f) => (
+            <option key={f.id} value={f.id}>{f.name}</option>
+          ))}
+        </select>
+          }
             searchPlaceholder="Search lot number…"
           />
         )
@@ -205,6 +202,18 @@ export default function InventoryPage() {
             ]}
             {...ledgerQuery.tableProps}
             emptyMessage="No stock movements recorded yet."
+          actionsNode={
+            <select
+          value={factoryFilter}
+          onChange={(e) => setFactoryFilter(e.target.value)}
+          className="h-9 px-3 rounded-md border border-input bg-background text-sm"
+        >
+          <option value="">All Factories</option>
+          {(factoryData?.rows || []).map((f) => (
+            <option key={f.id} value={f.id}>{f.name}</option>
+          ))}
+        </select>
+          }
             searchPlaceholder="Search lot number…"
           />
         )
@@ -234,6 +243,18 @@ export default function InventoryPage() {
             {...adjustmentQuery.tableProps}
             showSearch={false}
             emptyMessage="No stock adjustments recorded. Use Adjust on a lot to record a physical count."
+          actionsNode={
+            <select
+          value={factoryFilter}
+          onChange={(e) => setFactoryFilter(e.target.value)}
+          className="h-9 px-3 rounded-md border border-input bg-background text-sm"
+        >
+          <option value="">All Factories</option>
+          {(factoryData?.rows || []).map((f) => (
+            <option key={f.id} value={f.id}>{f.name}</option>
+          ))}
+        </select>
+          }
           />
         )
       )}

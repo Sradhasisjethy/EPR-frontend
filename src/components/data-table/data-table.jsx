@@ -53,6 +53,7 @@ export function DataTable({
   errorMessage = 'Could not load this data.',
   emptyMessage = 'No results.',
   filtersNode,
+  actionsNode,
   sorting: serverSorting,
   onSortingChange: onServerSortingChange,
   sortableColumns,
@@ -109,9 +110,9 @@ export function DataTable({
 
   return (
     <div className="w-full space-y-4">
-      {(showSearch || filtersNode) && (
+      {(showSearch || filtersNode || actionsNode) && (
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             {showSearch && (
               <div className="relative w-72">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -127,12 +128,15 @@ export function DataTable({
               </div>
             )}
             {filtersNode}
+            {actionsNode}
           </div>
-          {isFetching && (
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Loader2 size={14} className="animate-spin" /> Updating…
-            </span>
-          )}
+          <div className="flex items-center gap-4">
+            {isFetching && (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Loader2 size={14} className="animate-spin" /> Updating…
+              </span>
+            )}
+          </div>
         </div>
       )}
 

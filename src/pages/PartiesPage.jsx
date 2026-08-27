@@ -32,7 +32,7 @@ const TAB_KEYS = TABS.map((tab) => tab.key);
 const SORTABLE_COLUMNS = ['name', 'partyType', 'status'];
 
 export default function PartiesPage() {
-  const [activeTab, setActiveTab] = useTabParam(TAB_KEYS, '');
+  const [activeTab, setActiveTab] = useTabParam(TAB_KEYS, '', 'subtab');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingParty, setEditingParty] = useState(null);
   const [addressesFor, setAddressesFor] = useState(null);
@@ -71,17 +71,8 @@ export default function PartiesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Parties</h2>
-          <p className="text-muted-foreground">Customers, vendors, contractors, labour and sales references (M04)</p>
-        </div>
-        {canCreate && (
-          <Button onClick={() => { setEditingParty(null); setDialogOpen(true); }}>
-            <Plus size={16} /> Add Party
-          </Button>
-        )}
-      </div>
+
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -161,6 +152,11 @@ export default function PartiesPage() {
           ]}
           {...tableProps}
           searchPlaceholder="Search name, code, GSTIN or phone…"
+          actionsNode={canCreate && (
+          <Button onClick={() => { setEditingParty(null); setDialogOpen(true); }}>
+            <Plus size={16} /> Add Party
+          </Button>
+        )}
           emptyMessage="No parties yet. Add a customer, vendor, contractor or labourer to get started."
         />
       )}

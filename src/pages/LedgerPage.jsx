@@ -15,7 +15,7 @@ import { useTabParam } from '@/hooks/use-tab-param';
 const TABS = ['Trial Balance', 'Party Ledger', 'Cash Book'];
 
 export default function LedgerPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Trial Balance');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Trial Balance', 'subtab');
   const [factoryId, setFactoryId] = useState('');
   const [partyId, setPartyId] = useState('');
   const [cashRange, setCashRange] = useState({ from: '', to: '', accountKey: 'CASH' });
@@ -32,10 +32,7 @@ export default function LedgerPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Ledger Reports</h2>
-        <p className="text-muted-foreground">Chart of accounts, trial balance, party ledger and cash book (M30)</p>
-      </div>
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (

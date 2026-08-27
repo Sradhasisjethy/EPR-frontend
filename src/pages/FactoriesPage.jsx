@@ -25,7 +25,7 @@ function RowActions({ onEdit, onDelete }) {
 }
 
 export default function FactoriesPage() {
-  const [activeTab, setActiveTab] = useTabParam(['factories', 'financial-years'], 'factories');
+  const [activeTab, setActiveTab] = useTabParam(['factories', 'financial-years'], 'factories', 'subtab');
   const [factoryDialogOpen, setFactoryDialogOpen] = useState(false);
   const [editingFactory, setEditingFactory] = useState(null);
   const [fyDialogOpen, setFyDialogOpen] = useState(false);
@@ -52,16 +52,7 @@ export default function FactoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Factories</h2>
-          <p className="text-muted-foreground">Manage plant locations and financial years (M01)</p>
-        </div>
-        <Button onClick={() => (activeTab === 'factories' ? (setEditingFactory(null), setFactoryDialogOpen(true)) : setFyDialogOpen(true))}>
-          <Plus size={16} />
-          Add {activeTab === 'factories' ? 'Factory' : 'Financial Year'}
-        </Button>
-      </div>
+      
 
       <div className="flex border-b border-border mb-6">
         {['Factories', 'Financial Years'].map((tab) => {
@@ -107,6 +98,12 @@ export default function FactoriesPage() {
             ]}
             {...tableProps}
             searchPlaceholder="Search factory…"
+          actionsNode={
+            <Button onClick={() => (activeTab === 'factories' ? (setEditingFactory(null), setFactoryDialogOpen(true)) : setFyDialogOpen(true))}>
+          <Plus size={16} />
+          Add {activeTab === 'factories' ? 'Factory' : 'Financial Year'}
+        </Button>
+          }
           />
         )
       )}

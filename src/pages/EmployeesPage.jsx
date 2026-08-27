@@ -104,18 +104,7 @@ export default function EmployeesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Employees</h2>
-          <p className="text-muted-foreground">Manage your organization's employees</p>
-        </div>
-        {canWrite && (
-          <Button onClick={() => { setEditingEmployee(null); setDialogOpen(true); }}>
-            <Plus size={16} />
-            Add Employee
-          </Button>
-        )}
-      </div>
+
 
       {isLoading ? (
         <TableSkeleton rows={5} columns={5} />
@@ -132,7 +121,16 @@ export default function EmployeesPage() {
           </p>
         </div>
       ) : (
-        <DataTable columns={columns} {...tableProps} searchPlaceholder="Search employee…" />
+        <DataTable
+          columns={columns}
+          {...tableProps}
+          searchPlaceholder="Search employee…"
+          actionsNode={canWrite && (
+            <Button onClick={() => { setEditingEmployee(null); setDialogOpen(true); }}>
+              <Plus size={16} /> Add Employee
+            </Button>
+          )}
+        />
       )}
 
       {canWrite && (

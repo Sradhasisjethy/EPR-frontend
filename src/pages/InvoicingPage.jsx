@@ -30,15 +30,8 @@ export default function InvoicingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Sales Invoices</h2>
-          <p className="text-muted-foreground">GST invoices raised from dispatched delivery challans (M20/M21)</p>
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus size={16} /> New Invoice <KeyHint>N</KeyHint>
-        </Button>
-      </div>
+
+      
 
       {isLoading ? (
         <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
@@ -71,6 +64,11 @@ export default function InvoicingPage() {
           ]}
           {...tableProps}
           searchPlaceholder="Search invoice number…"
+          actionsNode={
+            <Button onClick={() => setDialogOpen(true)}>
+          <Plus size={16} /> New Invoice <KeyHint>N</KeyHint>
+        </Button>
+          }
         />
       )}
 

@@ -18,7 +18,7 @@ import { useTabParam } from '@/hooks/use-tab-param';
 const TABS = ['Receipts', 'Payments', 'Cheques'];
 
 export default function PaymentsPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Receipts');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Receipts', 'subtab');
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [bouncingCheque, setBouncingCheque] = useState(null);
@@ -45,15 +45,7 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Receipts & Payments</h2>
-          <p className="text-muted-foreground">Customer receipts and vendor/contractor/labour payments with invoice allocation (M24/M25)</p>
-        </div>
-        {addHandlers[activeTab] && (
-          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
-        )}
-      </div>
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -90,6 +82,9 @@ export default function PaymentsPage() {
             ]}
             {...receipts.tableProps}
             searchPlaceholder="Search receipt number…"
+          actionsNode={addHandlers[activeTab] && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
           />
         )
       )}
@@ -117,6 +112,9 @@ export default function PaymentsPage() {
             ]}
             {...payments.tableProps}
             searchPlaceholder="Search payment number…"
+          actionsNode={addHandlers[activeTab] && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
           />
         )
       )}
@@ -158,6 +156,9 @@ export default function PaymentsPage() {
             ]}
             {...cheques.tableProps}
             searchPlaceholder="Search cheque number or bank…"
+          actionsNode={addHandlers[activeTab] && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
             emptyMessage="No cheques yet — they appear here when a receipt or payment uses cheque mode."
           />
         )

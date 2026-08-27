@@ -32,15 +32,8 @@ export default function PriceListsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Price Lists</h2>
-          <p className="text-muted-foreground">Retail, wholesale, party-specific and contractor rates (M05)</p>
-        </div>
-        <Button onClick={() => { setEditingId(null); setDialogOpen(true); }}>
-          <Plus size={16} /> Add Price List
-        </Button>
-      </div>
+
+      
 
       {isLoading ? (
         <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
@@ -78,6 +71,11 @@ export default function PriceListsPage() {
           ]}
           {...tableProps}
           searchPlaceholder="Search price list…"
+          actionsNode={
+            <Button onClick={() => { setEditingId(null); setDialogOpen(true); }}>
+          <Plus size={16} /> Add Price List
+        </Button>
+          }
         />
       )}
 

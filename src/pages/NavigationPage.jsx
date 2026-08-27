@@ -100,7 +100,7 @@ export default function NavigationPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Navigation</h2>
+          
           <p className="text-sm text-muted-foreground max-w-2xl">
             Choose which modules appear in the sidebar and in what order. This applies to everyone in
             the organisation.

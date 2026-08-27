@@ -33,7 +33,7 @@ const SORTABLE = {
 const PAYMENT_LABEL = { UNPAID: 'Unpaid', PARTIALLY_PAID: 'Partially Paid', PAID: 'Paid' };
 
 export default function PurchasingPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Indents');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Indents', 'subtab');
   const [indentDialogOpen, setIndentDialogOpen] = useState(false);
   const [convertingIndent, setConvertingIndent] = useState(null);
   const [matchingInvoice, setMatchingInvoice] = useState(null);
@@ -87,15 +87,12 @@ export default function PurchasingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Purchasing</h2>
-          <p className="text-muted-foreground">Purchase orders, goods receipt, and vendor invoices (M12)</p>
-        </div>
-        {canCreate && (
-          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
-        )}
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Purchasing</h2>
+        <p className="text-muted-foreground">Purchase orders, goods receipt, and vendor invoices (M12)</p>
       </div>
+
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -149,6 +146,9 @@ export default function PurchasingPage() {
             ]}
             {...indentQuery.tableProps}
             searchPlaceholder="Search indent number…"
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
           />
         )
       )}
@@ -193,6 +193,9 @@ export default function PurchasingPage() {
             ]}
             {...poQuery.tableProps}
             searchPlaceholder="Search PO number…"
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
           />
         )
       )}
@@ -231,6 +234,9 @@ export default function PurchasingPage() {
             ]}
             {...grnQuery.tableProps}
             emptyMessage="No goods receipts yet. Receiving against a purchase order is what puts stock in."
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
             searchPlaceholder="Search GRN number…"
           />
         )
@@ -291,6 +297,9 @@ export default function PurchasingPage() {
             ]}
             {...invoiceQuery.tableProps}
             emptyMessage="No vendor bills yet. Raise one against a goods receipt to book the payable."
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
             searchPlaceholder="Search vendor invoice…"
           />
         )

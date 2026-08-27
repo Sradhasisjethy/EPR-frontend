@@ -27,13 +27,8 @@ export default function TransfersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Inter-Factory Transfers</h2>
-          <p className="text-muted-foreground">Multi-location stock with in-transit tracking (M14)</p>
-        </div>
-        <Button onClick={() => setInitiateOpen(true)}><Plus size={16} /> Initiate Transfer</Button>
-      </div>
+
+      
 
       {isLoading ? (
         <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
@@ -79,6 +74,9 @@ export default function TransfersPage() {
           ]}
           {...tableProps}
           searchPlaceholder="Search transfer no, vehicle…"
+          actionsNode={
+            <Button onClick={() => setInitiateOpen(true)}><Plus size={16} /> Initiate Transfer</Button>
+          }
         />
       )}
 

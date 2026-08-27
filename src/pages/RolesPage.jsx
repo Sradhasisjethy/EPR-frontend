@@ -33,16 +33,7 @@ export default function RolesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Roles & Permissions</h2>
-          <p className="text-muted-foreground">Manage system access roles</p>
-        </div>
-        <Button onClick={() => navigate('/roles/new')}>
-          <Plus size={16} />
-          Add Role
-        </Button>
-      </div>
+      
 
       {isLoading ? (
         <TableSkeleton rows={5} columns={4} />
@@ -82,6 +73,12 @@ export default function RolesPage() {
           ]}
           {...tableProps}
           searchPlaceholder="Search role…"
+          actionsNode={
+            <Button onClick={() => navigate('/roles/new')}>
+          <Plus size={16} />
+          Add Role
+        </Button>
+          }
         />
       )}
 

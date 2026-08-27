@@ -18,7 +18,7 @@ import { useTabParam } from '@/hooks/use-tab-param';
 const TABS = ['Sales Returns', 'Purchase Returns', 'Credit Notes', 'Debit Notes'];
 
 export default function ReturnsPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Sales Returns');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Sales Returns', 'subtab');
   const [salesReturnOpen, setSalesReturnOpen] = useState(false);
   const [purchaseReturnOpen, setPurchaseReturnOpen] = useState(false);
   const [creditNoteOpen, setCreditNoteOpen] = useState(false);
@@ -50,13 +50,8 @@ export default function ReturnsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Returns & Notes</h2>
-          <p className="text-muted-foreground">Sales/purchase returns and financial credit/debit notes (M22/M23)</p>
-        </div>
-        <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
-      </div>
+
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -89,6 +84,9 @@ export default function ReturnsPage() {
             ]}
             {...salesReturns.tableProps}
             searchPlaceholder="Search return no, reason…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+          }
           />
         )
       )}
@@ -112,6 +110,9 @@ export default function ReturnsPage() {
             ]}
             {...purchaseReturns.tableProps}
             searchPlaceholder="Search return no, reason…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+          }
           />
         )
       )}
@@ -135,6 +136,9 @@ export default function ReturnsPage() {
             ]}
             {...creditNotes.tableProps}
             searchPlaceholder="Search note no, reason…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+          }
           />
         )
       )}
@@ -158,6 +162,9 @@ export default function ReturnsPage() {
             ]}
             {...debitNotes.tableProps}
             searchPlaceholder="Search note no, reason…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+          }
           />
         )
       )}

@@ -56,7 +56,7 @@ function RowActions({ onEdit, onDelete, canModify, canDelete }) {
 }
 
 export default function ProductsPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Products');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Products', 'subtab');
   const [conversionDialogOpen, setConversionDialogOpen] = useState(false);
   const [editingConversion, setEditingConversion] = useState(null);
   const [costDialogFor, setCostDialogFor] = useState(null);
@@ -126,17 +126,8 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Products & BOM</h2>
-          <p className="text-muted-foreground">Product, category, UoM, HSN and mix design masters (M03)</p>
-        </div>
-        {canCreate && (
-          <Button onClick={addHandlers[activeTab]}>
-            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
-          </Button>
-        )}
-      </div>
+
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -182,6 +173,11 @@ export default function ProductsPage() {
             ]}
             {...productQuery.tableProps}
             emptyMessage="No products yet. Add a finished good or raw material to get started."
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
+          </Button>
+        )}
             searchPlaceholder="Search product name or code…"
           />
         </QueryState>
@@ -224,6 +220,11 @@ export default function ProductsPage() {
             ]}
             {...mixQuery.tableProps}
             emptyMessage="No mix designs yet. Define one against a finished good so production knows what to consume."
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
+          </Button>
+        )}
             searchPlaceholder="Search mix design…"
           />
         </QueryState>
@@ -250,6 +251,11 @@ export default function ProductsPage() {
             ]}
             {...uomQuery.tableProps}
             emptyMessage="No units of measure yet. Add one before creating products."
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
+          </Button>
+        )}
             searchPlaceholder="Search UoM…"
           />
         </QueryState>
@@ -276,6 +282,11 @@ export default function ProductsPage() {
             ]}
             {...categoryQuery.tableProps}
             emptyMessage="No categories yet. Categories group products for reporting and ageing thresholds."
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
+          </Button>
+        )}
             searchPlaceholder="Search category…"
           />
         </QueryState>
@@ -303,6 +314,11 @@ export default function ProductsPage() {
             ]}
             {...hsnQuery.tableProps}
             emptyMessage="No HSN codes yet. Add the codes your products are taxed under."
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
+          </Button>
+        )}
             searchPlaceholder="Search HSN code…"
           />
         </QueryState>
@@ -361,6 +377,11 @@ export default function ProductsPage() {
             ]}
             {...conversionQuery.tableProps}
             emptyMessage="No conversions yet. Add one so a BOM can be written in a different unit from the stocking unit."
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
+          </Button>
+        )}
             searchPlaceholder="Search by unit…"
           />
         </QueryState>

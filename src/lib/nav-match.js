@@ -3,7 +3,7 @@ import { NAVIGATION } from '@/constants/navigation';
 // Query params that identify a destination rather than filter one. Two leaves can
 // share a route and differ only by these (Sales > Returns vs Purchase > Returns),
 // so they have to take part in active-link matching.
-export const NAV_PARAMS = ['tab', 'report'];
+export const NAV_PARAMS = ['report'];
 
 export const routeKey = (pathname, search) => {
   const params = new URLSearchParams(search);

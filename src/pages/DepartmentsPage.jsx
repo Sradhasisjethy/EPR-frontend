@@ -81,17 +81,7 @@ export default function DepartmentsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Departments</h2>
-          <p className="text-muted-foreground">Manage department hierarchies and team structures</p>
-        </div>
-        <Button onClick={() => { setEditingDept(null); setDialogOpen(true); }}>
-          <Plus size={16} className="mr-1.5" />
-          Add Department
-        </Button>
-      </div>
+
 
       {/* Filter Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
@@ -267,6 +257,12 @@ export default function DepartmentsPage() {
           ]}
           data={deptData?.rows || []}
           searchKey="name"
+          actionsNode={
+            <Button onClick={() => { setEditingDept(null); setDialogOpen(true); }}>
+              <Plus size={16} className="mr-1.5" />
+              Add Department
+            </Button>
+          }
         />
       )}
 

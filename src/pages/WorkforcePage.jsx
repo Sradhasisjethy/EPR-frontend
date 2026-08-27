@@ -18,7 +18,7 @@ import { useTabParam } from '@/hooks/use-tab-param';
 const TABS = ['Material Issues', 'Production Entries', 'Attendance', 'Advances'];
 
 export default function WorkforcePage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Material Issues');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Material Issues', 'subtab');
   const [issueOpen, setIssueOpen] = useState(false);
   const [entryOpen, setEntryOpen] = useState(false);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
@@ -42,13 +42,12 @@ export default function WorkforcePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Contractor & Labour</h2>
-          <p className="text-muted-foreground">Job-work material issues, piece-rate production, attendance and advances (M26/M27)</p>
-        </div>
-        <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Contractor & Labour</h2>
+        <p className="text-muted-foreground">Job-work material issues, piece-rate production, attendance and advances (M26/M27)</p>
       </div>
+
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -74,6 +73,9 @@ export default function WorkforcePage() {
             ]}
             {...materialIssues.tableProps}
             searchPlaceholder="Search issue number…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
+          }
           />
         )
       )}
@@ -97,6 +99,9 @@ export default function WorkforcePage() {
             ]}
             {...contractorEntries.tableProps}
             searchPlaceholder="Search entry number…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
+          }
           />
         )
       )}
@@ -113,6 +118,9 @@ export default function WorkforcePage() {
             ]}
             {...attendance.tableProps}
             searchPlaceholder="Search by date…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
+          }
           />
         )
       )}
@@ -146,6 +154,9 @@ export default function WorkforcePage() {
             ]}
             {...advances.tableProps}
             searchPlaceholder="Search advance no, reason…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
+          }
           />
         )
       )}

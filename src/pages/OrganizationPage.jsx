@@ -21,7 +21,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 
 export default function OrganizationPage() {
-  const [activeTab, setActiveTab] = useTabParam(['organizations', 'offices', 'departments'], 'organizations');
+  const [activeTab, setActiveTab] = useTabParam(['organizations', 'offices', 'departments'], 'organizations', 'subtab');
   const [filterOrgId, setFilterOrgId] = useState('');
   const [filterOfficeId, setFilterOfficeId] = useState('');
 
@@ -152,17 +152,7 @@ export default function OrganizationPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight font-sans">Organizations</h2>
-          <p className="text-muted-foreground text-sm">Manage companies and global organization entities</p>
-        </div>
-        <Button onClick={handleAdd}>
-          <Plus size={16} className="mr-1.5" />
-          {addLabel}
-        </Button>
-      </div>
+
 
       <div className="flex border-b border-border mb-6">
         {['Organizations', 'Offices', 'Departments'].map(tab => (
@@ -220,6 +210,12 @@ export default function OrganizationPage() {
               ]}
               {...orgs.tableProps}
               searchPlaceholder="Search by name…"
+              actionsNode={
+                <Button onClick={handleAdd}>
+                  <Plus size={16} className="mr-1.5" />
+                  {addLabel}
+                </Button>
+              }
             />
           )}
         </>
@@ -274,6 +270,12 @@ export default function OrganizationPage() {
               {...offices.tableProps}
               searchPlaceholder="Search by name…"
               filtersNode={filterNode}
+              actionsNode={
+                <Button onClick={handleAdd}>
+                  <Plus size={16} className="mr-1.5" />
+                  {addLabel}
+                </Button>
+              }
             />
           )}
         </>
@@ -317,6 +319,12 @@ export default function OrganizationPage() {
               {...depts.tableProps}
               searchPlaceholder="Search by name…"
               filtersNode={filterNode}
+              actionsNode={
+                <Button onClick={handleAdd}>
+                  <Plus size={16} className="mr-1.5" />
+                  {addLabel}
+                </Button>
+              }
             />
           )}
         </>

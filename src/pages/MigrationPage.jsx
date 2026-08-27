@@ -86,7 +86,7 @@ export default function MigrationPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Data Migration</h2>
+        
         <p className="text-muted-foreground">
           One-time import of masters and opening balances at go-live (M29)
         </p>

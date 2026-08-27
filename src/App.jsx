@@ -40,6 +40,12 @@ import NotificationsPage from '@/pages/NotificationsPage';
 import MigrationPage from '@/pages/MigrationPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import AdministrationPage from '@/pages/AdministrationPage';
+import MastersPage from '@/pages/MastersPage';
+import SalesPage from '@/pages/SalesPage';
+import ProductionModulePage from '@/pages/ProductionModulePage';
+import InventoryModulePage from '@/pages/InventoryModulePage';
+import FinancePage from '@/pages/FinancePage';
 
 export default function App() {
   return (
@@ -55,6 +61,13 @@ export default function App() {
 
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/administration" element={<AdministrationPage />} />
+          <Route path="/masters" element={<MastersPage />} />
+          <Route path="/sales" element={<SalesPage />} />
+          <Route path="/production-module" element={<ProductionModulePage />} />
+          <Route path="/inventory-module" element={<InventoryModulePage />} />
+          <Route path="/finance" element={<FinancePage />} />
+          
           <Route path="/employees" element={<EmployeesPage />} />
           <Route path="/organization" element={<OrganizationPage />} />
           <Route path="/offices" element={<OfficesPage />} />

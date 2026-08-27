@@ -37,9 +37,10 @@ export default function ReservationsPage() {
 
   return (
     <div className="space-y-6">
+
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Stock Reservations</h2>
+          
           <p className="text-sm text-muted-foreground">
             Stock held against confirmed orders. It is on hand, but it cannot be promised to anyone else.
           </p>

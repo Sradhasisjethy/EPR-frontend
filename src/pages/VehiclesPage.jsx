@@ -70,9 +70,10 @@ export default function VehiclesPage() {
 
   return (
     <div className="space-y-6">
+
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Vehicles</h2>
+          
           <p className="text-sm text-muted-foreground">
             The fleet behind the vehicle number on a challan, so the same lorry is spelt one way everywhere.
           </p>

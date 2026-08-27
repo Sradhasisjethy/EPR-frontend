@@ -50,8 +50,8 @@ const LABELS = {
 };
 
 export default function SavedReportsPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Report Builder');
-  const [reportType, setReportType] = useTabParam(REPORT_TYPES, ReportTypes.STOCK_AGEING, 'report');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Report Builder', 'subtab');
+  const [reportType, setReportType] = useTabParam(REPORT_TYPES, ReportTypes.STOCK_AGEING, 'report', 'subtab');
   const [params, setParams] = useState({});
   const [reportName, setReportName] = useState('');
   const [result, setResult] = useState(null);
@@ -152,6 +152,7 @@ export default function SavedReportsPage() {
 
   return (
     <div className="space-y-6">
+
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Saved Report Builder</h2>
