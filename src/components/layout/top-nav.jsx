@@ -52,13 +52,19 @@ export function TopNav() {
       glassMode ? "bg-background/60 backdrop-blur-md" : "bg-card"
     )}>
       <div className="flex items-center">
-        <h1 className="text-xl font-semibold">{title}</h1>
-        {(trail.length > 1 || segments.length > 0) && (
-          <div className="hidden md:flex ml-4 items-center text-sm text-muted-foreground">
-            <span className="mx-2">/</span>
-            <span>{(trail.length > 0 ? trail : segments).join(' / ')}</span>
-          </div>
-        )}
+        <div className="flex items-center text-sm font-medium text-muted-foreground">
+          {(trail.length > 0 ? trail : segments).map((item, index, arr) => {
+            const isLast = index === arr.length - 1;
+            // Clean up segments like "sales-orders" to "Sales Orders" if using path fallback
+            const label = trail.length > 0 ? item : item.charAt(0).toUpperCase() + item.slice(1).replace(/-/g, ' ');
+            return (
+              <span key={index} className="flex items-center">
+                <span className={isLast ? "text-foreground" : ""}>{label}</span>
+                {!isLast && <span className="mx-2 text-border">/</span>}
+              </span>
+            );
+          })}
+        </div>
       </div>
 
       <div className="flex items-center space-x-4">

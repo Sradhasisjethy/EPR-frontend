@@ -21,7 +21,7 @@ const FULFILMENT_BADGE = {
 };
 
 export default function ProductionPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Plans');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Plans', 'subtab');
   const [generateOpen, setGenerateOpen] = useState(false);
   const [confirmingPlan, setConfirmingPlan] = useState(null);
   const [entryDialogOpen, setEntryDialogOpen] = useState(false);
@@ -46,17 +46,7 @@ export default function ProductionPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Production</h2>
-          <p className="text-muted-foreground">Planning, casting entry, material consumption and wastage (M08-M11)</p>
-        </div>
-        {addHandlers[activeTab] && (
-          <Button onClick={addHandlers[activeTab]}>
-            <Plus size={16} /> {activeTab === 'Plans' ? 'Generate Proposal' : activeTab === 'Entries' ? 'New Entry' : 'Record Wastage'}
-          </Button>
-        )}
-      </div>
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -103,6 +93,11 @@ export default function ProductionPage() {
             ]}
             {...planQuery.tableProps}
             searchPlaceholder="Search plan number…"
+          actionsNode={addHandlers[activeTab] && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> {activeTab === 'Plans' ? 'Generate Proposal' : activeTab === 'Entries' ? 'New Entry' : 'Record Wastage'}
+          </Button>
+        )}
           />
         )
       )}
@@ -120,6 +115,11 @@ export default function ProductionPage() {
             ]}
             {...entryQuery.tableProps}
             searchPlaceholder="Search entry number…"
+          actionsNode={addHandlers[activeTab] && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> {activeTab === 'Plans' ? 'Generate Proposal' : activeTab === 'Entries' ? 'New Entry' : 'Record Wastage'}
+          </Button>
+        )}
           />
         )
       )}
@@ -154,6 +154,11 @@ export default function ProductionPage() {
             ]}
             {...orderQuery.tableProps}
             searchPlaceholder="Search plan number…"
+          actionsNode={addHandlers[activeTab] && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> {activeTab === 'Plans' ? 'Generate Proposal' : activeTab === 'Entries' ? 'New Entry' : 'Record Wastage'}
+          </Button>
+        )}
             emptyMessage="No confirmed production orders. Generate a plan and confirm it to create work for the floor."
           />
         )
@@ -185,6 +190,11 @@ export default function ProductionPage() {
             ]}
             {...consumptionQuery.tableProps}
             searchPlaceholder="Search entry number…"
+          actionsNode={addHandlers[activeTab] && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> {activeTab === 'Plans' ? 'Generate Proposal' : activeTab === 'Entries' ? 'New Entry' : 'Record Wastage'}
+          </Button>
+        )}
             emptyMessage="No material has been consumed yet."
           />
         )
@@ -215,6 +225,11 @@ export default function ProductionPage() {
             ]}
             {...approvalQuery.tableProps}
             searchPlaceholder="Search entry number…"
+          actionsNode={addHandlers[activeTab] && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> {activeTab === 'Plans' ? 'Generate Proposal' : activeTab === 'Entries' ? 'New Entry' : 'Record Wastage'}
+          </Button>
+        )}
           />
         )
       )}
@@ -232,6 +247,11 @@ export default function ProductionPage() {
             ]}
             {...wastageQuery.tableProps}
             searchPlaceholder="Search wastage…"
+          actionsNode={addHandlers[activeTab] && (
+          <Button onClick={addHandlers[activeTab]}>
+            <Plus size={16} /> {activeTab === 'Plans' ? 'Generate Proposal' : activeTab === 'Entries' ? 'New Entry' : 'Record Wastage'}
+          </Button>
+        )}
           />
         )
       )}

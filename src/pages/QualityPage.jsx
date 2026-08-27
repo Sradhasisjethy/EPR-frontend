@@ -20,7 +20,7 @@ const TYPE_LABEL = {
 };
 
 export default function QualityPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Awaiting Clearance');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Awaiting Clearance', 'subtab');
   const [inspectingLot, setInspectingLot] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [recordingResult, setRecordingResult] = useState(null);
@@ -35,22 +35,7 @@ export default function QualityPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Quality Control</h2>
-          <p className="text-sm text-muted-foreground">
-            A lot held for testing cannot be sold until a final inspection passes. Nothing releases it on a timer.
-          </p>
-        </div>
-        <Button
-          onClick={() => {
-            setInspectingLot(null);
-            setDialogOpen(true);
-          }}
-        >
-          <Plus size={16} className="mr-2" /> Raise Inspection
-        </Button>
-      </div>
+
 
       <div className="flex border-b border-border">
         {TABS.map((tab) => (
@@ -104,6 +89,16 @@ export default function QualityPage() {
             {...heldQuery.tableProps}
             searchPlaceholder="Search lot number…"
             emptyMessage="No lots are waiting on quality clearance."
+            actionsNode={
+              <Button
+                onClick={() => {
+                  setInspectingLot(null);
+                  setDialogOpen(true);
+                }}
+              >
+                <Plus size={16} className="mr-1.5" /> Raise Inspection
+              </Button>
+            }
           />
         </QueryState>
       )}
@@ -160,6 +155,16 @@ export default function QualityPage() {
             {...inspectionQuery.tableProps}
             searchPlaceholder="Search inspection or sample…"
             emptyMessage="No inspections recorded yet."
+            actionsNode={
+              <Button
+                onClick={() => {
+                  setInspectingLot(null);
+                  setDialogOpen(true);
+                }}
+              >
+                <Plus size={16} className="mr-1.5" /> Raise Inspection
+              </Button>
+            }
           />
         </QueryState>
       )}

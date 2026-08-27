@@ -21,15 +21,8 @@ export default function DispatchPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Dispatch</h2>
-          <p className="text-muted-foreground">Delivery challans, vehicle-wise dispatch and printing (M15/M18)</p>
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus size={16} /> New Delivery Challan <KeyHint>N</KeyHint>
-        </Button>
-      </div>
+
+      
 
       {isLoading ? (
         <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
@@ -80,6 +73,11 @@ export default function DispatchPage() {
           ]}
           {...tableProps}
           searchPlaceholder="Search challan no, vehicle, driver…"
+          actionsNode={
+            <Button onClick={() => setDialogOpen(true)}>
+          <Plus size={16} /> New Delivery Challan <KeyHint>N</KeyHint>
+        </Button>
+          }
         />
       )}
 

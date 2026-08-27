@@ -75,17 +75,8 @@ export default function SalesOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Sales Orders</h2>
-          <p className="text-muted-foreground">Order entry with soft stock reservation and credit control (M06/M07)</p>
-        </div>
-        {canCreate && (
-          <Button onClick={() => { setEditingOrder(null); setDialogOpen(true); }}>
-            <Plus size={16} /> New Sales Order <KeyHint>N</KeyHint>
-          </Button>
-        )}
-      </div>
+
+      
 
       <div className="flex flex-wrap border-b border-border">
         {STATUS_TABS.map((tab) => (
@@ -189,6 +180,11 @@ export default function SalesOrdersPage() {
           ]}
           {...tableProps}
           emptyMessage="No sales orders here yet. Raise one to reserve stock against a customer."
+          actionsNode={canCreate && (
+          <Button onClick={() => { setEditingOrder(null); setDialogOpen(true); }}>
+            <Plus size={16} /> New Sales Order <KeyHint>N</KeyHint>
+          </Button>
+        )}
           searchPlaceholder="Search order number, customer or PO reference…"
         />
       )}

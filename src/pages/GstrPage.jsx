@@ -20,7 +20,7 @@ const StatCard = ({ label, value }) => (
 );
 
 export default function GstrPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'GSTR-1');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'GSTR-1', 'subtab');
   const [factoryId, setFactoryId] = useState('');
   const [range, setRange] = useState({ fromDate: '', toDate: '' });
 
@@ -34,10 +34,7 @@ export default function GstrPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">GST Returns</h2>
-        <p className="text-muted-foreground">GSTR-1 and GSTR-3B data export for portal filing (M31)</p>
-      </div>
+      
 
       <div className="grid grid-cols-3 gap-4 max-w-2xl">
         <div className="space-y-1.5">

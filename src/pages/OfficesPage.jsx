@@ -63,17 +63,7 @@ export default function OfficesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Offices</h2>
-          <p className="text-muted-foreground">Manage physical office locations across organizations</p>
-        </div>
-        <Button onClick={() => { setEditingOffice(null); setDialogOpen(true); }}>
-          <Plus size={16} className="mr-1.5" />
-          Add Office
-        </Button>
-      </div>
+
 
       {/* Filter Toolbar */}
       <div className="flex items-center justify-between pt-2">
@@ -184,6 +174,12 @@ export default function OfficesPage() {
           ]}
           data={offData?.rows || []}
           searchKey="name"
+          actionsNode={
+            <Button onClick={() => { setEditingOffice(null); setDialogOpen(true); }}>
+              <Plus size={16} className="mr-1.5" />
+              Add Office
+            </Button>
+          }
         />
       )}
 
