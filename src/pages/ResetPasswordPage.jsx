@@ -53,10 +53,10 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="w-full id-glass-card rounded-[24px] p-7 md:p-10 relative overflow-hidden">
+    <div className="w-full id-glass-card rounded-[24px] p-6 tall:p-10 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-[2px] id-gradient opacity-90" />
 
-      <div className="mb-8">
+      <div className="mb-6 tall:mb-8">
         <div className="w-12 h-12 rounded-xl bg-infideep-surface-high border border-infideep-outline-variant/40 flex items-center justify-center mb-4">
           <KeyRound size={22} className="text-infideep-primary" aria-hidden="true" />
         </div>
@@ -69,7 +69,7 @@ export default function ResetPasswordPage() {
       </div>
 
       {success ? (
-        <div className="space-y-6">
+        <div className="space-y-4 tall:space-y-6">
           <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 space-y-2">
             <div className="flex items-center gap-2 text-emerald-400 font-semibold text-[14px]">
               <CheckCircle2 size={18} aria-hidden="true" />
@@ -83,13 +83,13 @@ export default function ResetPasswordPage() {
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="w-full flex justify-center items-center py-3.5 px-4 rounded-lg shadow-md text-[12px] font-semibold uppercase tracking-[0.05em] text-white id-gradient hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-infideep-primary focus-visible:ring-offset-infideep-bg active:scale-[0.98] transition-all duration-200"
+            className="w-full flex justify-center items-center py-3 tall:py-3.5 px-4 rounded-lg shadow-md text-[12px] font-semibold uppercase tracking-[0.05em] text-white id-gradient hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-infideep-primary focus-visible:ring-offset-infideep-bg active:scale-[0.98] transition-all duration-200"
           >
             Sign in now
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 tall:space-y-6">
           {error && (
             <div
               role="alert"
@@ -118,7 +118,7 @@ export default function ResetPasswordPage() {
                 placeholder="••••••••"
                 disabled={isLoading}
                 required
-                className="id-input block w-full pl-10 pr-11 py-3.5 rounded-lg text-[14px] shadow-inner"
+                className="id-input block w-full pl-10 pr-11 py-3 tall:py-3.5 rounded-lg text-[14px] shadow-inner"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                 <button
@@ -158,7 +158,7 @@ export default function ResetPasswordPage() {
                 placeholder="••••••••"
                 disabled={isLoading}
                 required
-                className="id-input block w-full pl-10 pr-11 py-3.5 rounded-lg text-[14px] shadow-inner"
+                className="id-input block w-full pl-10 pr-11 py-3 tall:py-3.5 rounded-lg text-[14px] shadow-inner"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                 <button
@@ -177,7 +177,7 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center items-center py-3.5 px-4 rounded-lg shadow-md text-[12px] font-semibold uppercase tracking-[0.05em] text-white id-gradient hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-infideep-primary focus-visible:ring-offset-infideep-bg active:scale-[0.98] transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed disabled:active:scale-100"
+            className="w-full flex justify-center items-center py-3 tall:py-3.5 px-4 rounded-lg shadow-md text-[12px] font-semibold uppercase tracking-[0.05em] text-white id-gradient hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-infideep-primary focus-visible:ring-offset-infideep-bg active:scale-[0.98] transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed disabled:active:scale-100"
           >
             <span>{isLoading ? 'Resetting…' : 'Reset Password'}</span>
             {isLoading && <Loader2 size={18} className="ml-2 animate-spin" aria-hidden="true" />}

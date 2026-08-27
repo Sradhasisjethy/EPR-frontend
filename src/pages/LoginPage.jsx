@@ -144,37 +144,37 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="infideep-auth min-h-screen w-full flex bg-infideep-bg text-infideep-on-surface font-sans selection:bg-infideep-primary selection:text-[#660026]">
+      <div className="infideep-auth min-h-screen lg:h-screen lg:overflow-hidden w-full flex bg-infideep-bg text-infideep-on-surface font-sans selection:bg-infideep-primary selection:text-[#660026]">
         {/* ---------------------------------------------------------------
             Left: brand experience. Purely decorative, so it drops away
             entirely below lg rather than squeezing the form.
             --------------------------------------------------------------- */}
-        <div className="hidden lg:flex w-[60%] relative flex-col justify-between p-12 overflow-hidden border-r border-infideep-outline-variant/30">
+        <div className="hidden lg:flex w-[60%] h-full relative flex-col justify-between p-8 tall:p-12 overflow-hidden border-r border-infideep-outline-variant/30">
           <div className="absolute inset-0 bg-gradient-to-br from-infideep-bg/80 via-infideep-bg/40 to-infideep-bg/90 z-0 pointer-events-none" />
           <div className="absolute inset-0 id-bg-glow z-0 pointer-events-none mix-blend-screen" />
           <div className="absolute inset-0 id-grid-lines z-0 pointer-events-none" />
 
           <div className="relative z-10 flex flex-col h-full">
-            <div className="mb-auto pt-8">
-              <InfideepLogo glow className="h-[68px] w-auto" />
+            <div className="mb-auto pt-2 tall:pt-8">
+              <InfideepLogo glow className="h-[52px] tall:h-[68px] w-auto" />
             </div>
 
-            <div className="mt-auto max-w-2xl mb-16">
-              <h1 className="font-display text-[48px] leading-[56px] font-bold tracking-[-0.02em] mb-6 drop-shadow-md">
+            <div className="mt-auto max-w-2xl mb-8 tall:mb-16">
+              <h1 className="font-display text-[34px] leading-[42px] tall:text-[48px] tall:leading-[56px] font-bold tracking-[-0.02em] mb-4 tall:mb-6 drop-shadow-md">
                 Powering Smarter <br />
                 <span className="id-text-gradient">Enterprise Operations</span>
               </h1>
-              <p className="text-[18px] leading-[28px] max-w-xl opacity-90">
+              <p className="text-[15px] leading-[24px] tall:text-[18px] tall:leading-[28px] max-w-xl opacity-90">
                 Manage your people, processes, and business operations from one intelligent
                 platform designed for scale and performance.
               </p>
             </div>
 
-            <div className="flex gap-6 items-center pb-8">
+            <div className="flex flex-wrap gap-3 tall:gap-6 items-center pb-2 tall:pb-8">
               {HIGHLIGHTS.map(({ icon: Icon, label, tone }) => (
                 <div
                   key={label}
-                  className="flex items-center gap-3 bg-infideep-surface-low/60 backdrop-blur-md p-3.5 rounded-lg border border-infideep-outline-variant/30 shadow-lg"
+                  className="flex items-center gap-2 tall:gap-3 bg-infideep-surface-low/60 backdrop-blur-md p-2.5 tall:p-3.5 rounded-lg border border-infideep-outline-variant/30 shadow-lg"
                 >
                   <Icon size={20} className={tone} aria-hidden="true" />
                   <span className="text-[12px] font-semibold uppercase tracking-[0.05em]">
@@ -189,20 +189,23 @@ export default function LoginPage() {
         {/* ---------------------------------------------------------------
             Right: the actual sign-in surface.
             --------------------------------------------------------------- */}
-        <div className="w-full lg:w-[40%] flex flex-col justify-center items-center px-4 py-10 md:px-12 bg-infideep-bg relative z-20">
+        <div className="w-full lg:w-[40%] lg:h-full lg:overflow-y-auto bg-infideep-bg relative z-20">
+          {/* min-h-full + justify-center centres the card while it fits and lets
+              it scroll once it does not, instead of overflowing out of reach. */}
+          <div className="flex flex-col justify-center items-center min-h-full px-4 py-8 md:px-10 xl:px-12">
           {/* Mobile brand header, standing in for the hidden left panel. */}
-          <div className="lg:hidden mb-10 flex flex-col items-center text-center">
+          <div className="lg:hidden mb-8 flex flex-col items-center text-center">
             <InfideepLogo glow showWordmark={false} className="h-12 w-auto mb-4" />
             <h1 className="font-display text-[24px] leading-[32px] font-semibold id-text-gradient">
               INFIDEEP ERP
             </h1>
           </div>
 
-          <div className="w-full max-w-[440px] id-glass-card rounded-[24px] p-7 md:p-10 relative overflow-hidden">
+          <div className="w-full max-w-[440px] id-glass-card rounded-[24px] p-6 sm:p-7 tall:p-10 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-[2px] id-gradient opacity-90" />
 
-            <div className="mb-8">
-              <h2 className="font-display text-[24px] leading-[32px] font-semibold mb-2">
+            <div className="mb-6 tall:mb-8">
+              <h2 className="font-display text-[22px] leading-[30px] tall:text-[24px] tall:leading-[32px] font-semibold mb-2">
                 Welcome back
               </h2>
               <p className="text-[14px] leading-[20px] text-infideep-on-surface-variant/90">
@@ -213,14 +216,14 @@ export default function LoginPage() {
             {error && (
               <div
                 role="alert"
-                className="mb-6 flex items-start gap-2 p-3 rounded-lg bg-[#93000a]/25 border border-infideep-error/40 text-infideep-error text-[13px] font-medium"
+                className="mb-4 tall:mb-6 flex items-start gap-2 p-3 rounded-lg bg-[#93000a]/25 border border-infideep-error/40 text-infideep-error text-[13px] font-medium"
               >
                 <AlertCircle size={16} className="shrink-0 mt-px" aria-hidden="true" />
                 <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6" noValidate={false}>
+            <form onSubmit={handleSubmit} className="space-y-4 tall:space-y-6" noValidate={false}>
               <div>
                 <label htmlFor="email" className="block text-[14px] leading-[20px] mb-2 ml-1">
                   Work Email
@@ -239,7 +242,7 @@ export default function LoginPage() {
                     placeholder="name@company.com"
                     disabled={isLoading}
                     required
-                    className="id-input block w-full pl-10 pr-3 py-3.5 rounded-lg text-[14px] shadow-inner"
+                    className="id-input block w-full pl-10 pr-3 py-3 tall:py-3.5 rounded-lg text-[14px] shadow-inner"
                   />
                 </div>
               </div>
@@ -266,7 +269,7 @@ export default function LoginPage() {
                     disabled={isLoading}
                     required
                     aria-describedby={capsLockOn ? 'caps-lock-warning' : undefined}
-                    className={`id-input block w-full pl-10 py-3.5 rounded-lg text-[14px] shadow-inner ${
+                    className={`id-input block w-full pl-10 py-3 tall:py-3.5 rounded-lg text-[14px] shadow-inner ${
                       capsLockOn ? 'pr-20' : 'pr-11'
                     }`}
                   />
@@ -334,7 +337,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center py-3.5 px-4 rounded-lg shadow-md text-[12px] font-semibold uppercase tracking-[0.05em] text-white id-gradient hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-infideep-primary focus-visible:ring-offset-infideep-bg active:scale-[0.98] transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed disabled:active:scale-100"
+                className="w-full flex justify-center items-center py-3 tall:py-3.5 px-4 rounded-lg shadow-md text-[12px] font-semibold uppercase tracking-[0.05em] text-white id-gradient hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-infideep-primary focus-visible:ring-offset-infideep-bg active:scale-[0.98] transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 <span>{isLoading ? 'Signing in…' : 'Sign In'}</span>
                 {isLoading && <Loader2 size={18} className="ml-2 animate-spin" aria-hidden="true" />}
@@ -343,7 +346,7 @@ export default function LoginPage() {
 
             {/* SSO — rendered per the comp. No OAuth endpoint exists on the API
                 yet, so each provider explains itself rather than failing. */}
-            <div className="mt-8">
+            <div className="mt-6 tall:mt-8">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center" aria-hidden="true">
                   <div className="w-full border-t border-infideep-outline-variant/40" />
@@ -355,13 +358,13 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="mt-6 flex flex-col gap-3.5">
+              <div className="mt-5 tall:mt-6 flex flex-col gap-2.5 tall:gap-3.5">
                 {SSO_PROVIDERS.map(({ key, label, Mark, feature }) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => notConfigured(feature)}
-                    className="w-full inline-flex justify-center items-center gap-3 py-3 px-4 border border-infideep-outline-variant/70 rounded-lg bg-infideep-surface/80 hover:bg-infideep-surface-high focus:outline-none focus-visible:ring-1 focus-visible:ring-infideep-grad-start focus-visible:border-infideep-grad-start transition-colors duration-200 text-[12px] font-semibold uppercase tracking-[0.05em] shadow-sm"
+                    className="w-full inline-flex justify-center items-center gap-3 py-2.5 tall:py-3 px-4 border border-infideep-outline-variant/70 rounded-lg bg-infideep-surface/80 hover:bg-infideep-surface-high focus:outline-none focus-visible:ring-1 focus-visible:ring-infideep-grad-start focus-visible:border-infideep-grad-start transition-colors duration-200 text-[12px] font-semibold uppercase tracking-[0.05em] shadow-sm"
                   >
                     <Mark />
                     {label}
@@ -370,7 +373,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-infideep-outline-variant/30 text-center">
+            <div className="mt-6 pt-5 tall:mt-8 tall:pt-6 border-t border-infideep-outline-variant/30 text-center">
               <div className="flex items-center justify-center gap-2">
                 <ShieldCheck size={16} className="text-infideep-primary/80 shrink-0" aria-hidden="true" />
                 <p className="text-[12px] leading-[18px]">
@@ -380,7 +383,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="mt-10 flex flex-wrap justify-center gap-6 text-[13px]">
+          <div className="mt-6 tall:mt-10 flex flex-wrap justify-center gap-4 tall:gap-6 text-[13px]">
             {FOOTER_LINKS.map(({ label, feature }) => (
               <button
                 key={label}
@@ -391,6 +394,7 @@ export default function LoginPage() {
                 {label}
               </button>
             ))}
+            </div>
           </div>
         </div>
       </div>

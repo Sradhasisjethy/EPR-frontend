@@ -9,12 +9,12 @@ import { InfideepLogo } from '@/components/auth/infideep-logo';
  */
 export function AuthLayout() {
   return (
-    <div className="infideep-auth min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-infideep-bg text-infideep-on-surface font-sans px-4 py-10 selection:bg-infideep-primary selection:text-[#660026]">
+    <div className="infideep-auth min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-infideep-bg text-infideep-on-surface font-sans px-4 py-8 tall:py-10 selection:bg-infideep-primary selection:text-[#660026]">
       <div className="absolute inset-0 id-bg-glow z-0 pointer-events-none mix-blend-screen" />
       <div className="absolute inset-0 id-grid-lines z-0 pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md flex flex-col items-center">
-        <InfideepLogo glow className="h-16 w-auto mb-8" />
+        <InfideepLogo glow className="h-12 tall:h-16 w-auto mb-6 tall:mb-8" />
         <Outlet />
       </div>
     </div>

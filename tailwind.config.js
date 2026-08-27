@@ -4,6 +4,14 @@ export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
+      screens: {
+        // Height-based, not width. The login card's problem is vertical room:
+        // a 14" laptop at 150% Windows scaling reports 1280x720 CSS pixels, so
+        // it matches the `xl` WIDTH breakpoint while having barely 620px of
+        // viewport height. Keying the generous spacing to width therefore gave
+        // the tightest screens the roomiest layout, which is backwards.
+        tall: { raw: '(min-height: 880px)' },
+      },
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         display: ['Plus Jakarta Sans', 'Inter', '-apple-system', 'Segoe UI', 'sans-serif'],
