@@ -158,15 +158,15 @@ export default function LoginPage() {
 
           <div className="relative z-10 flex flex-col h-full">
             <div className="mb-auto pt-2 tall:pt-8">
-              <InfideepLogo glow className="h-[52px] tall:h-[68px] big:h-[104px] w-auto" />
+              <InfideepLogo glow className="h-[52px] tall:h-[68px] big:h-[124px] w-auto" />
             </div>
 
             <div className="mt-auto max-w-2xl big:max-w-4xl mb-8 tall:mb-16">
-              <h1 className="font-display text-[34px] leading-[42px] tall:text-[48px] tall:leading-[56px] big:text-[68px] big:leading-[80px] font-bold tracking-[-0.02em] mb-4 tall:mb-6 drop-shadow-md">
+              <h1 className="font-display text-[34px] leading-[42px] tall:text-[48px] tall:leading-[56px] big:text-[84px] big:leading-[96px] font-bold tracking-[-0.02em] mb-4 tall:mb-6 drop-shadow-md">
                 Powering Smarter <br />
                 <span className="id-text-gradient">Enterprise Operations</span>
               </h1>
-              <p className="text-[15px] leading-[24px] tall:text-[18px] tall:leading-[28px] big:text-[23px] big:leading-[34px] max-w-xl big:max-w-[46ch] opacity-90">
+              <p className="text-[15px] leading-[24px] tall:text-[18px] tall:leading-[28px] big:text-[26px] big:leading-[38px] max-w-xl big:max-w-[42ch] opacity-90">
                 Manage your people, processes, and business operations from one intelligent
                 platform designed for scale and performance.
               </p>
@@ -176,10 +176,10 @@ export default function LoginPage() {
               {HIGHLIGHTS.map(({ icon: Icon, label, tone }) => (
                 <div
                   key={label}
-                  className="flex items-center gap-2 tall:gap-3 bg-infideep-surface-low/60 backdrop-blur-md p-2.5 tall:p-3.5 big:p-5 rounded-lg border border-infideep-outline-variant/30 shadow-lg"
+                  className="flex items-center gap-2 tall:gap-3 bg-infideep-surface-low/60 backdrop-blur-md p-2.5 tall:p-3.5 big:p-6 rounded-lg border border-infideep-outline-variant/30 shadow-lg"
                 >
                   <Icon size={20} className={tone} aria-hidden="true" />
-                  <span className="text-[12px] big:text-[14px] font-semibold uppercase tracking-[0.05em]">
+                  <span className="text-[12px] big:text-[16px] font-semibold uppercase tracking-[0.05em]">
                     {label}
                   </span>
                 </div>
@@ -203,14 +203,14 @@ export default function LoginPage() {
             </h1>
           </div>
 
-          <div className="w-full max-w-[440px] big:max-w-[600px] id-glass-card rounded-[24px] p-6 sm:p-7 tall:p-10 big:p-14 relative overflow-hidden">
+          <div className="w-full max-w-[440px] big:max-w-[720px] id-glass-card rounded-[24px] p-6 sm:p-7 tall:p-10 big:p-16 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-[2px] id-gradient opacity-90" />
 
             <div className="mb-6 tall:mb-8">
-              <h2 className="font-display text-[22px] leading-[30px] tall:text-[24px] tall:leading-[32px] big:text-[34px] big:leading-[44px] font-semibold mb-2">
+              <h2 className="font-display text-[22px] leading-[30px] tall:text-[24px] tall:leading-[32px] big:text-[40px] big:leading-[50px] font-semibold mb-2">
                 Welcome back
               </h2>
-              <p className="text-[14px] big:text-[17px] leading-[20px] big:leading-[24px] text-infideep-on-surface-variant/90">
+              <p className="text-[14px] big:text-[19px] leading-[20px] big:leading-[24px] text-infideep-on-surface-variant/90">
                 Enter your credentials to access your workspace.
               </p>
             </div>
@@ -227,7 +227,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4 tall:space-y-6 big:space-y-7" noValidate={false}>
               <div>
-                <label htmlFor="email" className="block text-[14px] big:text-[17px] leading-[20px] mb-2 ml-1">
+                <label htmlFor="email" className="block text-[14px] big:text-[19px] leading-[20px] mb-2 ml-1">
                   Work Email
                 </label>
                 <div className="relative">
@@ -244,13 +244,13 @@ export default function LoginPage() {
                     placeholder="name@company.com"
                     disabled={isLoading}
                     required
-                    className="id-input block w-full pl-10 pr-3 py-3 tall:py-3.5 big:py-4 rounded-lg text-[14px] big:text-[16px] shadow-inner"
+                    className="id-input block w-full pl-10 pr-3 py-3 tall:py-3.5 big:py-5 rounded-lg text-[14px] big:text-[18px] shadow-inner"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-[14px] big:text-[17px] leading-[20px] mb-2 ml-1">
+                <label htmlFor="password" className="block text-[14px] big:text-[19px] leading-[20px] mb-2 ml-1">
                   Password
                 </label>
                 <div className="relative">
@@ -271,7 +271,7 @@ export default function LoginPage() {
                     disabled={isLoading}
                     required
                     aria-describedby={capsLockOn ? 'caps-lock-warning' : undefined}
-                    className={`id-input block w-full pl-10 py-3 tall:py-3.5 big:py-4 rounded-lg text-[14px] big:text-[16px] shadow-inner ${
+                    className={`id-input block w-full pl-10 py-3 tall:py-3.5 big:py-5 rounded-lg text-[14px] big:text-[18px] shadow-inner ${
                       capsLockOn ? 'pr-20' : 'pr-11'
                     }`}
                   />
@@ -322,7 +322,7 @@ export default function LoginPage() {
                   />
                   <label
                     htmlFor="remember-me"
-                    className="ml-2 block text-[14px] big:text-[16px] leading-[20px] cursor-pointer select-none"
+                    className="ml-2 block text-[14px] big:text-[18px] leading-[20px] cursor-pointer select-none"
                   >
                     Remember me
                   </label>
@@ -339,7 +339,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center py-3 tall:py-3.5 big:py-4 px-4 rounded-lg shadow-md text-[12px] big:text-[15px] font-semibold uppercase tracking-[0.05em] text-white id-gradient hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-infideep-primary focus-visible:ring-offset-infideep-bg active:scale-[0.98] transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed disabled:active:scale-100"
+                className="w-full flex justify-center items-center py-3 tall:py-3.5 big:py-5 px-4 rounded-lg shadow-md text-[12px] big:text-[17px] font-semibold uppercase tracking-[0.05em] text-white id-gradient hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-infideep-primary focus-visible:ring-offset-infideep-bg active:scale-[0.98] transition-all duration-200 disabled:opacity-80 disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 <span>{isLoading ? 'Signing in…' : 'Sign In'}</span>
                 {isLoading && <Loader2 size={18} className="ml-2 animate-spin" aria-hidden="true" />}
@@ -368,7 +368,7 @@ export default function LoginPage() {
                     onClick={() => notConfigured(feature)}
                     aria-label={label}
                     title={label}
-                    className="w-full inline-flex justify-center items-center gap-2 tall:gap-3 py-2.5 tall:py-3 big:py-3.5 px-2 tall:px-4 border border-infideep-outline-variant/70 rounded-lg bg-infideep-surface/80 hover:bg-infideep-surface-high focus:outline-none focus-visible:ring-1 focus-visible:ring-infideep-grad-start focus-visible:border-infideep-grad-start transition-colors duration-200 text-[11px] tall:text-[12px] big:text-[14px] font-semibold uppercase tracking-[0.03em] tall:tracking-[0.05em] shadow-sm"
+                    className="w-full inline-flex justify-center items-center gap-2 tall:gap-3 py-2.5 tall:py-3 big:py-4 px-2 tall:px-4 border border-infideep-outline-variant/70 rounded-lg bg-infideep-surface/80 hover:bg-infideep-surface-high focus:outline-none focus-visible:ring-1 focus-visible:ring-infideep-grad-start focus-visible:border-infideep-grad-start transition-colors duration-200 text-[11px] tall:text-[12px] big:text-[15px] font-semibold uppercase tracking-[0.03em] tall:tracking-[0.05em] shadow-sm"
                   >
                     <Mark />
                     <span className="hidden sm:inline tall:hidden truncate">{short}</span>
@@ -388,7 +388,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="mt-6 tall:mt-10 flex flex-wrap justify-center gap-4 tall:gap-6 text-[13px] big:text-[15px]">
+          <div className="mt-6 tall:mt-10 flex flex-wrap justify-center gap-4 tall:gap-6 text-[13px] big:text-[17px]">
             {FOOTER_LINKS.map(({ label, feature }) => (
               <button
                 key={label}
