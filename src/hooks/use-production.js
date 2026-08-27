@@ -83,3 +83,36 @@ export function useCreateWastage() {
     },
   });
 }
+
+/**
+ * Production orders: confirmed plan lines with how much has actually been cast
+ * against each. Not a separate document — see ProductionService.listOrders for
+ * why adding a third entity between plan and entry would duplicate the concept.
+ */
+export function useProductionOrders(params = {}) {
+  return useQuery({
+    queryKey: ['production', 'orders', params],
+    queryFn: async () => {
+      const res = await apiClient.get('/production/orders', { params });
+      return res.data.data;
+    },
+    placeholderData: (prev) => prev,
+  });
+}
+
+/** Raw material actually consumed, across every run. */
+export function useMaterialConsumptions(params = {}) {
+  return useQuery({
+    queryKey: ['production', 'consumptions', params],
+    queryFn: async () => {
+      const res = await apiClient.get('/production/consumptions', { params });
+      return res.data.data;
+    },
+    placeholderData: (prev) => prev,
+  });
+}
+
+/** Opens the shop-floor job card for a confirmed plan in a new tab. */
+export function productionSheetUrl(planId) {
+  return `${apiClient.defaults.baseURL}/production/plans/${planId}/sheet`;
+}

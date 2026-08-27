@@ -6,6 +6,7 @@ import { useCurrentUser, useLogout } from '@/hooks/use-auth';
 import { usePermissions } from '@/hooks/use-permissions';
 import { NAVIGATION } from '@/constants/navigation';
 import { hasPermission } from '@/lib/permissions';
+import { applyNavPreferences } from '@/lib/nav-preferences';
 import { isNavHrefActive } from '@/lib/nav-match';
 import { cn } from '@/lib/utils';
 
@@ -23,9 +24,16 @@ export function Sidebar() {
   // Hide what the user can't reach, then drop any group left with nothing in it.
   const navigation = useMemo(() => {
     const allowed = (item) => !item.permission || hasPermission(user, item.permission);
-    return NAVIGATION.filter(allowed)
+    const permitted = NAVIGATION.filter(allowed)
       .map((item) => (item.children ? { ...item, children: item.children.filter(allowed) } : item))
       .filter((item) => !item.children || item.children.length > 0);
+
+    // The tenant's customisation is applied AFTER the permission filter, never
+    // before — hiding is cosmetic and must not be able to reveal a module the
+    // user holds no grant for. The preference rides along with the session
+    // (see AuthService.getMe) so every user sees the same menu, not just the
+    // administrators who can edit it.
+    return applyNavPreferences(permitted, user?.navigationPreferences);
   }, [user]);
 
   // One group open at a time — with a dozen modules an accordion stays readable

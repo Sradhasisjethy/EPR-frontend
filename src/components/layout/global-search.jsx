@@ -30,7 +30,7 @@ const SEARCH_LINKS = [
   { name: 'Expenses', path: '/expenses' },
   { name: 'Ledger', path: '/ledger' },
   { name: 'GSTR', path: '/gstr' },
-  { name: 'Analytics', path: '/analytics' },
+  { name: 'Insights', path: '/analytics' },
   { name: 'Reports', path: '/reports' },
   { name: 'Settings', path: '/settings' },
 ];

@@ -13,6 +13,9 @@ export function useCurrentUser() {
         name: `${data.firstName} ${data.lastName}`,
         role: data.role,
         permissions: data.permissions || [],
+        // The tenant's sidebar customisation, served with the session so every
+        // user gets it — not only those who can read settings.
+        navigationPreferences: data.navigationPreferences || null,
       };
     },
     retry: false,

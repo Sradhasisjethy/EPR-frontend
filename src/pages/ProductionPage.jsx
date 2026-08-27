@@ -1,18 +1,24 @@
 import { useState } from 'react';
 import { usePaginated } from '@/hooks/use-paginated';
-import { Plus, CheckCircle2 } from 'lucide-react';
+import { Plus, CheckCircle2, Printer } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useProductionPlans, useProductionEntries, usePendingApprovals, useApproveVariance, useWastageRecords } from '@/hooks/use-production';
+import { useProductionPlans, useProductionEntries, usePendingApprovals, useApproveVariance, useWastageRecords, useProductionOrders, useMaterialConsumptions, productionSheetUrl } from '@/hooks/use-production';
 import { GeneratePlanDialog } from '@/components/production/generate-plan-dialog';
 import { ConfirmPlanDialog } from '@/components/production/confirm-plan-dialog';
 import { ProductionEntryFormDialog } from '@/components/production/production-entry-form-dialog';
 import { WastageFormDialog } from '@/components/production/wastage-form-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 
-const TABS = ['Plans', 'Entries', 'Approvals', 'Wastage'];
+const TABS = ['Plans', 'Orders', 'Entries', 'Consumption', 'Approvals', 'Wastage'];
+
+const FULFILMENT_BADGE = {
+  NOT_STARTED: 'pending',
+  IN_PROGRESS: 'onboarding',
+  COMPLETE: 'active',
+};
 
 export default function ProductionPage() {
   const [activeTab, setActiveTab] = useTabParam(TABS, 'Plans');
@@ -25,11 +31,15 @@ export default function ProductionPage() {
   const entryQuery = usePaginated(useProductionEntries);
   const approvalQuery = usePaginated(usePendingApprovals);
   const wastageQuery = usePaginated(useWastageRecords);
+  const orderQuery = usePaginated(useProductionOrders);
+  const consumptionQuery = usePaginated(useMaterialConsumptions);
   const approveVariance = useApproveVariance();
 
   const addHandlers = {
     Plans: () => setGenerateOpen(true),
+    Orders: null,
     Entries: () => setEntryDialogOpen(true),
+    Consumption: null,
     Approvals: null,
     Wastage: () => setWastageDialogOpen(true),
   };
@@ -77,7 +87,18 @@ export default function ProductionPage() {
                 cell: ({ row }) =>
                   row.original.status === 'PROPOSED' ? (
                     <button className="text-xs text-primary hover:underline" onClick={() => setConfirmingPlan(row.original)}>Review & Confirm</button>
-                  ) : null,
+                  ) : (
+                    // The shop-floor job card. Opened in a new tab rather than
+                    // fetched, so the browser's own PDF viewer handles it.
+                    <a
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                      href={productionSheetUrl(row.original.id)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <Printer size={13} /> Production sheet
+                    </a>
+                  ),
               },
             ]}
             {...planQuery.tableProps}
@@ -99,6 +120,72 @@ export default function ProductionPage() {
             ]}
             {...entryQuery.tableProps}
             searchPlaceholder="Search entry number…"
+          />
+        )
+      )}
+
+      {activeTab === 'Orders' && (
+        orderQuery.query.isLoading ? <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" /> : (
+          <DataTable
+            columns={[
+              { id: 'plan', header: 'Plan #', cell: ({ row }) => row.original.productionPlan?.planNumber || '—' },
+              { id: 'planDate', header: 'Plan Date', cell: ({ row }) => row.original.productionPlan?.planDate },
+              { id: 'product', header: 'Product', cell: ({ row }) => row.original.product?.name },
+              { accessorKey: 'targetQty', header: 'To Make' },
+              { accessorKey: 'producedQty', header: 'Made' },
+              { accessorKey: 'remainingQty', header: 'Remaining' },
+              {
+                id: 'fulfilment', header: 'Progress',
+                cell: ({ row }) => <StatusBadge status={FULFILMENT_BADGE[row.original.fulfilmentStatus] || 'pending'} />,
+              },
+              {
+                id: 'actions', header: '',
+                cell: ({ row }) =>
+                  row.original.remainingQty > 0 ? (
+                    <button
+                      className="text-xs text-primary hover:underline"
+                      onClick={() => setEntryDialogOpen(true)}
+                      title={`Record production against ${row.original.product?.name || 'this order'}`}
+                    >
+                      Record production
+                    </button>
+                  ) : null,
+              },
+            ]}
+            {...orderQuery.tableProps}
+            searchPlaceholder="Search plan number…"
+            emptyMessage="No confirmed production orders. Generate a plan and confirm it to create work for the floor."
+          />
+        )
+      )}
+
+      {activeTab === 'Consumption' && (
+        consumptionQuery.query.isLoading ? <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" /> : (
+          <DataTable
+            columns={[
+              { id: 'entry', header: 'Entry #', cell: ({ row }) => row.original.productionEntry?.entryNumber },
+              { id: 'date', header: 'Date', cell: ({ row }) => row.original.productionEntry?.productionDate },
+              { id: 'product', header: 'Made', cell: ({ row }) => row.original.productionEntry?.product?.name },
+              { id: 'material', header: 'Raw Material', cell: ({ row }) => row.original.rawMaterial?.name },
+              { accessorKey: 'mixDesignQty', header: 'Per Recipe' },
+              { accessorKey: 'actualQty', header: 'Actually Used' },
+              {
+                id: 'variance', header: 'Variance',
+                cell: ({ row }) => {
+                  const pct = Number(row.original.variancePercent || 0);
+                  if (pct === 0) return <span className="text-muted-foreground text-xs">—</span>;
+                  return (
+                    <span className={row.original.requiresApproval ? 'text-destructive text-xs font-medium' : 'text-amber-600 dark:text-amber-400 text-xs'}>
+                      {pct}%{row.original.requiresApproval && !row.original.approvedBy ? ' · needs sign-off' : ''}
+                    </span>
+                  );
+                },
+              },
+              { accessorKey: 'varianceReason', header: 'Reason' },
+            ]}
+            {...consumptionQuery.tableProps}
+            searchPlaceholder="Search entry number…"
+            emptyMessage="No material has been consumed yet."
           />
         )
       )}

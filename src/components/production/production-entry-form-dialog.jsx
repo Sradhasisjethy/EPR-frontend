@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreateProductionEntry } from '@/hooks/use-production';
 import { useFactories } from '@/hooks/use-factory';
-import { useProducts, useMixDesigns } from '@/hooks/use-products';
+import { useProducts, useResolvedMixDesign } from '@/hooks/use-products';
 import { ProductType } from '@/constants/enums';
 
 export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId, defaultProductId, defaultPlanLineId }) {
@@ -15,8 +15,11 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
   const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.FINISHED_GOOD });
-  const { data: mixDesignData } = useMixDesigns({ page: 1, limit: 100, productId: form.productId || undefined });
-  const activeMixDesign = (mixDesignData?.rows || []).find((m) => m.isActive);
+  // Resolved by production date, matching what the server will actually
+  // consume. Selecting the `isActive` version instead meant a backdated entry
+  // showed one recipe and posted another.
+  const mixDesignQuery = useResolvedMixDesign(form.productId, form.productionDate);
+  const activeMixDesign = mixDesignQuery.data;
   const createMutation = useCreateProductionEntry();
 
   useEffect(() => {
@@ -33,6 +36,14 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
     }
   }, [open, defaultFactoryId, defaultProductId]);
 
+  // Changing the product or the production date can resolve a different recipe.
+  // Overrides are keyed by material, so without this a quantity typed against
+  // one version would silently carry into another that happens to share it.
+  const resolvedMixDesignId = activeMixDesign?.id;
+  useEffect(() => {
+    setMaterialOverrides({});
+  }, [resolvedMixDesignId]);
+
   const expectedQty = (line) => (Number(line.quantityPerUnit) * Number(form.goodQty || 0));
 
   const handleSubmit = (e) => {
@@ -40,7 +51,11 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
     setError('');
 
     if (!activeMixDesign) {
-      setError('This product has no active mix design — configure one under Products & BOM.');
+      setError(
+        mixDesignQuery.isError
+          ? `No mix design is effective for this product on ${form.productionDate}. Activate one from that date, or change the production date.`
+          : 'This product has no active mix design — configure one under Products & BOM.'
+      );
       return;
     }
 
@@ -103,13 +118,19 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
             </div>
           </div>
 
-          {form.productId && !activeMixDesign && (
-            <p className="text-sm text-destructive">No active mix design for this product.</p>
+          {form.productId && form.productionDate && mixDesignQuery.isLoading && (
+            <p className="text-sm text-muted-foreground">Loading the mix design in force on {form.productionDate}…</p>
+          )}
+
+          {form.productId && form.productionDate && !mixDesignQuery.isLoading && !activeMixDesign && (
+            <p className="text-sm text-destructive">
+              No mix design is effective for this product on {form.productionDate}.
+            </p>
           )}
 
           {activeMixDesign && (
             <div className="space-y-2">
-              <Label>Raw Material Consumption (from active mix design — edit if actuals differ)</Label>
+              <Label>Raw Material Consumption (per the mix design in force on {form.productionDate} — edit if actuals differ)</Label>
               {activeMixDesign.lines.map((line) => {
                 const expected = expectedQty(line);
                 const override = materialOverrides[line.rawMaterialProductId] || {};

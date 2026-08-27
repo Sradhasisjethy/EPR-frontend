@@ -44,6 +44,13 @@ export function DataTable({
   searchValue,
   onSearchChange,
   isFetching = false,
+  // A failed fetch used to fall through to `emptyMessage`, so a 500 or a
+  // permission error was indistinguishable from "there is genuinely no data" —
+  // the worst possible confusion on a stock or ledger screen. Pass the query's
+  // isError (and optionally its refetch) to say what actually happened.
+  isError = false,
+  onRetry,
+  errorMessage = 'Could not load this data.',
   emptyMessage = 'No results.',
   filtersNode,
   sorting: serverSorting,
@@ -176,8 +183,28 @@ export function DataTable({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                    {isFetching ? 'Loading…' : emptyMessage}
+                  <td
+                    colSpan={columns.length}
+                    className={cn('h-24 text-center', isError ? 'text-destructive' : 'text-muted-foreground')}
+                  >
+                    {isError ? (
+                      <span className="inline-flex items-center gap-2">
+                        {errorMessage}
+                        {onRetry && (
+                          <button
+                            type="button"
+                            onClick={onRetry}
+                            className="underline hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                          >
+                            Retry
+                          </button>
+                        )}
+                      </span>
+                    ) : isFetching ? (
+                      'Loading…'
+                    ) : (
+                      emptyMessage
+                    )}
                   </td>
                 </tr>
               )}

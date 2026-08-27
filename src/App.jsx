@@ -21,6 +21,10 @@ import PurchasingPage from '@/pages/PurchasingPage';
 import TransfersPage from '@/pages/TransfersPage';
 import SalesOrdersPage from '@/pages/SalesOrdersPage';
 import ProductionPage from '@/pages/ProductionPage';
+import QualityPage from '@/pages/QualityPage';
+import VehiclesPage from '@/pages/VehiclesPage';
+import ReservationsPage from '@/pages/ReservationsPage';
+import NavigationPage from '@/pages/NavigationPage';
 import DispatchPage from '@/pages/DispatchPage';
 import InvoicingPage from '@/pages/InvoicingPage';
 import ReturnsPage from '@/pages/ReturnsPage';
@@ -35,13 +39,17 @@ import SavedReportsPage from '@/pages/SavedReportsPage';
 import NotificationsPage from '@/pages/NotificationsPage';
 import MigrationPage from '@/pages/MigrationPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
+import NotFoundPage from '@/pages/NotFoundPage';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Login owns the full viewport (split brand panel + form), so it sits
+            outside AuthLayout's centred-card shell rather than inside it. */}
+        <Route path="/login" element={<LoginPage />} />
+
         <Route element={<AuthLayout />}>
-          <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>
 
@@ -62,6 +70,10 @@ export default function App() {
           <Route path="/audit-log" element={<AuditLogPage />} />
           <Route path="/sales-orders" element={<SalesOrdersPage />} />
           <Route path="/production" element={<ProductionPage />} />
+          <Route path="/quality" element={<QualityPage />} />
+          <Route path="/vehicles" element={<VehiclesPage />} />
+          <Route path="/reservations" element={<ReservationsPage />} />
+          <Route path="/navigation" element={<NavigationPage />} />
           <Route path="/dispatch" element={<DispatchPage />} />
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/purchasing" element={<PurchasingPage />} />
@@ -90,6 +102,10 @@ export default function App() {
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/migration" element={<MigrationPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+
+          {/* Catch-all last, and inside this layout so an unknown URL keeps the
+              shell and a way back rather than rendering an empty document. */}
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
