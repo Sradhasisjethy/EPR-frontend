@@ -12,7 +12,7 @@ import OfficesPage from './OfficesPage';
 import DepartmentsPage from './DepartmentsPage';
 import FactoriesPage from './FactoriesPage';
 import NavigationPage from './NavigationPage';
-import MigrationPage from './MigrationPage';
+// import MigrationPage from './MigrationPage';
 
 const ALL_TABS = [
   { key: 'users', label: 'Users' },
@@ -22,7 +22,7 @@ const ALL_TABS = [
   { key: 'departments', label: 'Departments' },
   { key: 'locations', label: 'Locations', permission: WebPermissions.FACTORY_READ },
   { key: 'navigation', label: 'Navigation', permission: 'SETTINGS_MODIFY' },
-  { key: 'migration', label: 'Data Migration', permission: WebPermissions.MIGRATION_RUN },
+  // { key: 'migration', label: 'Data Migration', permission: WebPermissions.MIGRATION_RUN },
 ];
 
 export default function AdministrationPage() {
@@ -69,7 +69,7 @@ export default function AdministrationPage() {
         {activeTab === 'departments' && <DepartmentsPage />}
         {activeTab === 'locations' && <FactoriesPage />}
         {activeTab === 'navigation' && <NavigationPage />}
-        {activeTab === 'migration' && <MigrationPage />}
+        {/* {activeTab === 'migration' && <MigrationPage />} */}
       </div>
     </div>
   );

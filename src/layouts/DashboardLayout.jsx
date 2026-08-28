@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { AppShell } from '@/components/layout/app-shell';
 import { useCurrentUser } from '@/hooks/use-auth';
+import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
 
 /**
  * Route guard for everything behind login. The Next.js version had no client-side
@@ -10,6 +11,9 @@ import { useCurrentUser } from '@/hooks/use-auth';
  */
 export function DashboardLayout() {
   const { data: user, isLoading, isError } = useCurrentUser();
+
+  // Initialize inactivity tracking
+  useInactivityTimeout();
 
   if (isLoading) {
     return (

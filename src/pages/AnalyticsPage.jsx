@@ -53,11 +53,6 @@ export default function AnalyticsPage() {
         <p className="text-muted-foreground">Dashboards, stock ageing, costing, alerts and cancellation analysis (M32-M38)</p>
       </div>
 
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Insights</h2>
-        <p className="text-muted-foreground">Dashboards, stock ageing, costing, alerts and cancellation analysis (M32-M38)</p>
-      </div>
-
       <div className="grid grid-cols-3 gap-4 max-w-2xl">
         <div className="space-y-1.5">
           <Label>Factory</Label>
