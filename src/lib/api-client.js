@@ -8,6 +8,14 @@ const apiClient = axios.create({
   },
 });
 
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('infideep-access-token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Only handle auth redirects - don't transform response data
 apiClient.interceptors.response.use(
   (response) => response,

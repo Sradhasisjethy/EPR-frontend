@@ -27,6 +27,10 @@ export function useLogin() {
   return useMutation({
     mutationFn: async (credentials) => {
       const response = await apiClient.post('/auth/login', credentials);
+      const token = response.data?.data?.accessToken;
+      if (token) {
+        localStorage.setItem('infideep-access-token', token);
+      }
       return response.data;
     },
     onSuccess: () => {
@@ -42,6 +46,7 @@ export function useLogout() {
       await apiClient.post('/auth/logout');
     },
     onSettled: () => {
+      localStorage.removeItem('infideep-access-token');
       queryClient.clear();
       window.location.href = '/login';
     },
