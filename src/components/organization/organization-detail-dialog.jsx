@@ -62,44 +62,51 @@ export function OrganizationDetailDialog({ open, onOpenChange, data, type }) {
                   <MapPin size={13} className="text-primary" /> Location & Address
                 </span>
                 <p className="font-medium text-foreground">
-                  {[data.address, data.city, data.state, data.country].filter(Boolean).join(', ') || 'N/A'}
+                  {[data.address, data.city, data.state, data.country, data.pincode ? `PIN: ${data.pincode}` : null].filter(Boolean).join(', ') || 'N/A'}
                 </p>
               </div>
 
-              {data.allDepartments && (
-                <div className="space-y-2 pt-2 border-t border-border">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <Network size={13} className="text-primary" /> Departments Operating Here
-                  </span>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {data.allDepartments.length > 0 ? (
-                      data.allDepartments.map((d) => (
-                        <div key={d.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-medium">
-                          <span>📁 {d.name}</span>
-                          {d.code && <span className="text-[10px] opacity-75">({d.code})</span>}
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-xs text-muted-foreground italic">No specific departments mapped yet.</p>
-                    )}
-                  </div>
+              <div className="space-y-2 pt-2 border-t border-border">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <Network size={13} className="text-primary" /> Departments Operating Here
+                </span>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {((data.departments && data.departments.length > 0) ? data.departments : (data.allDepartments && data.allDepartments.length > 0) ? data.allDepartments : []).length > 0 ? (
+                    ((data.departments && data.departments.length > 0) ? data.departments : data.allDepartments).map((d) => (
+                      <div key={d.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-medium">
+                        <span>📁 {d.name}</span>
+                        {d.code && <span className="text-[10px] opacity-75">({d.code})</span>}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">No specific departments mapped yet.</p>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           )}
 
           {type === 'department' && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <MapPin size={13} className="text-primary" /> Primary Office
-                  </span>
-                  <p className="font-medium text-foreground">
-                    📍 {data.Office ? `${data.Office.name} (${data.Office.city || 'HQ'})` : 'Global / All Offices'}
-                  </p>
+              <div className="space-y-2">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <MapPin size={13} className="text-primary" /> Assigned Offices
+                </span>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {((data.offices && data.offices.length > 0) ? data.offices : data.Office ? [data.Office] : []).length > 0 ? (
+                    ((data.offices && data.offices.length > 0) ? data.offices : [data.Office]).map((off) => (
+                      <div key={off.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground border border-border text-xs font-medium">
+                        <span>📍 {off.name}</span>
+                        {off.city && <span className="text-[10px] text-muted-foreground">({off.city})</span>}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">All / Flexible Locations</p>
+                  )}
                 </div>
+              </div>
 
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
                 <div className="space-y-1">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Network size={13} className="text-primary" /> Level

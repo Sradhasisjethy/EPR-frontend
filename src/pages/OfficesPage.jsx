@@ -133,7 +133,9 @@ export default function OfficesPage() {
               header: 'Departments Operating',
               cell: ({ row }) => {
                 const officeId = row.original.id;
-                const depts = (deptData?.rows || []).filter(d => d.officeId === officeId || d.Office?.id === officeId);
+                const depts = (row.original.departments && row.original.departments.length > 0)
+                  ? row.original.departments
+                  : (deptData?.rows || []).filter(d => d.officeId === officeId || d.offices?.some(o => o.id === officeId));
                 return (
                   <div className="flex flex-wrap gap-1">
                     {depts.length > 0 ? (
@@ -161,8 +163,10 @@ export default function OfficesPage() {
               cell: ({ row }) => (
                 <RowActions
                   onView={() => {
-                    const officeDepts = (deptData?.rows || []).filter(d => d.officeId === row.original.id || d.Office?.id === row.original.id);
-                    setViewingData({ ...row.original, allDepartments: officeDepts });
+                    const depts = (row.original.departments && row.original.departments.length > 0)
+                      ? row.original.departments
+                      : (deptData?.rows || []).filter(d => d.officeId === row.original.id || d.offices?.some(o => o.id === row.original.id));
+                    setViewingData({ ...row.original, departments: depts, allDepartments: depts });
                     setDetailDialogOpen(true);
                   }}
                   onViewDepartments={() => navigate(`/departments?officeId=${row.original.id}&organizationId=${row.original.organizationId || ''}`)}
