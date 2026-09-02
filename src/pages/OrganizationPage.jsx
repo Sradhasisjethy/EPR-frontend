@@ -196,6 +196,15 @@ export default function OrganizationPage() {
                   )
                 },
                 { accessorKey: 'code', header: 'Code', cell: ({ row }) => row.original.code || 'N/A' },
+                { 
+                  accessorKey: 'gstin', 
+                  header: 'GSTIN', 
+                  cell: ({ row }) => row.original.gstin ? (
+                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-muted/60 border border-border/50 text-foreground">
+                      {row.original.gstin}
+                    </span>
+                  ) : <span className="text-muted-foreground text-xs">N/A</span>
+                },
                 { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
                 {
                   id: 'actions',
@@ -248,13 +257,33 @@ export default function OrganizationPage() {
                     </button>
                   )
                 },
+                { accessorKey: 'code', header: 'Code', cell: ({ row }) => row.original.code || 'N/A' },
                 { 
                   id: 'organization', 
                   header: 'Organization', 
                   cell: ({ row }) => row.original.Organization?.name ? `🏢 ${row.original.Organization.name}` : 'Global/N/A' 
                 },
                 { accessorKey: 'city', header: 'City', cell: ({ row }) => row.original.city || 'N/A' },
+                { accessorKey: 'state', header: 'State', cell: ({ row }) => row.original.state || 'N/A' },
+                { accessorKey: 'pincode', header: 'Pincode', cell: ({ row }) => row.original.pincode || 'N/A' },
                 { accessorKey: 'country', header: 'Country', cell: ({ row }) => row.original.country || 'N/A' },
+                { 
+                  id: 'departments', 
+                  header: 'Departments', 
+                  cell: ({ row }) => {
+                    const depts = row.original.departments || [];
+                    if (depts.length === 0) return <span className="text-muted-foreground text-xs">None</span>;
+                    return (
+                      <div className="flex flex-wrap gap-1 max-w-[220px]">
+                        {depts.map((d) => (
+                          <span key={d.id} className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium border border-primary/20">
+                            {d.name}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  }
+                },
                 { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
                 {
                   id: 'actions',
@@ -293,17 +322,31 @@ export default function OrganizationPage() {
             <DataTable
               columns={[
                 { accessorKey: 'name', header: 'Name' },
+                { accessorKey: 'code', header: 'Code', cell: ({ row }) => row.original.code || 'N/A' },
                 { 
                   id: 'organization', 
                   header: 'Organization', 
                   cell: ({ row }) => row.original.Organization?.name ? `🏢 ${row.original.Organization.name}` : 'Global/N/A' 
                 },
                 { 
-                  id: 'office', 
-                  header: 'Office', 
-                  cell: ({ row }) => row.original.Office?.name ? `📍 ${row.original.Office.name}` : 'N/A' 
+                  id: 'offices', 
+                  header: 'Assigned Offices', 
+                  cell: ({ row }) => {
+                    const mappedOffices = row.original.offices && row.original.offices.length > 0
+                      ? row.original.offices
+                      : row.original.Office ? [row.original.Office] : [];
+                    if (mappedOffices.length === 0) return <span className="text-muted-foreground text-xs">All Locations</span>;
+                    return (
+                      <div className="flex flex-wrap gap-1 max-w-[240px]">
+                        {mappedOffices.map((off) => (
+                          <span key={off.id} className="text-xs px-1.5 py-0.5 rounded bg-muted/70 text-foreground font-medium border border-border">
+                            📍 {off.name}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  }
                 },
-                { accessorKey: 'code', header: 'Code', cell: ({ row }) => row.original.code || 'N/A' },
                 { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
                 {
                   id: 'actions',

@@ -208,17 +208,28 @@ export default function DepartmentsPage() {
             },
             { 
               id: 'officeLocation',
-              header: 'Location / Office',
+              header: 'Assigned Offices',
               cell: ({ row }) => {
-                const office = row.original.Office || row.original.office;
+                const offices = (row.original.offices && row.original.offices.length > 0)
+                  ? row.original.offices
+                  : row.original.Office ? [row.original.Office] : [];
                 return (
-                  <button
-                    onClick={() => navigate(`/offices?organizationId=${row.original.organizationId || ''}`)}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-all text-left"
-                    title="Click to view office"
-                  >
-                    📍 {office ? `${office.name} (${office.city || 'HQ'})` : 'Global / All Offices'}
-                  </button>
+                  <div className="flex flex-wrap gap-1">
+                    {offices.length > 0 ? (
+                      offices.map((off) => (
+                        <button
+                          key={off.id}
+                          onClick={() => navigate(`/offices?organizationId=${row.original.organizationId || ''}`)}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-all text-left"
+                          title="Click to view offices"
+                        >
+                          📍 {off.name}
+                        </button>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">All / Flexible Locations</span>
+                    )}
+                  </div>
                 );
               }
             },

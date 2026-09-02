@@ -23,6 +23,14 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('infideep-access-token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Handle auth redirects and token refresh
 apiClient.interceptors.response.use(
   (response) => response,

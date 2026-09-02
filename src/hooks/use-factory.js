@@ -13,6 +13,8 @@ export const {
 export const {
   useList: useFinancialYears,
   useCreate: useCreateFinancialYear,
+  useUpdate: useUpdateFinancialYear,
+  useDelete: useDeleteFinancialYear,
 } = createResourceHooks('financial-years', '/financial-years');
 
 export function useCurrentFinancialYear() {
@@ -26,14 +28,36 @@ export function useCurrentFinancialYear() {
   });
 }
 
-export function useSetCurrentFinancialYear() {
+export function useUpdateFinancialYearStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id) => {
-      const response = await apiClient.put(`/financial-years/${id}/set-current`);
+    mutationFn: async ({ id, status }) => {
+      const response = await apiClient.patch(`/financial-years/${id}/status`, { status });
       return response.data.data;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['financial-years'] }),
+  });
+}
+
+export function useFinancialYearPeriods(id) {
+  return useQuery({
+    queryKey: ['financial-years', id, 'periods'],
+    queryFn: async () => {
+      const response = await apiClient.get(`/financial-years/${id}/periods`);
+      return response.data.data;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useFinancialYearCloseChecklist(id) {
+  return useQuery({
+    queryKey: ['financial-years', id, 'close-checklist'],
+    queryFn: async () => {
+      const response = await apiClient.get(`/financial-years/${id}/close-checklist`);
+      return response.data.data;
+    },
+    enabled: !!id,
   });
 }
 
