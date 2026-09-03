@@ -190,7 +190,7 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
               </Label>
               <Input
                 id="office-name"
-                placeholder="e.g. New York HQ"
+                placeholder="e.g. Bhubaneswar HQ"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
@@ -203,7 +203,7 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
               </Label>
               <Input
                 id="office-code"
-                placeholder="e.g. NY-HQ"
+                placeholder="e.g. BBS-HQ"
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value })}
                 required
@@ -217,7 +217,7 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
             </Label>
             <Input
               id="office-address"
-              placeholder="e.g. 123 Business Street"
+              placeholder="e.g. Plot No. 123, Saheed Nagar"
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
               required
@@ -231,7 +231,7 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
               </Label>
               <Input
                 id="office-city"
-                placeholder="e.g. New York"
+                placeholder="e.g. Bhubaneswar"
                 value={form.city}
                 onChange={(e) => setForm({ ...form, city: e.target.value })}
                 required
@@ -244,7 +244,7 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
               </Label>
               <Input
                 id="office-state"
-                placeholder="e.g. NY"
+                placeholder="e.g. Odisha"
                 value={form.state}
                 onChange={(e) => setForm({ ...form, state: e.target.value })}
                 required
@@ -259,7 +259,7 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
               </Label>
               <Input
                 id="office-pincode"
-                placeholder="e.g. 10001"
+                placeholder="e.g. 751007"
                 value={form.pincode}
                 onChange={(e) => setForm({ ...form, pincode: e.target.value })}
                 required
@@ -272,7 +272,7 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
               </Label>
               <Input
                 id="office-country"
-                placeholder="e.g. USA"
+                placeholder="e.g. India"
                 value={form.country}
                 onChange={(e) => setForm({ ...form, country: e.target.value })}
                 required

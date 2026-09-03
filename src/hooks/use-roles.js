@@ -51,3 +51,38 @@ export function useDeleteRole() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['roles'] }),
   });
 }
+
+export function useRoleMembers(roleId) {
+  return useQuery({
+    queryKey: ['role-members', roleId],
+    queryFn: async () => (await apiClient.get(`/roles/${roleId}/members`)).data.data,
+    enabled: !!roleId,
+  });
+}
+
+export function useAssignRoleMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ roleId, employeeId }) => {
+      const response = await apiClient.post(`/roles/${roleId}/members`, { employeeId });
+      return response.data;
+    },
+    onSuccess: (_, { roleId }) => {
+      queryClient.invalidateQueries({ queryKey: ['role-members', roleId] });
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
+    },
+  });
+}
+
+export function useRemoveRoleMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ roleId, employeeId }) => {
+      await apiClient.delete(`/roles/${roleId}/members/${employeeId}`);
+    },
+    onSuccess: (_, { roleId }) => {
+      queryClient.invalidateQueries({ queryKey: ['role-members', roleId] });
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
+    },
+  });
+}

@@ -42,10 +42,64 @@ export default function PriceListsPage() {
       ) : (
         <DataTable
           columns={[
-            { accessorKey: 'name', header: 'Name' },
-            { accessorKey: 'priceType', header: 'Type' },
-            { id: 'party', header: 'Party', cell: ({ row }) => row.original.party?.name || 'General' },
-            { id: 'default', header: 'Default', cell: ({ row }) => (row.original.isDefault ? 'Yes' : 'No') },
+            { accessorKey: 'name', header: 'Price List Name' },
+            {
+              id: 'scope',
+              header: 'Applicable Scope',
+              cell: ({ row }) => {
+                if (row.original.party) {
+                  return (
+                    <div className="space-y-0.5">
+                      <span className="font-semibold text-primary block">{row.original.party.name}</span>
+                      <span className="text-[10px] text-muted-foreground uppercase">{row.original.party.partyType} Specific</span>
+                    </div>
+                  );
+                }
+                if (row.original.customerTier) {
+                  return (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-muted/80 border border-border">
+                      {row.original.customerTier} Tier
+                    </span>
+                  );
+                }
+                return <span className="text-xs text-muted-foreground">General (All Customers)</span>;
+              },
+            },
+            {
+              id: 'rateBasis',
+              header: 'Rate Basis',
+              cell: ({ row }) => (
+                <span className="text-xs font-medium">
+                  {row.original.rateBasis === 'TAX_INCLUSIVE' ? 'MRP / Tax Incl.' : 'Tax Exclusive'}
+                </span>
+              ),
+            },
+            {
+              id: 'validity',
+              header: 'Validity Period',
+              cell: ({ row }) => {
+                const from = row.original.effectiveFrom;
+                const to = row.original.validUntil;
+                if (!from && !to) return <span className="text-xs text-muted-foreground">Always Active</span>;
+                return (
+                  <span className="text-xs font-mono">
+                    {from || 'Start'} &rarr; {to || 'Open'}
+                  </span>
+                );
+              },
+            },
+            {
+              id: 'default',
+              header: 'Default',
+              cell: ({ row }) =>
+                row.original.isDefault ? (
+                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                    Default
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground text-xs">—</span>
+                ),
+            },
             { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
             {
               id: 'actions', header: '',

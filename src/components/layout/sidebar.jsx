@@ -13,7 +13,7 @@ export function Sidebar() {
   const { sidebarCollapsed, setSidebarCollapsed, glassMode } = useUIStore();
   const { pathname, search } = useLocation();
   const { data: user } = useCurrentUser();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasAnyPermission } = usePermissions();
   const logoutMutation = useLogout();
 
   // Nested modules (Reports) highlight their category leaf while a specific
@@ -22,7 +22,11 @@ export function Sidebar() {
 
   // Hide what the user can't reach, then drop any group left with nothing in it.
   const navigation = useMemo(() => {
-    const allowed = (item) => !item.permission || hasPermission(item.permission);
+    const allowed = (item) => {
+      if (item.anyPermissions) return hasAnyPermission(item.anyPermissions);
+      if (item.permission) return hasPermission(item.permission);
+      return true;
+    };
     const permitted = NAVIGATION.filter(allowed)
       .map((item) => (item.children ? { ...item, children: item.children.filter(allowed) } : item))
       .filter((item) => !item.children || item.children.length > 0);
@@ -33,7 +37,7 @@ export function Sidebar() {
     // (see AuthService.getMe) so every user sees the same menu, not just the
     // administrators who can edit it.
     return applyNavPreferences(permitted, user?.navigationPreferences);
-  }, [user, hasPermission]);
+  }, [user, hasPermission, hasAnyPermission]);
 
   // One group open at a time — with a dozen modules an accordion stays readable
   // where a free-for-all turns back into the flat list this replaced.

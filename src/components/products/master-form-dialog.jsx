@@ -5,10 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 /**
- * Small config-driven CRUD dialog for simple flat masters (UoM, HSN Code,
- * Product Category) — these three share the exact same {text/number fields +
- * optional status-on-edit} shape, so one dialog renders all three rather than
- * three near-identical copies.
+ * Config-driven CRUD dialog for simple flat masters (UoM, HSN Code,
+ * Product Category). Supports text, number, select, and radio fields with hints.
  */
 export function MasterFormDialog({ open, onOpenChange, entity, title, fields, createMutation, updateMutation, buildPayload }) {
   const isEditing = !!entity;
@@ -21,7 +19,11 @@ export function MasterFormDialog({ open, onOpenChange, entity, title, fields, cr
     if (open) {
       setForm(
         entity
-          ? { ...emptyForm, ...Object.fromEntries(fields.map((f) => [f.name, entity[f.name] ?? f.default ?? ''])), status: entity.status || 'active' }
+          ? {
+              ...emptyForm,
+              ...Object.fromEntries(fields.map((f) => [f.name, entity[f.name] ?? f.default ?? ''])),
+              status: entity.status || 'active',
+            }
           : emptyForm
       );
       setError('');
@@ -43,7 +45,7 @@ export function MasterFormDialog({ open, onOpenChange, entity, title, fields, cr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{isEditing ? `Edit ${title}` : `New ${title}`}</DialogTitle>
         </DialogHeader>
@@ -53,39 +55,75 @@ export function MasterFormDialog({ open, onOpenChange, entity, title, fields, cr
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {fields.map((field) => (
-            <div key={field.name} className="space-y-1.5">
-              <Label htmlFor={field.name}>{field.label}</Label>
-              {field.type === 'select' ? (
-                <select
-                  id={field.name}
-                  value={form[field.name]}
-                  onChange={(e) => setForm({ ...form, [field.name]: e.target.value })}
-                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
-                  required={field.required}
-                >
-                  <option value="" disabled>Select {field.label.toLowerCase()}</option>
-                  {(field.options || []).map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              ) : (
-                <Input
-                  id={field.name}
-                  type={field.type || 'text'}
-                  value={form[field.name]}
-                  onChange={(e) => setForm({ ...form, [field.name]: e.target.value })}
-                  required={field.required}
-                />
-              )}
-            </div>
-          ))}
+          {fields.map((field) => {
+            const options = typeof field.options === 'function' ? field.options() : (field.options || []);
+            return (
+              <div key={field.name} className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor={field.name}>
+                    {field.label} {field.required && <span className="text-destructive">*</span>}
+                  </Label>
+                  {field.badge && (
+                    <span className="text-[10px] text-muted-foreground font-mono">{field.badge}</span>
+                  )}
+                </div>
+
+                {field.type === 'select' ? (
+                  <select
+                    id={field.name}
+                    value={form[field.name]}
+                    onChange={(e) => setForm({ ...form, [field.name]: e.target.value })}
+                    className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm font-medium"
+                    required={field.required}
+                  >
+                    <option value="" disabled={field.required}>
+                      {field.placeholder || `Select ${field.label.toLowerCase()}`}
+                    </option>
+                    {options.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : field.type === 'radio' ? (
+                  <div className="flex items-center gap-4 pt-1">
+                    {options.map((opt) => (
+                      <label key={opt.value} className="flex items-center gap-1.5 text-xs font-medium cursor-pointer">
+                        <input
+                          type="radio"
+                          name={field.name}
+                          value={opt.value}
+                          checked={form[field.name] === opt.value}
+                          onChange={(e) => setForm({ ...form, [field.name]: e.target.value })}
+                          className="text-primary focus:ring-primary h-4 w-4"
+                        />
+                        <span>{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <Input
+                    id={field.name}
+                    type={field.type || 'text'}
+                    step={field.step}
+                    min={field.min}
+                    max={field.max}
+                    placeholder={field.placeholder}
+                    value={form[field.name]}
+                    onChange={(e) => setForm({ ...form, [field.name]: e.target.value })}
+                    required={field.required}
+                  />
+                )}
+                {field.hint && <p className="text-[11px] text-muted-foreground">{field.hint}</p>}
+              </div>
+            );
+          })}
 
           {isEditing && (
             <div className="space-y-1.5">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="master-status">Status</Label>
               <select
-                id="status"
+                id="master-status"
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
@@ -96,7 +134,7 @@ export function MasterFormDialog({ open, onOpenChange, entity, title, fields, cr
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : isEditing ? 'Save Changes' : `Create ${title}`}</Button>
           </DialogFooter>

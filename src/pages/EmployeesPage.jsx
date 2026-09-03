@@ -11,6 +11,7 @@ import { EmployeeFormDialog } from '@/components/employees/employee-form-dialog'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { TableSkeleton } from '@/components/ui/skeleton';
 import { EmployeeDocumentsAdminDialog } from '@/components/employees/employee-documents-admin-dialog';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export default function EmployeesPage() {
   const { query, tableProps } = usePaginated(useEmployees);
@@ -41,9 +42,42 @@ export default function EmployeesPage() {
       id: 'name',
       accessorFn: (row) => `${row.firstName || ''} ${row.lastName || ''}`,
       header: 'Name',
-      cell: ({ row }) => `${row.original.firstName || ''} ${row.original.lastName || ''}`.trim() || 'N/A'
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="w-8 h-8 rounded-full border border-border shrink-0">
+            {row.original.avatar && <AvatarImage src={row.original.avatar} alt={row.original.firstName} className="object-cover" />}
+            <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
+              {(row.original.firstName?.[0] || 'U').toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span className="font-medium text-foreground">
+            {`${row.original.firstName || ''} ${row.original.lastName || ''}`.trim() || 'N/A'}
+          </span>
+        </div>
+      )
     },
     { accessorKey: 'email', header: 'Email' },
+    {
+      id: 'role',
+      header: 'Role',
+      cell: ({ row }) => {
+        const assignedRole = row.original.AdGroupMembers?.[0]?.AdGroup?.name;
+        const systemRole = row.original.role;
+        return (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {assignedRole ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                {assignedRole}
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                {systemRole?.replace('_', ' ') || 'EMPLOYEE'}
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
     {
       id: 'departmentName',
       header: 'Department',

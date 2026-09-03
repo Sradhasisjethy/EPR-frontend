@@ -154,10 +154,16 @@ export default function ProductsPage() {
             columns={[
               { accessorKey: 'name', header: 'Name' },
               { accessorKey: 'code', header: 'Code' },
-              { accessorKey: 'productType', header: 'Type' },
+              { accessorKey: 'productType', header: 'Type', cell: ({ row }) => (
+                <span className="text-xs font-medium px-2 py-0.5 rounded bg-muted">
+                  {row.original.productType === 'FINISHED_GOOD' ? 'Finished Good' : 'Raw Material'}
+                </span>
+              )},
               { id: 'uom', header: 'UoM', cell: ({ row }) => row.original.uom?.code || 'N/A' },
-              { id: 'curing', header: 'Curing (days)', cell: ({ row }) => row.original.curingDays ?? 0 },
+              ...(showRates ? [{ id: 'sellingPrice', header: 'Selling Price (₹)', cell: ({ row }) => row.original.sellingPricePaise ? formatINR(row.original.sellingPricePaise) : '—' }] : []),
               ...(showRates ? [{ id: 'cost', header: 'Std. Cost', cell: ({ row }) => formatINR(row.original.standardCostPaise) }] : []),
+              { id: 'reorder', header: 'Reorder Level', cell: ({ row }) => Number(row.original.reorderLevel) > 0 ? `${Number(row.original.reorderLevel)} ${row.original.uom?.code || ''}` : '—' },
+              { id: 'curing', header: 'Curing (days)', cell: ({ row }) => row.original.curingDays ?? 0 },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
               {
                 id: 'actions', header: '',
@@ -193,6 +199,7 @@ export default function ProductsPage() {
                 id: 'status', header: 'Version',
                 cell: ({ row }) => <BomStatusBadge status={row.original.status} version={row.original.version} />,
               },
+              { id: 'yield', header: 'Output Yield', cell: ({ row }) => `${Number(row.original.outputQuantity || 1)} ${row.original.product?.uom?.code || 'units'}` },
               { id: 'effectiveFrom', header: 'Effective From', cell: ({ row }) => row.original.effectiveFrom || '—' },
               { id: 'lines', header: 'Lines', cell: ({ row }) => row.original.lines?.length ?? 0 },
               {
@@ -236,6 +243,7 @@ export default function ProductsPage() {
             columns={[
               { accessorKey: 'name', header: 'Name' },
               { accessorKey: 'code', header: 'Code' },
+              { accessorKey: 'uqc', header: 'Statutory GST UQC', cell: ({ row }) => row.original.uqc ? <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-muted/60 border border-border/60">{row.original.uqc}</span> : '—' },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
               {
                 id: 'actions', header: '',
@@ -267,6 +275,7 @@ export default function ProductsPage() {
             columns={[
               { accessorKey: 'name', header: 'Name' },
               { accessorKey: 'code', header: 'Code', cell: ({ row }) => row.original.code || 'N/A' },
+              { id: 'parentCategory', header: 'Parent Category (Hierarchy)', cell: ({ row }) => row.original.parentCategory?.name ? <span className="text-xs font-semibold text-primary">{row.original.parentCategory.name}</span> : <span className="text-xs text-muted-foreground">— (Root)</span> },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
               {
                 id: 'actions', header: '',
@@ -296,9 +305,15 @@ export default function ProductsPage() {
         <QueryState query={hsnQuery.query} label="HSN codes">
           <DataTable
             columns={[
-              { accessorKey: 'code', header: 'HSN Code' },
+              { id: 'type', header: 'Type', cell: ({ row }) => (
+                <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded border ${row.original.codeType === 'SAC' ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300' : 'bg-primary/10 text-primary border-primary/20'}`}>
+                  {row.original.codeType || 'HSN'}
+                </span>
+              )},
+              { accessorKey: 'code', header: 'HSN / SAC Code' },
               { accessorKey: 'description', header: 'Description', cell: ({ row }) => row.original.description || 'N/A' },
-              { accessorKey: 'gstRatePercent', header: 'GST %' },
+              { accessorKey: 'gstRatePercent', header: 'GST Rate', cell: ({ row }) => `${row.original.gstRatePercent}%` },
+              { id: 'cess', header: 'Cess %', cell: ({ row }) => Number(row.original.cessPercent) > 0 ? `${row.original.cessPercent}%` : '—' },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
               {
                 id: 'actions', header: '',
@@ -326,21 +341,86 @@ export default function ProductsPage() {
 
       <MasterFormDialog
         open={uomDialogOpen} onOpenChange={setUomDialogOpen} entity={editingUom} title="UoM"
-        fields={[{ name: 'name', label: 'Name', required: true }, { name: 'code', label: 'Code', required: true }]}
+        fields={[
+          { name: 'name', label: 'Unit Name', required: true, placeholder: 'e.g. Metric Tonne, Cubic Meter' },
+          { name: 'code', label: 'Unit Symbol / Code', required: true, placeholder: 'e.g. MT, CUM, NOS' },
+          {
+            name: 'uqc',
+            label: 'Statutory GST UQC Code',
+            type: 'select',
+            placeholder: 'Select Statutory GST UQC',
+            hint: 'Official Unit Quantity Code mapped for GST e-Invoicing, e-Way bills, and GSTR reporting.',
+            options: [
+              { value: 'BAG', label: 'BAG — Bags' },
+              { value: 'CUM', label: 'CUM — Cubic Meters' },
+              { value: 'KGS', label: 'KGS — Kilograms' },
+              { value: 'TON', label: 'TON — Tonnes / Metric Tons' },
+              { value: 'NOS', label: 'NOS — Numbers / Pieces' },
+              { value: 'MTR', label: 'MTR — Meters' },
+              { value: 'SQM', label: 'SQM — Square Meters' },
+              { value: 'SQF', label: 'SQF — Square Feet' },
+              { value: 'LTR', label: 'LTR — Litres' },
+              { value: 'BOX', label: 'BOX — Boxes' },
+              { value: 'BDL', label: 'BDL — Bundles' },
+              { value: 'OTH', label: 'OTH — Others' },
+            ],
+          },
+        ]}
         createMutation={useCreateUom()} updateMutation={useUpdateUom()}
       />
+
       <MasterFormDialog
         open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen} entity={editingCategory} title="Category"
-        fields={[{ name: 'name', label: 'Name', required: true }, { name: 'code', label: 'Code' }]}
+        fields={[
+          { name: 'name', label: 'Category Name', required: true, placeholder: 'e.g. Reinforced Concrete Pipes' },
+          { name: 'code', label: 'Category Code', placeholder: 'e.g. RCP-PIPE' },
+          {
+            name: 'parentId',
+            label: 'Parent Category (Hierarchy)',
+            type: 'select',
+            placeholder: 'None (Root Category)',
+            hint: 'Nest subcategories under a parent (e.g. Aggregates -> 10mm / 20mm or Precast -> Boundary Wall).',
+            options: () => [
+              { value: '', label: 'None (Root Category)' },
+              ...(categoryQuery.query.data?.rows || [])
+                .filter((c) => c.id !== editingCategory?.id)
+                .map((c) => ({ value: c.id, label: c.name })),
+            ],
+          },
+        ]}
+        buildPayload={(form) => ({
+          name: form.name,
+          code: form.code || undefined,
+          parentId: form.parentId || null,
+        })}
         createMutation={useCreateProductCategory()} updateMutation={useUpdateProductCategory()}
       />
+
       <MasterFormDialog
-        open={hsnDialogOpen} onOpenChange={setHsnDialogOpen} entity={editingHsn} title="HSN Code"
+        open={hsnDialogOpen} onOpenChange={setHsnDialogOpen} entity={editingHsn} title="HSN / SAC Code"
         fields={[
-          { name: 'code', label: 'HSN Code', required: true },
-          { name: 'description', label: 'Description' },
-          { name: 'gstRatePercent', label: 'GST %', type: 'number' },
+          {
+            name: 'codeType',
+            label: 'Tax Classification',
+            type: 'radio',
+            default: 'HSN',
+            options: [
+              { value: 'HSN', label: 'Goods (HSN Code)' },
+              { value: 'SAC', label: 'Services (SAC Code)' },
+            ],
+          },
+          { name: 'code', label: 'HSN / SAC Code', required: true, placeholder: 'e.g. 6810' },
+          { name: 'description', label: 'Tariff Description', placeholder: 'e.g. Articles of cement, concrete or artificial stone' },
+          { name: 'gstRatePercent', label: 'GST Rate (%)', type: 'number', step: '0.1', placeholder: '18', hint: 'Applicable combined GST rate (CGST + SGST or IGST)' },
+          { name: 'cessPercent', label: 'Compensation Cess (%)', type: 'number', step: '0.1', placeholder: '0', hint: 'Special cess applicable on specified minerals or coal' },
         ]}
+        buildPayload={(form) => ({
+          codeType: form.codeType || 'HSN',
+          code: form.code,
+          description: form.description || undefined,
+          gstRatePercent: form.gstRatePercent !== '' ? Number(form.gstRatePercent) : 0,
+          cessPercent: form.cessPercent !== '' ? Number(form.cessPercent) : 0,
+        })}
         createMutation={useCreateHsnCode()} updateMutation={useUpdateHsnCode()}
       />
       {activeTab === 'UoM Conversions' && (
