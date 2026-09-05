@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useCreateMixDesign, useUpdateMixDesign, useProducts, useUoms } from '@/hooks/use-products';
 import { ProductType } from '@/constants/enums';
 import { toPaise, fromPaise } from '@/lib/money';
+import { toInput } from '@/lib/decimal';
 
 const emptyLine = { rawMaterialProductId: '', quantityPerUnit: '', wastagePercent: '0', uomId: '' };
 
@@ -38,7 +39,7 @@ export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProd
         setForm({
           productId: mixDesign.productId || '',
           name: mixDesign.name || '',
-          outputQuantity: mixDesign.outputQuantity != null ? String(mixDesign.outputQuantity) : '1',
+          outputQuantity: toInput(mixDesign.outputQuantity, '1'),
           effectiveFrom: mixDesign.effectiveFrom ? mixDesign.effectiveFrom.slice(0, 10) : new Date().toISOString().slice(0, 10),
           laborCostRupees: fromPaise(mixDesign.laborCostPaise),
           overheadCostRupees: fromPaise(mixDesign.overheadCostPaise),
@@ -46,8 +47,8 @@ export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProd
         setLines(
           (mixDesign.lines || []).map((l) => ({
             rawMaterialProductId: l.rawMaterialProductId,
-            quantityPerUnit: String(l.quantityPerUnit),
-            wastagePercent: l.wastagePercent != null ? String(l.wastagePercent) : '0',
+            quantityPerUnit: toInput(l.quantityPerUnit),
+            wastagePercent: toInput(l.wastagePercent, '0'),
             uomId: l.uomId,
           }))
         );

@@ -9,12 +9,16 @@ import PartiesPage from './PartiesPage';
 import ProductsPage from './ProductsPage';
 import PriceListsPage from './PriceListsPage';
 import VehiclesPage from './VehiclesPage';
+import BundlesPage from './BundlesPage';
 
 const ALL_TABS = [
   { key: 'parties', label: 'Parties', permission: WebPermissions.PARTY_READ },
   { key: 'products', label: 'Products & BOM', permission: WebPermissions.PRODUCT_READ },
   { key: 'price-lists', label: 'Price Lists', permission: WebPermissions.PRICING_READ },
   { key: 'vehicles', label: 'Vehicles', permission: WebPermissions.VEHICLE_READ },
+  // A bundle is a statement about what a product is, so it is gated on the
+  // product permission rather than the sales one.
+  { key: 'bundles', label: 'Bundles', permission: WebPermissions.PRODUCT_READ },
 ];
 
 export default function MastersPage() {
@@ -68,6 +72,7 @@ export default function MastersPage() {
             {activeTab === 'parties' && <PartiesPage />}
             {activeTab === 'products' && <ProductsPage />}
             {activeTab === 'price-lists' && <PriceListsPage />}
+            {activeTab === 'bundles' && <BundlesPage />}
             {activeTab === 'vehicles' && <VehiclesPage />}
           </div>
         </>

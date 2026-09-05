@@ -7,6 +7,7 @@ import { ActionError } from '@/components/query-state';
 import { useCreateVehicle, useUpdateVehicle } from '@/hooks/use-vehicles';
 import { useParties } from '@/hooks/use-parties';
 import { AlertTriangle, ShieldAlert } from 'lucide-react';
+import { toInput } from '@/lib/decimal';
 
 const TYPES = [
   ['TRUCK', 'Truck (General Cargo)'],
@@ -79,9 +80,9 @@ export function VehicleFormDialog({ open, onOpenChange, vehicle }) {
             registrationNumber: vehicle.registrationNumber || '',
             vehicleType: vehicle.vehicleType || 'TRUCK',
             bodyConfiguration: vehicle.bodyConfiguration || 'Tipper / Dumper (Aggregates & Sand)',
-            capacityTonnes: vehicle.capacityTonnes != null ? String(vehicle.capacityTonnes) : '',
-            tareWeightTonnes: vehicle.tareWeightTonnes != null ? String(vehicle.tareWeightTonnes) : '',
-            grossVehicleWeightTonnes: vehicle.grossVehicleWeightTonnes != null ? String(vehicle.grossVehicleWeightTonnes) : '',
+            capacityTonnes: toInput(vehicle.capacityTonnes),
+            tareWeightTonnes: toInput(vehicle.tareWeightTonnes),
+            grossVehicleWeightTonnes: toInput(vehicle.grossVehicleWeightTonnes),
             ownership: vehicle.ownership || 'OWNED',
             transporterPartyId: vehicle.transporterPartyId || '',
             driverName: vehicle.driverName || '',

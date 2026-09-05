@@ -40,6 +40,41 @@ export const {
 } = createResourceHooks('mix-designs', '/mix-designs');
 
 /**
+ * Every product, paged through until the server runs out.
+ *
+ * The list endpoint caps `limit` at 100. A screen that needs the *whole*
+ * catalogue — bulk-populating a price list, matching a CSV import — was
+ * silently getting only the first hundred alphabetically, so anything later in
+ * the alphabet was invisible with no error to explain it. Screens that just
+ * need to pick one item should use ProductPicker instead, which searches
+ * server-side rather than pulling everything down.
+ */
+export function useAllProducts(params = {}, options = {}) {
+  return useQuery({
+    queryKey: ['products', 'all', params],
+    queryFn: async () => {
+      const limit = 100;
+      let page = 1;
+      let rows = [];
+      let count = 0;
+
+      // Bounded so a server that never stops paging cannot hang the screen.
+      for (let guard = 0; guard < 100; guard += 1) {
+        const response = await apiClient.get('/products', { params: { ...params, page, limit } });
+        const data = response.data.data;
+        rows = rows.concat(data.rows || []);
+        count = Number(data.count ?? rows.length);
+        if (rows.length >= count || !(data.rows || []).length) break;
+        page += 1;
+      }
+
+      return { rows, count };
+    },
+    ...options,
+  });
+}
+
+/**
  * The mix design in force for a product on a given date.
  *
  * Production consumes the DATE-EFFECTIVE recipe, not whichever version happens

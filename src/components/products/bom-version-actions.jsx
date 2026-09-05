@@ -24,7 +24,8 @@ export function BomStatusBadge({ status, version }) {
 
 /** Cost rollup for one BOM version (FR-M03-10). */
 export function BomCostDialog({ open, onOpenChange, mixDesign }) {
-  const { data, isLoading } = useMixDesignCost(open ? mixDesign?.id : null);
+  const { data, isLoading, error } = useMixDesignCost(open ? mixDesign?.id : null);
+  const errorMessage = error?.response?.data?.message || error?.message;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -32,7 +33,22 @@ export function BomCostDialog({ open, onOpenChange, mixDesign }) {
         <DialogHeader><DialogTitle>Material cost — {mixDesign?.name}</DialogTitle></DialogHeader>
         {isLoading ? (
           <div className="h-40 rounded-lg border border-border bg-card animate-pulse" />
-        ) : !data ? null : (
+        ) : error ? (
+          <div className="space-y-3 py-2">
+            <div className="p-3.5 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm font-medium">
+              {errorMessage || 'Failed to calculate material cost.'}
+            </div>
+            {errorMessage?.includes('No conversion is defined') && (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                The recipe uses a unit that differs from the raw material&apos;s stocking unit. To resolve this, define a conversion factor between these units under <strong>Masters &gt; Products &amp; BOM &gt; UoM Conversions</strong> (e.g. 1 CUM = 1500 KG), or edit the mix design lines to match the stocking unit.
+              </p>
+            )}
+          </div>
+        ) : !data || !data.lines || data.lines.length === 0 ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">
+            No material lines found in this mix design.
+          </div>
+        ) : (
           <div className="space-y-3">
             <table className="w-full text-sm">
               <thead className="text-muted-foreground border-b border-border">
@@ -67,6 +83,11 @@ export function BomCostDialog({ open, onOpenChange, mixDesign }) {
             </table>
             <p className="text-xs text-muted-foreground">
               Valued at each material&apos;s current standard cost, including the wastage allowance on every line.
+              {data.totalCostPaise === 0 && (
+                <span className="block text-amber-600 dark:text-amber-400 mt-1">
+                  Note: Total cost is ₹0.00 because standard costs have not been set on the raw materials yet. You can configure them in the Products master.
+                </span>
+              )}
             </p>
           </div>
         )}

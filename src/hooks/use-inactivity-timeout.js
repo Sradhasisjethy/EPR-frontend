@@ -6,12 +6,15 @@ export function useInactivityTimeout() {
   const { data: settings = [] } = useSettings('security');
   const { mutate: logout } = useLogout();
   const lastActivityRef = useRef(Date.now());
+  const logoutRef = useRef(logout);
+  logoutRef.current = logout;
 
   useEffect(() => {
-    const timeoutSetting = settings.find(s => s.key === 'sessionTimeout');
+    const settingsList = Array.isArray(settings) ? settings : [];
+    const timeoutSetting = settingsList.find((s) => s.key === 'sessionTimeout');
     // Default to 30 minutes if not set in DB
     const timeoutMinutes = timeoutSetting ? parseInt(timeoutSetting.value, 10) : 30;
-    
+
     if (!timeoutMinutes || timeoutMinutes <= 0) return;
 
     const timeoutMs = timeoutMinutes * 60 * 1000;
@@ -23,12 +26,12 @@ export function useInactivityTimeout() {
     // Check periodically if we have passed the timeout threshold
     const intervalId = setInterval(() => {
       if (Date.now() - lastActivityRef.current > timeoutMs) {
-        logout();
+        logoutRef.current?.();
       }
     }, 10000); // Check every 10 seconds
 
     const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'mousemove'];
-    
+
     // Throttle the event listener for performance so we don't spam state/refs
     let throttleTimer;
     const handleActivity = () => {
@@ -40,13 +43,13 @@ export function useInactivityTimeout() {
       }
     };
 
-    events.forEach(event => document.addEventListener(event, handleActivity, { passive: true }));
+    events.forEach((event) => document.addEventListener(event, handleActivity, { passive: true }));
     updateLastActivity(); // Initialize
 
     return () => {
       clearInterval(intervalId);
       if (throttleTimer) clearTimeout(throttleTimer);
-      events.forEach(event => document.removeEventListener(event, handleActivity));
+      events.forEach((event) => document.removeEventListener(event, handleActivity));
     };
-  }, [settings, logout]);
+  }, [settings]);
 }

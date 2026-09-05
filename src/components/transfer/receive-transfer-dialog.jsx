@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useReceiveTransfer } from '@/hooks/use-transfer';
+import { toInput } from '@/lib/decimal';
 
 export function ReceiveTransferDialog({ open, onOpenChange, transfer }) {
   const [receivedDate, setReceivedDate] = useState('');
@@ -14,7 +15,7 @@ export function ReceiveTransferDialog({ open, onOpenChange, transfer }) {
   useEffect(() => {
     if (open && transfer) {
       setReceivedDate(new Date().toISOString().slice(0, 10));
-      setQuantities(Object.fromEntries(transfer.lines.map((l) => [l.id, String(l.quantity)])));
+      setQuantities(Object.fromEntries(transfer.lines.map((l) => [l.id, toInput(l.quantity)])));
       setError('');
     }
   }, [open, transfer]);

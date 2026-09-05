@@ -4,6 +4,7 @@ import { useSalesOrder } from '@/hooks/use-sales';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { canViewRates } from '@/lib/permissions';
 import { formatINR } from '@/lib/money';
+import { BundleLines } from './bundle-lines';
 
 const STATUS_MAP = {
   DRAFT: 'pending', CONFIRMED: 'active', IN_PRODUCTION: 'onboarding', PARTIALLY_DISPATCHED: 'onboarding',
@@ -53,43 +54,12 @@ export function SalesOrderDetailDialog({ open, onOpenChange, orderId }) {
               {order.shortCloseReason && <Field label="Short-closed Because">{order.shortCloseReason}</Field>}
             </div>
 
-            <div className="rounded-lg border border-border overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-muted/50 text-muted-foreground">
-                    <tr>
-                      <th className="h-9 px-3 font-medium">Product</th>
-                      <th className="h-9 px-3 font-medium text-right">Ordered</th>
-                      <th className="h-9 px-3 font-medium text-right">Dispatched</th>
-                      <th className="h-9 px-3 font-medium text-right">Pending</th>
-                      <th className="h-9 px-3 font-medium text-right">To Produce</th>
-                      {showRates && <th className="h-9 px-3 font-medium text-right">Rate</th>}
-                      {showRates && <th className="h-9 px-3 font-medium text-right">Amount</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(order.lines || []).map((l) => {
-                      const pending = Number(l.orderedQty) - Number(l.dispatchedQty);
-                      return (
-                        <tr key={l.id} className="border-t border-border/50">
-                          <td className="px-3 py-2">{l.product?.name || l.productId}</td>
-                          <td className="px-3 py-2 text-right tabular-nums">{Number(l.orderedQty)}</td>
-                          <td className="px-3 py-2 text-right tabular-nums">{Number(l.dispatchedQty)}</td>
-                          <td className="px-3 py-2 text-right tabular-nums font-medium">{pending}</td>
-                          <td className="px-3 py-2 text-right tabular-nums">{Number(l.productionRequired)}</td>
-                          {showRates && <td className="px-3 py-2 text-right tabular-nums">{formatINR(l.ratePaise)}</td>}
-                          {showRates && (
-                            <td className="px-3 py-2 text-right tabular-nums">
-                              {formatINR(Number(l.ratePaise) * Number(l.orderedQty))}
-                            </td>
-                          )}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            {/* Accessories are shown under the product that brought them, with
+                the removal tray and the picker, rather than as a flat list where
+                a bundle is indistinguishable from six unrelated lines. The
+                commands only act on a DRAFT — a confirmed order holds stock
+                reservations. */}
+            <BundleLines order={order} editable={order.status === 'DRAFT'} showRates={showRates} />
           </div>
         )}
       </DialogContent>

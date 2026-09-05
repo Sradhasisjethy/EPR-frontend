@@ -24,7 +24,7 @@ export default function LedgerPage() {
   const showRates = canViewRates(user);
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: partyData } = useParties({ page: 1, limit: 200 });
+  const { data: partyData } = useParties({ page: 1, limit: 100 });
 
   const trialBalance = useTrialBalance(factoryId || undefined);
   const partyLedger = usePaginated(usePartyLedger, { partyId: partyId || undefined });

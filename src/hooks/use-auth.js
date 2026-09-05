@@ -28,8 +28,12 @@ export function useLogin() {
     mutationFn: async (credentials) => {
       const response = await apiClient.post('/auth/login', credentials);
       const token = response.data?.data?.accessToken;
+      const refreshToken = response.data?.data?.refreshToken;
       if (token) {
         localStorage.setItem('infideep-access-token', token);
+      }
+      if (refreshToken) {
+        localStorage.setItem('infideep-refresh-token', refreshToken);
       }
       return response.data;
     },
@@ -43,10 +47,16 @@ export function useLogout() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      await apiClient.post('/auth/logout');
+      try {
+        const storedRefreshToken = localStorage.getItem('infideep-refresh-token');
+        await apiClient.post('/auth/logout', { refreshToken: storedRefreshToken || undefined });
+      } catch {
+        // Ignore logout network errors so client cleanup proceeds
+      }
     },
     onSettled: () => {
       localStorage.removeItem('infideep-access-token');
+      localStorage.removeItem('infideep-refresh-token');
       queryClient.clear();
       window.location.href = '/login';
     },

@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreatePriceList, useUpdatePriceList, usePriceList } from '@/hooks/use-pricing';
-import { useProducts } from '@/hooks/use-products';
+import { useAllProducts } from '@/hooks/use-products';
 import { useParties } from '@/hooks/use-parties';
 import { PriceType, PartyType } from '@/constants/enums';
 import { toPaise, fromPaise, formatINR } from '@/lib/money';
+import { toInput } from '@/lib/decimal';
 
 const emptyLine = {
   productId: '',
@@ -38,8 +39,10 @@ export function PriceListFormDialog({ open, onOpenChange, priceListId }) {
   const fileInputRef = useRef(null);
 
   const { data: existing } = usePriceList(priceListId);
-  const { data: productData } = useProducts({ page: 1, limit: 200 });
-  const { data: partyData } = useParties({ page: 1, limit: 200 });
+  // Needs the whole catalogue: it bulk-populates every active product and
+  // matches CSV imports by name, both of which break on a truncated list.
+  const { data: productData } = useAllProducts();
+  const { data: partyData } = useParties({ page: 1, limit: 100 });
   const createMutation = useCreatePriceList();
   const updateMutation = useUpdatePriceList();
   const isSaving = createMutation.isPending || updateMutation.isPending;
@@ -77,8 +80,8 @@ export function PriceListFormDialog({ open, onOpenChange, priceListId }) {
           (existing.items || []).map((i) => ({
             productId: i.productId,
             rateRupees: fromPaise(i.ratePaise),
-            minQuantity: i.minQuantity != null ? String(i.minQuantity) : '1',
-            discountPercent: i.discountPercent != null ? String(i.discountPercent) : '0',
+            minQuantity: toInput(i.minQuantity, '1'),
+            discountPercent: toInput(i.discountPercent, '0'),
           }))
         );
       } else if (!isEditing) {

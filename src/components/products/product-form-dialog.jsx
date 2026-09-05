@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useCreateProduct, useUpdateProduct, useUoms, useProductCategories, useHsnCodes } from '@/hooks/use-products';
 import { toPaise, fromPaise } from '@/lib/money';
 import { ProductType } from '@/constants/enums';
+import { toInput } from '@/lib/decimal';
 
 const emptyForm = {
   name: '',
@@ -16,6 +17,7 @@ const emptyForm = {
   productType: ProductType.FINISHED_GOOD,
   curingDays: '0',
   qcRequired: false,
+  isAccessory: false,
   standardCostRupees: '',
   sellingPriceRupees: '',
   openingStockQty: '',
@@ -50,11 +52,12 @@ export function ProductFormDialog({ open, onOpenChange, product }) {
               uomId: product.uomId || '',
               hsnId: product.hsnId || '',
               productType: product.productType || ProductType.FINISHED_GOOD,
-              curingDays: String(product.curingDays ?? 0),
+              curingDays: toInput(product.curingDays, '0'),
               qcRequired: !!product.qcRequired,
+              isAccessory: !!product.isAccessory,
               standardCostRupees: fromPaise(product.standardCostPaise),
               sellingPriceRupees: fromPaise(product.sellingPricePaise),
-              openingStockQty: product.openingStockQty != null ? String(product.openingStockQty) : '',
+              openingStockQty: toInput(product.openingStockQty),
               openingStockRateRupees: fromPaise(product.openingStockRatePaise),
               openingStockDate: product.openingStockDate ? product.openingStockDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
               defaultLocation: product.defaultLocation || '',
@@ -90,6 +93,7 @@ export function ProductFormDialog({ open, onOpenChange, product }) {
       productType: form.productType,
       curingDays: form.productType === ProductType.FINISHED_GOOD ? (Number(form.curingDays) || 0) : 0,
       qcRequired: form.productType === ProductType.FINISHED_GOOD ? form.qcRequired : false,
+      isAccessory: form.isAccessory,
       standardCostPaise: toPaise(form.standardCostRupees),
       sellingPricePaise: toPaise(form.sellingPriceRupees),
       openingStockQty: form.openingStockQty !== '' ? Number(form.openingStockQty) : 0,
@@ -496,6 +500,31 @@ export function ProductFormDialog({ open, onOpenChange, product }) {
               <span>ℹ️</span> Curing Days and Mandatory QA release are disabled for Raw Materials & Consumables.
             </div>
           )}
+
+          {/* Applies to any product type, so it sits outside the finished-good
+              block above. It changes nothing about how the product behaves —
+              only which list the bundle screen offers it in. */}
+          <div className="p-3 rounded-lg bg-background border border-border/70">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                id="product-is-accessory"
+                className="mt-0.5 rounded border-input text-primary focus:ring-primary h-4 w-4"
+                checked={form.isAccessory}
+                onChange={(e) => setForm({ ...form, isAccessory: e.target.checked })}
+              />
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold block text-foreground">
+                  This is an accessory
+                </span>
+                <span className="text-[10px] text-muted-foreground block">
+                  Something that normally goes out with another product — a rubber gasket with an RCC
+                  pipe, an MS frame with a manhole cover, lifting hooks with a slab. It appears in the
+                  accessory picker when you build a bundle, and can still be sold on its own.
+                </span>
+              </div>
+            </label>
+          </div>
 
           {isEditing && (
             <div className="space-y-1.5 pt-1">

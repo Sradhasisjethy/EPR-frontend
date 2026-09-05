@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useCreateParty, useUpdateParty, useUpsertWageProfile, useParties } from '@/hooks/use-parties';
 import { PartyType } from '@/constants/enums';
 import { toPaise, fromPaise } from '@/lib/money';
+import { toInput } from '@/lib/decimal';
 
 // Mirrors GSTIN_PATTERN in backend src/api/parties/parties.schema.js.
 const GSTIN_PATTERN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
@@ -132,7 +133,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
     { partyType: PartyType.CONTRACTOR, limit: 100 },
     { enabled: open && (form.partyType === PartyType.LABOUR || defaultPartyType === PartyType.LABOUR) }
   );
-  const contractors = contractorsData?.data || [];
+  const contractors = contractorsData?.rows || contractorsData?.data || (Array.isArray(contractorsData) ? contractorsData : []);
 
   useEffect(() => {
     if (open) {
@@ -159,19 +160,19 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
               country: party.country || 'India',
               gstType: party.gstType || (isContractorInit || isSalesRefInit ? 'Unregistered' : 'Registered Regular'),
               legalName: party.legalName || '',
-              openingBalance: party.openingBalance != null ? String(party.openingBalance) : '',
+              openingBalance: toInput(party.openingBalance),
               asOfDate: party.asOfDate ? party.asOfDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
               balanceType: party.balanceType || (isCustomerInit ? 'TO_RECEIVE' : (isPayeeInit || isSalesRefInit) ? 'TO_PAY' : isLabourInit ? 'TO_RECEIVE' : 'TO_RECEIVE'),
               paymentTerms: party.paymentTerms && !['To Receive', 'To Pay'].includes(party.paymentTerms) ? party.paymentTerms : 'Net 30 Days',
               pincode: party.pincode || '',
               billingAddress: party.billingAddress || party.address || '',
-              creditPeriodDays: party.creditPeriodDays != null ? String(party.creditPeriodDays) : (party.creditAgeingDays ? String(party.creditAgeingDays) : '30'),
+              creditPeriodDays: party.creditPeriodDays != null ? toInput(party.creditPeriodDays) : toInput(party.creditAgeingDays, '30'),
               creditLimitRupees: party.creditLimitPaise ? fromPaise(party.creditLimitPaise) : '',
-              noOfCredits: String(party.noOfCredits ?? 0),
+              noOfCredits: toInput(party.noOfCredits, '0'),
               relationshipSince: party.relationshipSince ? party.relationshipSince.slice(0, 10) : '',
-              distanceKm: party.distanceKm != null ? String(party.distanceKm) : '',
+              distanceKm: toInput(party.distanceKm),
               transportation: party.transportation || '',
-              retentionPercent: party.retentionPercent != null ? String(party.retentionPercent) : (isContractorInit ? '5' : '0'),
+              retentionPercent: toInput(party.retentionPercent, isContractorInit ? '5' : '0'),
               entityType: party.entityType || 'INDIVIDUAL',
               msmeCategory: party.msmeCategory || 'NONE',
               udyamNumber: party.udyamNumber || '',
@@ -194,16 +195,16 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
               dateOfBirth: party.dateOfBirth ? party.dateOfBirth.slice(0, 10) : '',
               gender: party.gender || 'MALE',
               commissionType: party.commissionType || 'PERCENTAGE',
-              commissionValue: party.commissionValue != null ? String(party.commissionValue) : '2.0',
+              commissionValue: toInput(party.commissionValue, '2'),
               bankAccountNumber: party.bankAccountNumber || '',
               bankIfsc: party.bankIfsc || '',
               bankName: party.bankName || '',
               bankBranch: party.bankBranch || '',
               beneficiaryName: party.beneficiaryName || party.name || '',
-              creditAgeingDays: String(party.creditAgeingDays ?? 0),
+              creditAgeingDays: toInput(party.creditAgeingDays, '0'),
               creditAction: party.creditAction || 'NONE',
               dailyWageRupees: fromPaise(party.wageProfile?.dailyWagePaise),
-              overtimeRateMultiplier: String(party.wageProfile?.overtimeRateMultiplier ?? 1.5),
+              overtimeRateMultiplier: toInput(party.wageProfile?.overtimeRateMultiplier, '1.5'),
               status: party.status || 'active',
             }
           : {

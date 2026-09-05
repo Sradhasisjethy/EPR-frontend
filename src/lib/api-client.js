@@ -38,8 +38,10 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // If the refresh or login itself fails with 401, redirect to login
-      if (originalRequest.url.includes('/auth/refresh') || originalRequest.url.includes('/auth/login')) {
+      // If the refresh or login itself fails with 401, clear tokens and redirect to login
+      if (originalRequest.url?.includes('/auth/refresh') || originalRequest.url?.includes('/auth/login')) {
+        localStorage.removeItem('infideep-access-token');
+        localStorage.removeItem('infideep-refresh-token');
         if (!window.location.pathname.includes('/login')) {
           window.location.href = '/login';
         }
@@ -47,26 +49,51 @@ apiClient.interceptors.response.use(
       }
 
       if (isRefreshing) {
-        return new Promise(function(resolve, reject) {
+        return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(() => {
-          return apiClient(originalRequest);
-        }).catch(err => {
-          return Promise.reject(err);
-        });
+        })
+          .then((token) => {
+            if (token) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
+            return apiClient(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        await apiClient.post('/auth/refresh');
+        const storedRefreshToken = localStorage.getItem('infideep-refresh-token');
+        const refreshResponse = await axios.post(
+          `${apiClient.defaults.baseURL}/auth/refresh`,
+          { refreshToken: storedRefreshToken || undefined },
+          { withCredentials: true }
+        );
+
+        const newAccessToken = refreshResponse.data?.data?.accessToken;
+        const newRefreshToken = refreshResponse.data?.data?.refreshToken;
+
+        if (newAccessToken) {
+          localStorage.setItem('infideep-access-token', newAccessToken);
+          apiClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        }
+
+        if (newRefreshToken) {
+          localStorage.setItem('infideep-refresh-token', newRefreshToken);
+        }
+
         isRefreshing = false;
-        processQueue(null);
+        processQueue(null, newAccessToken);
+
         return apiClient(originalRequest);
       } catch (err) {
         isRefreshing = false;
-        processQueue(err);
+        processQueue(err, null);
+        localStorage.removeItem('infideep-access-token');
+        localStorage.removeItem('infideep-refresh-token');
         if (!window.location.pathname.includes('/login')) {
           window.location.href = '/login';
         }

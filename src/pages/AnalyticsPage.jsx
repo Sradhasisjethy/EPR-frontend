@@ -10,8 +10,9 @@ import { formatINR } from '@/lib/money';
 import { useFactories } from '@/hooks/use-factory';
 import { useStockAgeing, useDashboardKpis, useCostingReport, useAlerts, useCancellationAnalytics } from '@/hooks/use-analytics';
 import { useTabParam } from '@/hooks/use-tab-param';
+import AttachRatePage from '@/pages/AttachRatePage';
 
-const TABS = ['Dashboard', 'Stock Ageing', 'Costing', 'Alerts', 'Cancellations'];
+const TABS = ['Dashboard', 'Stock Ageing', 'Costing', 'Alerts', 'Cancellations', 'Attach Rate'];
 
 const StatCard = ({ label, value, hint }) => (
   <div className="p-4 rounded-xl border border-border bg-card">
@@ -247,6 +248,7 @@ export default function AnalyticsPage() {
           </div>
         )
       )}
+      {activeTab === 'Attach Rate' && <AttachRatePage />}
     </div>
   );
 }

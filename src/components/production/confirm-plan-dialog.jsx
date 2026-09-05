@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useConfirmPlan } from '@/hooks/use-production';
+import { toInput } from '@/lib/decimal';
 
 export function ConfirmPlanDialog({ open, onOpenChange, plan }) {
   const [quantities, setQuantities] = useState({});
@@ -12,7 +13,7 @@ export function ConfirmPlanDialog({ open, onOpenChange, plan }) {
 
   useEffect(() => {
     if (open && plan) {
-      setQuantities(Object.fromEntries(plan.lines.map((l) => [l.id, String(l.confirmedQty ?? l.requiredQty)])));
+      setQuantities(Object.fromEntries(plan.lines.map((l) => [l.id, toInput(l.confirmedQty ?? l.requiredQty)])));
       setError('');
     }
   }, [open, plan]);

@@ -12,7 +12,7 @@ import { apiClient } from '@/lib/api-client';
  * @param {string} basePath - API path, e.g. '/factories'
  */
 export function createResourceHooks(key, basePath) {
-  const useList = (params = {}) =>
+  const useList = (params = {}, options = {}) =>
     useQuery({
       queryKey: [key, 'list', params],
       queryFn: async () => {
@@ -20,6 +20,7 @@ export function createResourceHooks(key, basePath) {
         return response.data.data; // { rows, count } from Sequelize findAndCountAll
       },
       placeholderData: (prev) => prev,
+      ...options,
     });
 
   const useGet = (id, options = {}) =>

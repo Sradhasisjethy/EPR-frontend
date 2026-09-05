@@ -380,12 +380,10 @@ export default function ProductsPage() {
             type: 'select',
             placeholder: 'None (Root Category)',
             hint: 'Nest subcategories under a parent (e.g. Aggregates -> 10mm / 20mm or Precast -> Boundary Wall).',
-            options: () => [
-              { value: '', label: 'None (Root Category)' },
-              ...(categoryQuery.query.data?.rows || [])
+            options: () =>
+              (categoryQuery.query.data?.rows || [])
                 .filter((c) => c.id !== editingCategory?.id)
                 .map((c) => ({ value: c.id, label: c.name })),
-            ],
           },
         ]}
         buildPayload={(form) => ({

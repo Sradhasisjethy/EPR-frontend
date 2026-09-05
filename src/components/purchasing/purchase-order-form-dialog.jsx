@@ -10,6 +10,7 @@ import { useParties } from '@/hooks/use-parties';
 import { useProducts } from '@/hooks/use-products';
 import { PartyType } from '@/constants/enums';
 import { toPaise } from '@/lib/money';
+import { toInput } from '@/lib/decimal';
 
 const emptyLine = { productId: '', orderedQty: '', rateRupees: '' };
 
@@ -42,7 +43,7 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
         setLines(
           (order.lines || []).map((l) => ({
             productId: l.productId,
-            orderedQty: String(l.orderedQty ?? ''),
+            orderedQty: toInput(l.orderedQty),
             rateRupees: l.ratePaise === null || l.ratePaise === undefined ? '' : String(Number(l.ratePaise) / 100),
           }))
         );
