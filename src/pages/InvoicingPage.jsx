@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { usePaginated } from '@/hooks/use-paginated';
-import { Plus } from 'lucide-react';
+import { Plus, Printer } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
@@ -9,11 +9,14 @@ import { useHotkey } from '@/hooks/use-hotkey';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { canViewRates } from '@/lib/permissions';
 import { formatINR } from '@/lib/money';
-import { useSalesInvoices, useCancelInvoice } from '@/hooks/use-invoicing';
+import { useSalesInvoices, useCancelInvoice, openInvoicePrint } from '@/hooks/use-invoicing';
 import { CreateInvoiceDialog } from '@/components/invoicing/create-invoice-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
+import { toast } from 'sonner';
 
 export default function InvoicingPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [cancellingInvoice, setCancellingInvoice] = useState(null);
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
 
@@ -24,8 +27,7 @@ export default function InvoicingPage() {
   useHotkey('n', useCallback(() => setDialogOpen(true), []));
 
   const handleCancel = (invoice) => {
-    const reason = window.prompt('Cancellation reason:');
-    if (reason) cancelInvoice.mutate({ id: invoice.id, reason });
+    setCancellingInvoice(invoice);
   };
 
   return (
@@ -54,7 +56,18 @@ export default function InvoicingPage() {
             {
               id: 'actions', header: '',
               cell: ({ row }) => (
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                    onClick={() =>
+                      openInvoicePrint(row.original.id).catch((err) =>
+                        toast.error(err.response?.data?.message || 'Could not open the invoice.')
+                      )
+                    }
+                  >
+                    <Printer size={12} /> Print
+                  </button>
                   {row.original.status === 'POSTED' && (
                     <button className="text-xs text-destructive hover:underline" onClick={() => handleCancel(row.original)}>Cancel</button>
                   )}
@@ -73,6 +86,27 @@ export default function InvoicingPage() {
       )}
 
       <CreateInvoiceDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+
+      <ReasonDialog
+        open={!!cancellingInvoice}
+        onOpenChange={(open) => !open && setCancellingInvoice(null)}
+        title={`Cancel Invoice — ${cancellingInvoice?.invoiceNumber}`}
+        description="Are you sure you want to cancel this invoice? This action will mark the invoice as cancelled and reverse posted general ledger entries."
+        label="Cancellation Reason"
+        placeholder="e.g. Billing correction, duplicate invoice raised, customer return..."
+        confirmText="Cancel Invoice"
+        variant="destructive"
+        onConfirm={async (reason) => {
+          if (!cancellingInvoice) return;
+          try {
+            await cancelInvoice.mutateAsync({ id: cancellingInvoice.id, reason });
+            toast.success('Invoice cancelled successfully');
+          } catch (err) {
+            toast.error(err.response?.data?.message || 'Could not cancel invoice.');
+            throw err;
+          }
+        }}
+      />
     </div>
   );
 }
