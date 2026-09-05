@@ -13,7 +13,9 @@ import { MaterialIssueFormDialog } from '@/components/workforce/material-issue-f
 import { ProductionEntryFormDialog } from '@/components/workforce/production-entry-form-dialog';
 import { AttendanceFormDialog } from '@/components/workforce/attendance-form-dialog';
 import { AdvanceFormDialog } from '@/components/workforce/advance-form-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { toast } from 'sonner';
 
 const TABS = ['Material Issues', 'Production Entries', 'Attendance', 'Advances'];
 
@@ -23,6 +25,7 @@ export default function WorkforcePage() {
   const [entryOpen, setEntryOpen] = useState(false);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
   const [advanceOpen, setAdvanceOpen] = useState(false);
+  const [cancellingAdvance, setCancellingAdvance] = useState(null);
 
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
@@ -141,10 +144,7 @@ export default function WorkforcePage() {
                   <div className="flex justify-end">
                     <button
                       className="text-xs text-destructive hover:underline"
-                      onClick={() => {
-                        const reason = window.prompt('Cancellation reason:');
-                        if (reason) cancelAdvance.mutate({ id: row.original.id, reason });
-                      }}
+                      onClick={() => setCancellingAdvance(row.original)}
                     >
                       Cancel
                     </button>
@@ -165,6 +165,27 @@ export default function WorkforcePage() {
       <ProductionEntryFormDialog open={entryOpen} onOpenChange={setEntryOpen} />
       <AttendanceFormDialog open={attendanceOpen} onOpenChange={setAttendanceOpen} />
       <AdvanceFormDialog open={advanceOpen} onOpenChange={setAdvanceOpen} />
+
+      <ReasonDialog
+        open={!!cancellingAdvance}
+        onOpenChange={(open) => !open && setCancellingAdvance(null)}
+        title={`Cancel Advance — ${cancellingAdvance?.advanceNumber}`}
+        description="Are you sure you want to cancel this contractor advance? This action will reverse posted journal entries and cannot be undone."
+        label="Cancellation Reason"
+        placeholder="e.g. Advance paid in error, duplicate entry, recovered offline..."
+        confirmText="Cancel Advance"
+        variant="destructive"
+        onConfirm={async (reason) => {
+          if (!cancellingAdvance) return;
+          try {
+            await cancelAdvance.mutateAsync({ id: cancellingAdvance.id, reason });
+            toast.success('Advance cancelled successfully');
+          } catch (err) {
+            toast.error(err.response?.data?.message || 'Could not cancel advance.');
+            throw err;
+          }
+        }}
+      />
     </div>
   );
 }

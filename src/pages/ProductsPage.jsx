@@ -17,7 +17,7 @@ import {
   useHsnCodes, useDeleteHsnCode,
   useProducts, useDeleteProduct, useCreateUom, useUpdateUom, useCreateProductCategory, useUpdateProductCategory,
   useCreateHsnCode, useUpdateHsnCode,
-  useMixDesigns, } from '@/hooks/use-products';
+  useMixDesigns, useDeleteMixDesign, } from '@/hooks/use-products';
 import { MasterFormDialog } from '@/components/products/master-form-dialog';
 import { ProductFormDialog } from '@/components/products/product-form-dialog';
 import { MixDesignFormDialog } from '@/components/products/mix-design-form-dialog';
@@ -94,6 +94,7 @@ export default function ProductsPage() {
   const deleteCategory = useDeleteProductCategory();
   const deleteHsn = useDeleteHsnCode();
   const deleteProduct = useDeleteProduct();
+  const deleteMixDesign = useDeleteMixDesign();
 
   const confirmDelete = (label, mutation, entity, customDesc) => {
     setDeleteDialog({
@@ -220,6 +221,16 @@ export default function ProductsPage() {
                       mixDesign={row.original}
                       onShowCost={setCostDialogFor}
                       onActivate={setActivateDialogFor}
+                      onDelete={
+                        row.original.status === 'DRAFT' && canDelete
+                          ? () => confirmDelete(
+                              row.original.name,
+                              deleteMixDesign,
+                              row.original,
+                              `Delete draft mix design "${row.original.name}" (v${row.original.version})? Only an unused draft can be removed. This cannot be undone.`
+                            )
+                          : undefined
+                      }
                     />
                   </div>
                 ),
@@ -470,7 +481,21 @@ export default function ProductsPage() {
       <ActivateBomDialog open={!!activateDialogFor} onOpenChange={(v) => !v && setActivateDialogFor(null)} mixDesign={activateDialogFor} />
 
       <ProductFormDialog open={productDialogOpen} onOpenChange={setProductDialogOpen} product={editingProduct} />
-      <MixDesignFormDialog open={mixDialogOpen} onOpenChange={setMixDialogOpen} mixDesign={editingMix} />
+      <MixDesignFormDialog
+        open={mixDialogOpen}
+        onOpenChange={setMixDialogOpen}
+        mixDesign={editingMix}
+        onDelete={
+          canDelete
+            ? (mix) => confirmDelete(
+                mix.name,
+                deleteMixDesign,
+                mix,
+                `Delete draft mix design "${mix.name}" (v${mix.version})? Only an unused draft can be removed. This cannot be undone.`
+              )
+            : undefined
+        }
+      />
 
       <ConfirmDialog
         open={deleteDialog.open}

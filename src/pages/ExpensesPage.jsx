@@ -11,9 +11,12 @@ import { canViewRates } from '@/lib/permissions';
 import { formatINR } from '@/lib/money';
 import { useExpenses, useCancelExpense } from '@/hooks/use-expenses';
 import { ExpenseFormDialog } from '@/components/expenses/expense-form-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
+import { toast } from 'sonner';
 
 export default function ExpensesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [cancellingExpense, setCancellingExpense] = useState(null);
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
 
@@ -24,8 +27,7 @@ export default function ExpensesPage() {
   useHotkey('n', useCallback(() => setDialogOpen(true), []));
 
   const handleCancel = (expense) => {
-    const reason = window.prompt('Cancellation reason:');
-    if (reason) cancelExpense.mutate({ id: expense.id, reason });
+    setCancellingExpense(expense);
   };
 
   return (
@@ -64,6 +66,27 @@ export default function ExpensesPage() {
       )}
 
       <ExpenseFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+
+      <ReasonDialog
+        open={!!cancellingExpense}
+        onOpenChange={(open) => !open && setCancellingExpense(null)}
+        title={`Cancel Expense — ${cancellingExpense?.expenseNumber}`}
+        description="Are you sure you want to cancel this expense? This action will reverse posted general ledger entries and mark the expense as cancelled."
+        label="Cancellation Reason"
+        placeholder="e.g. Duplicate expense, wrong account selected, bill cancelled..."
+        confirmText="Cancel Expense"
+        variant="destructive"
+        onConfirm={async (reason) => {
+          if (!cancellingExpense) return;
+          try {
+            await cancelExpense.mutateAsync({ id: cancellingExpense.id, reason });
+            toast.success('Expense cancelled successfully');
+          } catch (err) {
+            toast.error(err.response?.data?.message || 'Could not cancel expense.');
+            throw err;
+          }
+        }}
+      />
     </div>
   );
 }

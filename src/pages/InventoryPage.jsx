@@ -7,7 +7,9 @@ import { useFactories } from '@/hooks/use-factory';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { hasPermission } from '@/lib/permissions';
+import { trimDecimals } from '@/lib/decimal';
 import { StockAdjustmentDialog } from '@/components/inventory/stock-adjustment-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
 
 // Must match the allow-lists StockLedgerService passes to `toOrder`.
 const SORTABLE = {
@@ -55,6 +57,7 @@ export default function InventoryPage() {
   const [activeTab, setActiveTab] = useTabParam(['lots', 'ledger', 'adjustments'], 'lots', 'subtab');
   const [factoryFilter, setFactoryFilter] = useState('');
   const [adjustingLot, setAdjustingLot] = useState(null);
+  const [releasingLot, setReleasingLot] = useState(null);
   const [actionError, setActionError] = useState('');
 
   const { data: user } = useCurrentUser();
@@ -105,7 +108,7 @@ export default function InventoryPage() {
               { accessorKey: 'originType', header: 'Origin' },
               { accessorKey: 'originDate', header: 'Origin Date' },
               { accessorKey: 'curingDays', header: 'Curing (d)' },
-              { id: 'qty', header: 'Available', cell: ({ row }) => `${row.original.qtyAvailable} / ${row.original.qtyOriginal}` },
+              { id: 'qty', header: 'Available', cell: ({ row }) => `${trimDecimals(row.original.qtyAvailable)} / ${trimDecimals(row.original.qtyOriginal)}` },
               { id: 'status', header: 'Status', cell: ({ row }) => <LotStatusBadge status={row.original.status} /> },
               {
                 id: 'ageing', header: 'Ageing',
@@ -118,20 +121,7 @@ export default function InventoryPage() {
                     {row.original.status === 'CURING' && (
                       <button
                         className="text-xs text-primary hover:underline"
-                        onClick={() => {
-                          // BR-08 / AC-4.4: a reason is mandatory and is stored
-                          // permanently on the lot, so prompt rather than confirm.
-                          const reason = window.prompt(
-                            'Release this lot early, before curing completes?\nThis is logged against your name (BR-08).\n\nReason:'
-                          );
-                          if (reason && reason.trim()) {
-                            setActionError('');
-                            releaseEarly.mutate(
-                              { lotId: row.original.id, reason },
-                              { onError: (err) => setActionError(err.response?.data?.message || 'Could not release this lot.') }
-                            );
-                          }
-                        }}
+                        onClick={() => setReleasingLot(row.original)}
                       >
                         Release early
                       </button>
@@ -190,7 +180,7 @@ export default function InventoryPage() {
                 id: 'qty', header: 'Qty',
                 cell: ({ row }) => (
                   <span className={row.original.direction === 'IN' ? 'text-emerald-600' : 'text-red-600'}>
-                    {row.original.direction === 'IN' ? '+' : '-'}{row.original.quantity}
+                    {row.original.direction === 'IN' ? '+' : '-'}{trimDecimals(row.original.quantity)}
                   </span>
                 ),
               },
@@ -229,13 +219,14 @@ export default function InventoryPage() {
               { accessorKey: 'adjustmentDate', header: 'Date' },
               { id: 'product', header: 'Product', cell: ({ row }) => row.original.product?.name || row.original.productId },
               { id: 'lot', header: 'Lot', cell: ({ row }) => row.original.lot?.lotNumber || row.original.lotId },
-              { id: 'previous', header: 'System Qty', cell: ({ row }) => Number(row.original.previousQty) },
-              { id: 'counted', header: 'Counted', cell: ({ row }) => Number(row.original.countedQty) },
+              { id: 'previous', header: 'System Qty', cell: ({ row }) => trimDecimals(row.original.previousQty) },
+              { id: 'counted', header: 'Counted', cell: ({ row }) => trimDecimals(row.original.countedQty) },
               {
                 id: 'delta', header: 'Difference',
                 cell: ({ row }) => {
                   const d = Number(row.original.adjustmentQty);
-                  return <span className={d > 0 ? 'text-emerald-600' : 'text-destructive'}>{d > 0 ? `+${d}` : d}</span>;
+                  const trimmed = trimDecimals(row.original.adjustmentQty);
+                  return <span className={d > 0 ? 'text-emerald-600' : 'text-destructive'}>{d > 0 ? `+${trimmed}` : trimmed}</span>;
                 },
               },
               { accessorKey: 'reason', header: 'Reason' },
@@ -260,6 +251,22 @@ export default function InventoryPage() {
       )}
 
       <StockAdjustmentDialog open={!!adjustingLot} onOpenChange={(v) => !v && setAdjustingLot(null)} lot={adjustingLot} />
+
+      <ReasonDialog
+        open={!!releasingLot}
+        onOpenChange={(v) => !v && setReleasingLot(null)}
+        title={`Release Early — ${releasingLot?.lotNumber}`}
+        description="Release this lot early, before curing completes? This action is permanently logged against your account (BR-08)."
+        label="Reason for early release"
+        placeholder="e.g. Urgent customer dispatch, QC testing passed ahead of schedule..."
+        confirmText="Release Early"
+        variant="default"
+        onConfirm={async (reason) => {
+          if (!releasingLot) return;
+          setActionError('');
+          await releaseEarly.mutateAsync({ lotId: releasingLot.id, reason });
+        }}
+      />
     </div>
   );
 }

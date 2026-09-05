@@ -13,7 +13,9 @@ import { SalesReturnFormDialog } from '@/components/returns/sales-return-form-di
 import { PurchaseReturnFormDialog } from '@/components/returns/purchase-return-form-dialog';
 import { CreditNoteFormDialog } from '@/components/returns/credit-note-form-dialog';
 import { DebitNoteFormDialog } from '@/components/returns/debit-note-form-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { toast } from 'sonner';
 
 const TABS = ['Sales Returns', 'Purchase Returns', 'Credit Notes', 'Debit Notes'];
 
@@ -23,6 +25,7 @@ export default function ReturnsPage() {
   const [purchaseReturnOpen, setPurchaseReturnOpen] = useState(false);
   const [creditNoteOpen, setCreditNoteOpen] = useState(false);
   const [debitNoteOpen, setDebitNoteOpen] = useState(false);
+  const [cancelPrompt, setCancelPrompt] = useState(null);
 
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
@@ -43,9 +46,8 @@ export default function ReturnsPage() {
     'Debit Notes': () => setDebitNoteOpen(true),
   };
 
-  const cancelWithReason = (mutation, id) => {
-    const reason = window.prompt('Cancellation reason:');
-    if (reason) mutation.mutate({ id, reason });
+  const cancelWithReason = (mutation, id, title) => {
+    setCancelPrompt({ mutation, id, title });
   };
 
   return (
@@ -78,7 +80,7 @@ export default function ReturnsPage() {
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelSalesReturn, row.original.id)}>Cancel</button></div>
+                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelSalesReturn, row.original.id, `Cancel Sales Return — ${row.original.returnNumber}`)}>Cancel</button></div>
                 ),
               },
             ]}
@@ -104,7 +106,7 @@ export default function ReturnsPage() {
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelPurchaseReturn, row.original.id)}>Cancel</button></div>
+                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelPurchaseReturn, row.original.id, `Cancel Purchase Return — ${row.original.returnNumber}`)}>Cancel</button></div>
                 ),
               },
             ]}
@@ -130,7 +132,7 @@ export default function ReturnsPage() {
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelCreditNote, row.original.id)}>Cancel</button></div>
+                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelCreditNote, row.original.id, `Cancel Credit Note — ${row.original.noteNumber}`)}>Cancel</button></div>
                 ),
               },
             ]}
@@ -156,7 +158,7 @@ export default function ReturnsPage() {
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelDebitNote, row.original.id)}>Cancel</button></div>
+                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelDebitNote, row.original.id, `Cancel Debit Note — ${row.original.noteNumber}`)}>Cancel</button></div>
                 ),
               },
             ]}
@@ -173,6 +175,27 @@ export default function ReturnsPage() {
       <PurchaseReturnFormDialog open={purchaseReturnOpen} onOpenChange={setPurchaseReturnOpen} />
       <CreditNoteFormDialog open={creditNoteOpen} onOpenChange={setCreditNoteOpen} />
       <DebitNoteFormDialog open={debitNoteOpen} onOpenChange={setDebitNoteOpen} />
+
+      <ReasonDialog
+        open={!!cancelPrompt}
+        onOpenChange={(open) => !open && setCancelPrompt(null)}
+        title={cancelPrompt?.title || 'Cancellation'}
+        description="Are you sure you want to cancel this record? This action will reverse stock/ledger entries and mark it as cancelled."
+        label="Cancellation Reason"
+        placeholder="e.g. Posted in error, customer return superseded..."
+        confirmText="Confirm Cancellation"
+        variant="destructive"
+        onConfirm={async (reason) => {
+          if (!cancelPrompt) return;
+          try {
+            await cancelPrompt.mutation.mutateAsync({ id: cancelPrompt.id, reason });
+            toast.success('Cancelled successfully');
+          } catch (err) {
+            toast.error(err.response?.data?.message || 'Could not cancel record.');
+            throw err;
+          }
+        }}
+      />
     </div>
   );
 }

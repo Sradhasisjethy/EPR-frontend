@@ -13,7 +13,9 @@ import { usePaginated } from '@/hooks/use-paginated';
 import { useReceipts, useCancelReceipt, usePayments, useCancelPayment } from '@/hooks/use-payments';
 import { ReceiptFormDialog } from '@/components/payments/receipt-form-dialog';
 import { PaymentFormDialog } from '@/components/payments/payment-form-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { toast } from 'sonner';
 
 const TABS = ['Receipts', 'Payments', 'Cheques'];
 
@@ -22,6 +24,7 @@ export default function PaymentsPage() {
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [bouncingCheque, setBouncingCheque] = useState(null);
+  const [cancelPrompt, setCancelPrompt] = useState(null);
 
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
@@ -38,9 +41,8 @@ export default function PaymentsPage() {
   // Cheques tab has no "add" action.
   const addHandlers = { Receipts: () => setReceiptDialogOpen(true), Payments: () => setPaymentDialogOpen(true) };
 
-  const cancelWithReason = (mutation, id) => {
-    const reason = window.prompt('Cancellation reason:');
-    if (reason) mutation.mutate({ id, reason });
+  const cancelWithReason = (mutation, id, title) => {
+    setCancelPrompt({ mutation, id, title });
   };
 
   return (
@@ -76,7 +78,7 @@ export default function PaymentsPage() {
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelReceipt, row.original.id)}>Cancel</button></div>
+                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelReceipt, row.original.id, `Cancel Receipt — ${row.original.receiptNumber}`)}>Cancel</button></div>
                 ),
               },
             ]}
@@ -106,7 +108,7 @@ export default function PaymentsPage() {
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelPayment, row.original.id)}>Cancel</button></div>
+                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelPayment, row.original.id, `Cancel Payment — ${row.original.paymentNumber}`)}>Cancel</button></div>
                 ),
               },
             ]}
@@ -167,6 +169,27 @@ export default function PaymentsPage() {
       <BounceChequeDialog open={!!bouncingCheque} onOpenChange={(v) => !v && setBouncingCheque(null)} cheque={bouncingCheque} />
       <ReceiptFormDialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen} />
       <PaymentFormDialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen} />
+
+      <ReasonDialog
+        open={!!cancelPrompt}
+        onOpenChange={(open) => !open && setCancelPrompt(null)}
+        title={cancelPrompt?.title || 'Cancellation'}
+        description="Are you sure you want to cancel this record? This action will reverse posted journal entries and cannot be undone."
+        label="Cancellation Reason"
+        placeholder="e.g. Duplicate entry, incorrect bank account selected, payment cancelled..."
+        confirmText="Confirm Cancellation"
+        variant="destructive"
+        onConfirm={async (reason) => {
+          if (!cancelPrompt) return;
+          try {
+            await cancelPrompt.mutation.mutateAsync({ id: cancelPrompt.id, reason });
+            toast.success('Cancelled successfully');
+          } catch (err) {
+            toast.error(err.response?.data?.message || 'Could not cancel record.');
+            throw err;
+          }
+        }}
+      />
     </div>
   );
 }

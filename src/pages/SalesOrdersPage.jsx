@@ -15,6 +15,7 @@ import {
 } from '@/hooks/use-sales';
 import { SalesOrderFormDialog } from '@/components/sales/sales-order-form-dialog';
 import { SalesOrderDetailDialog } from '@/components/sales/sales-order-detail-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
 
 const STATUS_MAP = {
   DRAFT: 'pending', CONFIRMED: 'active', IN_PRODUCTION: 'onboarding', PARTIALLY_DISPATCHED: 'onboarding',
@@ -41,6 +42,7 @@ export default function SalesOrdersPage() {
   const [detailId, setDetailId] = useState(null);
   const [status, setStatus] = useState('');
   const [actionError, setActionError] = useState('');
+  const [reasonPrompt, setReasonPrompt] = useState(null);
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
 
@@ -68,6 +70,26 @@ export default function SalesOrdersPage() {
     setActionError('');
     mutation.mutate(arg, {
       onError: (err) => setActionError(err.response?.data?.message || 'That action could not be completed.'),
+    });
+  };
+
+  const promptAndRun = ({ title, description, label, placeholder, confirmText = 'Submit', variant = 'destructive', mutation, id }) => {
+    setReasonPrompt({
+      title,
+      description,
+      label,
+      placeholder,
+      confirmText,
+      variant,
+      onConfirm: async (reason) => {
+        setActionError('');
+        try {
+          await mutation.mutateAsync({ id, reason });
+        } catch (err) {
+          setActionError(err.response?.data?.message || 'That action could not be completed.');
+          throw err;
+        }
+      },
     });
   };
 
@@ -152,10 +174,18 @@ export default function SalesOrdersPage() {
                     {['DRAFT', 'CONFIRMED', 'IN_PRODUCTION'].includes(o.status) && canModify && (
                       <button
                         className="text-xs text-destructive hover:underline"
-                        onClick={() => {
-                          const reason = window.prompt('Cancellation reason:');
-                          if (reason) run(cancelOrder, { id: o.id, reason });
-                        }}
+                        onClick={() =>
+                          promptAndRun({
+                            title: `Cancel Sales Order — ${o.orderNumber}`,
+                            description: 'Are you sure you want to cancel this sales order? This will release reserved stock balance and mark the order as cancelled.',
+                            label: 'Cancellation Reason',
+                            placeholder: 'e.g. Customer cancelled order, duplicate entry...',
+                            confirmText: 'Cancel Order',
+                            variant: 'destructive',
+                            mutation: cancelOrder,
+                            id: o.id,
+                          })
+                        }
                       >
                         Cancel
                       </button>
@@ -165,10 +195,18 @@ export default function SalesOrdersPage() {
                       <button
                         className="text-xs text-amber-600 hover:underline"
                         title="Close the undelivered balance and release its stock hold"
-                        onClick={() => {
-                          const reason = window.prompt('Short-close reason:');
-                          if (reason) run(shortCloseOrder, { id: o.id, reason });
-                        }}
+                        onClick={() =>
+                          promptAndRun({
+                            title: `Short-close Sales Order — ${o.orderNumber}`,
+                            description: 'Close the undelivered balance and release its stock hold.',
+                            label: 'Short-close Reason',
+                            placeholder: 'e.g. Customer requested partial delivery only, balance order cancelled...',
+                            confirmText: 'Short-close Order',
+                            variant: 'default',
+                            mutation: shortCloseOrder,
+                            id: o.id,
+                          })
+                        }
                       >
                         Short-close
                       </button>
@@ -191,6 +229,18 @@ export default function SalesOrdersPage() {
 
       <SalesOrderFormDialog open={dialogOpen} onOpenChange={setDialogOpen} order={editingOrder} />
       <SalesOrderDetailDialog open={!!detailId} onOpenChange={(v) => !v && setDetailId(null)} orderId={detailId} />
+
+      <ReasonDialog
+        open={!!reasonPrompt}
+        onOpenChange={(open) => !open && setReasonPrompt(null)}
+        title={reasonPrompt?.title}
+        description={reasonPrompt?.description}
+        label={reasonPrompt?.label}
+        placeholder={reasonPrompt?.placeholder}
+        confirmText={reasonPrompt?.confirmText}
+        variant={reasonPrompt?.variant}
+        onConfirm={reasonPrompt?.onConfirm}
+      />
     </div>
   );
 }

@@ -5,12 +5,13 @@ import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useProductionPlans, useProductionEntries, usePendingApprovals, useApproveVariance, useWastageRecords, useProductionOrders, useMaterialConsumptions, productionSheetUrl } from '@/hooks/use-production';
+import { useProductionPlans, useProductionEntries, usePendingApprovals, useApproveVariance, useWastageRecords, useProductionOrders, useMaterialConsumptions, openProductionSheet } from '@/hooks/use-production';
 import { GeneratePlanDialog } from '@/components/production/generate-plan-dialog';
 import { ConfirmPlanDialog } from '@/components/production/confirm-plan-dialog';
 import { ProductionEntryFormDialog } from '@/components/production/production-entry-form-dialog';
 import { WastageFormDialog } from '@/components/production/wastage-form-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { toast } from 'sonner';
 
 const TABS = ['Plans', 'Orders', 'Entries', 'Consumption', 'Approvals', 'Wastage'];
 
@@ -25,6 +26,11 @@ export default function ProductionPage() {
   const [generateOpen, setGenerateOpen] = useState(false);
   const [confirmingPlan, setConfirmingPlan] = useState(null);
   const [entryDialogOpen, setEntryDialogOpen] = useState(false);
+  // The order row a casting run is being recorded against, if any. Without it
+  // the entry is standalone: stock moves, but the order's produced/remaining
+  // figures never budge, because progress is summed over entries carrying the
+  // plan line's id.
+  const [entryForOrder, setEntryForOrder] = useState(null);
   const [wastageDialogOpen, setWastageDialogOpen] = useState(false);
 
   const planQuery = usePaginated(useProductionPlans);
@@ -78,16 +84,20 @@ export default function ProductionPage() {
                   row.original.status === 'PROPOSED' ? (
                     <button className="text-xs text-primary hover:underline" onClick={() => setConfirmingPlan(row.original)}>Review & Confirm</button>
                   ) : (
-                    // The shop-floor job card. Opened in a new tab rather than
-                    // fetched, so the browser's own PDF viewer handles it.
-                    <a
+                    // The shop-floor job card. Fetched rather than linked: the
+                    // API is on another origin, and a link navigation carries
+                    // no cookie, so a plain href arrived unauthenticated.
+                    <button
+                      type="button"
                       className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                      href={productionSheetUrl(row.original.id)}
-                      target="_blank"
-                      rel="noreferrer"
+                      onClick={() =>
+                        openProductionSheet(row.original.id).catch((err) =>
+                          toast.error(err.response?.data?.message || 'Could not open the production sheet.')
+                        )
+                      }
                     >
                       <Printer size={13} /> Production sheet
-                    </a>
+                    </button>
                   ),
               },
             ]}
@@ -144,7 +154,7 @@ export default function ProductionPage() {
                   row.original.remainingQty > 0 ? (
                     <button
                       className="text-xs text-primary hover:underline"
-                      onClick={() => setEntryDialogOpen(true)}
+                      onClick={() => { setEntryForOrder(row.original); setEntryDialogOpen(true); }}
                       title={`Record production against ${row.original.product?.name || 'this order'}`}
                     >
                       Record production
@@ -258,7 +268,13 @@ export default function ProductionPage() {
 
       <GeneratePlanDialog open={generateOpen} onOpenChange={setGenerateOpen} />
       <ConfirmPlanDialog open={!!confirmingPlan} onOpenChange={(open) => !open && setConfirmingPlan(null)} plan={confirmingPlan} />
-      <ProductionEntryFormDialog open={entryDialogOpen} onOpenChange={setEntryDialogOpen} />
+      <ProductionEntryFormDialog
+        open={entryDialogOpen}
+        onOpenChange={(open) => { setEntryDialogOpen(open); if (!open) setEntryForOrder(null); }}
+        defaultFactoryId={entryForOrder?.productionPlan?.factoryId}
+        defaultProductId={entryForOrder?.productId}
+        defaultPlanLineId={entryForOrder?.id}
+      />
       <WastageFormDialog open={wastageDialogOpen} onOpenChange={setWastageDialogOpen} />
     </div>
   );

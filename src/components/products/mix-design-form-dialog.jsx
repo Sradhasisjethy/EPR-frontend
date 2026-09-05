@@ -11,7 +11,7 @@ import { toInput } from '@/lib/decimal';
 
 const emptyLine = { rawMaterialProductId: '', quantityPerUnit: '', wastagePercent: '0', uomId: '' };
 
-export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProductId }) {
+export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProductId, onDelete }) {
   const isEditing = !!mixDesign;
   const [form, setForm] = useState({
     productId: '',
@@ -371,11 +371,28 @@ export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProd
           </div>
         </form>
 
-        <DialogFooter className="p-4 px-6 border-t border-border/60 bg-background/95 backdrop-blur shrink-0 flex items-center justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button type="submit" form="mix-form" disabled={isSaving}>
-            {isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Mix Design'}
-          </Button>
+        <DialogFooter className="p-4 px-6 border-t border-border/60 bg-background/95 backdrop-blur shrink-0 flex items-center justify-between">
+          <div>
+            {isEditing && mixDesign?.status === 'DRAFT' && onDelete && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onDelete(mixDesign);
+                }}
+              >
+                <Trash2 size={14} className="mr-1.5" /> Delete Draft
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="submit" form="mix-form" disabled={isSaving}>
+              {isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Mix Design'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

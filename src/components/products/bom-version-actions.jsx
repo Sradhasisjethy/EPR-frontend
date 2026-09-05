@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle2, Copy, IndianRupee } from 'lucide-react';
+import { CheckCircle2, Copy, IndianRupee, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -140,32 +140,41 @@ export function ActivateBomDialog({ open, onOpenChange, mixDesign }) {
 }
 
 /** Row actions for a BOM version. */
-export function BomRowActions({ mixDesign, onShowCost, onActivate }) {
+export function BomRowActions({ mixDesign, onShowCost, onActivate, onDelete }) {
   const clone = useCloneMixDesign();
 
   return (
     <div className="flex items-center justify-end gap-1">
       <button
         onClick={() => onShowCost(mixDesign)}
-        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
+        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
         title="Material cost"
       >
         <IndianRupee size={16} />
       </button>
       <button
         onClick={() => clone.mutate({ id: mixDesign.id })}
-        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
+        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
         title="Clone as a new draft"
       >
         <Copy size={16} />
       </button>
-      {mixDesign.status === 'DRAFT' && (
+      {mixDesign.status === 'DRAFT' && onActivate && (
         <button
           onClick={() => onActivate(mixDesign)}
-          className="p-1.5 rounded-md hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-600"
+          className="p-1.5 rounded-md hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-600 transition-colors"
           title="Activate this version"
         >
           <CheckCircle2 size={16} />
+        </button>
+      )}
+      {mixDesign.status === 'DRAFT' && onDelete && (
+        <button
+          onClick={() => onDelete(mixDesign)}
+          className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+          title="Delete draft"
+        >
+          <Trash2 size={16} />
         </button>
       )}
     </div>
