@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useOrganizations, useDepartments, useCreateOffice, useUpdateOffice, useCreateDepartment } from '@/hooks/use-organization';
 import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
+import { usePincodeLookup } from '@/hooks/use-pincode';
 
 const emptyForm = {
   organizationId: '',
@@ -28,6 +30,19 @@ const emptyForm = {
 export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizationId = '' }) {
   const isEditing = !!office;
   const [form, setForm] = useState(emptyForm);
+
+  // Typing a six-digit PIN fills city, state and country. All three stay
+  // editable — the lookup is a shortcut, not a source of truth, and a PIN the
+  // service does not recognise still belongs to a real address.
+  const pincodeStatus = usePincodeLookup(form.pincode, {
+    onResolved: (address) =>
+      setForm((previous) => ({
+        ...previous,
+        city: address.city || previous.city,
+        state: address.state || previous.state,
+        country: address.country || previous.country,
+      })),
+  });
   const [error, setError] = useState('');
   const [quickDeptOpen, setQuickDeptOpen] = useState(false);
   const [newDeptName, setNewDeptName] = useState('');
@@ -143,7 +158,7 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
       : createMutation.mutateAsync(payload);
 
     mutation
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success(isEditing ? 'Office updated' : 'Office created'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to save office.'));
   };
 
@@ -224,7 +239,34 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
             />
           </div>
 
+          {/* PIN first: it fills city, state and country, so only the street
+              address has to be typed by hand. */}
           <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="office-pincode">
+                Pincode / Postal Code <span className="text-destructive font-bold">*</span>
+              </Label>
+              <Input
+                id="office-pincode"
+                placeholder="e.g. 751007"
+                value={form.pincode}
+                onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                required
+              />
+              {pincodeStatus === 'loading' && (
+                <p className="text-xs text-muted-foreground">Looking up city and state…</p>
+              )}
+              {pincodeStatus === 'resolved' && (
+                <p className="text-xs text-muted-foreground">City, state and country filled — edit if needed.</p>
+              )}
+              {pincodeStatus === 'notfound' && (
+                <p className="text-xs text-muted-foreground">No match for that PIN code. Enter the city and state below.</p>
+              )}
+              {pincodeStatus === 'error' && (
+                <p className="text-xs text-muted-foreground">PIN lookup unavailable. Enter the city and state below.</p>
+              )}
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="office-city">
                 City <span className="text-destructive font-bold">*</span>
@@ -237,7 +279,9 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
                 required
               />
             </div>
+          </div>
 
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="office-state">
                 State <span className="text-destructive font-bold">*</span>
@@ -247,21 +291,6 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
                 placeholder="e.g. Odisha"
                 value={form.state}
                 onChange={(e) => setForm({ ...form, state: e.target.value })}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="office-pincode">
-                Pincode / Postal Code <span className="text-destructive font-bold">*</span>
-              </Label>
-              <Input
-                id="office-pincode"
-                placeholder="e.g. 751007"
-                value={form.pincode}
-                onChange={(e) => setForm({ ...form, pincode: e.target.value })}
                 required
               />
             </div>

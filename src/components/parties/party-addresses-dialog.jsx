@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { usePincodeLookup } from '@/hooks/use-pincode';
 import {
   usePartyAddresses, useCreatePartyAddress, useUpdatePartyAddress, useDeletePartyAddress,
 } from '@/hooks/use-party-addresses';
@@ -23,6 +24,17 @@ const EMPTY = {
 export function PartyAddressesDialog({ open, onOpenChange, party }) {
   const partyId = party?.id;
   const [form, setForm] = useState(EMPTY);
+
+  // The state here decides GST place of supply, so getting it from the PIN code
+  // rather than by hand removes a class of mis-billing.
+  const pincodeStatus = usePincodeLookup(form.pincode, {
+    onResolved: (address) =>
+      setForm((previous) => ({
+        ...previous,
+        city: address.city || previous.city,
+        state: address.state || previous.state,
+      })),
+  });
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -161,16 +173,18 @@ export function PartyAddressesDialog({ open, onOpenChange, party }) {
 
             <div className="grid grid-cols-4 gap-3">
               <div className="space-y-1.5">
+                <Label>PIN</Label>
+                <Input value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
+                {pincodeStatus === 'loading' && <p className="text-xs text-muted-foreground">Looking up…</p>}
+                {pincodeStatus === 'resolved' && <p className="text-xs text-muted-foreground">Filled from PIN.</p>}
+              </div>
+              <div className="space-y-1.5">
                 <Label>City</Label>
                 <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
               </div>
               <div className="space-y-1.5">
                 <Label>State</Label>
                 <Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} placeholder="Odisha" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>PIN</Label>
-                <Input value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
               </div>
               <div className="space-y-1.5">
                 <Label>GSTIN</Label>

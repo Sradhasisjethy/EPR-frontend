@@ -15,6 +15,8 @@ import { useCreateEmployee, useUpdateEmployee } from '@/hooks/use-employees';
 import { useOrganizations, useOffices, useDepartments } from '@/hooks/use-organization';
 import { useRoles } from '@/hooks/use-roles';
 import { EmployeeType, EmployeeStatus, SystemRoles } from '@/constants/enums';
+import { toast } from 'sonner';
+import { usePincodeLookup } from '@/hooks/use-pincode';
 
 const emptyForm = {
   email: '',
@@ -46,6 +48,18 @@ const emptyForm = {
 export function EmployeeFormDialog({ open, onOpenChange, employee }) {
   const isEditing = !!employee;
   const [form, setForm] = useState(emptyForm);
+
+  // The PIN code fills city, state and country, so only the street address has
+  // to be typed. Every field stays editable.
+  const pincodeStatus = usePincodeLookup(form.pincode, {
+    onResolved: (address) =>
+      setForm((previous) => ({
+        ...previous,
+        city: address.city || previous.city,
+        state: address.state || previous.state,
+        country: address.country || previous.country,
+      })),
+  });
   const [error, setError] = useState('');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
@@ -164,7 +178,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
       };
       updateMutation
         .mutateAsync({ id: employee.id, ...payload })
-        .then(() => onOpenChange(false))
+        .then(() => { toast.success(isEditing ? 'Employee updated' : 'Employee added'); onOpenChange(false); })
         .catch((err) => setError(err.response?.data?.message || 'Failed to save employee.'));
     } else {
       const payload = {
@@ -194,7 +208,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
       };
       createMutation
         .mutateAsync(payload)
-        .then(() => onOpenChange(false))
+        .then(() => { toast.success(isEditing ? 'Employee updated' : 'Employee added'); onOpenChange(false); })
         .catch((err) => setError(err.response?.data?.message || 'Failed to create employee.'));
     }
   };
@@ -515,6 +529,24 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-1.5">
+                <Label htmlFor="emp-pincode">Pincode / Postal Code</Label>
+                <Input
+                  id="emp-pincode"
+                  placeholder="e.g. 751007"
+                  value={form.pincode}
+                  onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                />
+                {pincodeStatus === 'loading' && (
+                  <p className="text-xs text-muted-foreground">Looking up city and state…</p>
+                )}
+                {pincodeStatus === 'resolved' && (
+                  <p className="text-xs text-muted-foreground">Filled from the PIN code — edit if needed.</p>
+                )}
+                {(pincodeStatus === 'notfound' || pincodeStatus === 'error') && (
+                  <p className="text-xs text-muted-foreground">Enter the city and state below.</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
                 <Label htmlFor="emp-city">City</Label>
                 <Input
                   id="emp-city"
@@ -530,15 +562,6 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
                   placeholder="e.g. Odisha"
                   value={form.state}
                   onChange={(e) => setForm({ ...form, state: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="emp-pincode">Pincode / Postal Code</Label>
-                <Input
-                  id="emp-pincode"
-                  placeholder="e.g. 751007"
-                  value={form.pincode}
-                  onChange={(e) => setForm({ ...form, pincode: e.target.value })}
                 />
               </div>
               <div className="space-y-1.5">
