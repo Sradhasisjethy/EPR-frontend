@@ -16,6 +16,7 @@ import { DebitNoteFormDialog } from '@/components/returns/debit-note-form-dialog
 import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 const TABS = ['Sales Returns', 'Purchase Returns', 'Credit Notes', 'Debit Notes'];
 
@@ -73,7 +74,7 @@ export default function ReturnsPage() {
             columns={[
               { accessorKey: 'returnNumber', header: 'Return #' },
               { id: 'customer', header: 'Customer', cell: ({ row }) => row.original.customer?.name },
-              { accessorKey: 'returnDate', header: 'Date' },
+              { id: 'returnDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.returnDate} /> },
               { accessorKey: 'reason', header: 'Reason' },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.totalAmountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
@@ -99,7 +100,7 @@ export default function ReturnsPage() {
             columns={[
               { accessorKey: 'returnNumber', header: 'Return #' },
               { id: 'vendor', header: 'Vendor', cell: ({ row }) => row.original.vendor?.name },
-              { accessorKey: 'returnDate', header: 'Date' },
+              { id: 'returnDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.returnDate} /> },
               { accessorKey: 'reason', header: 'Reason' },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.totalAmountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
@@ -125,7 +126,7 @@ export default function ReturnsPage() {
             columns={[
               { accessorKey: 'noteNumber', header: 'Note #' },
               { id: 'customer', header: 'Customer', cell: ({ row }) => row.original.customer?.name },
-              { accessorKey: 'noteDate', header: 'Date' },
+              { id: 'noteDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.noteDate} /> },
               { accessorKey: 'reason', header: 'Reason' },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.amountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
@@ -151,7 +152,7 @@ export default function ReturnsPage() {
             columns={[
               { accessorKey: 'noteNumber', header: 'Note #' },
               { id: 'vendor', header: 'Vendor', cell: ({ row }) => row.original.vendor?.name },
-              { accessorKey: 'noteDate', header: 'Date' },
+              { id: 'noteDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.noteDate} /> },
               { accessorKey: 'reason', header: 'Reason' },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.amountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },

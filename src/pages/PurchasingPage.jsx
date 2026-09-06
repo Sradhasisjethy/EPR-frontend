@@ -22,6 +22,8 @@ import { GoodsReceiptFormDialog } from '@/components/purchasing/goods-receipt-fo
 import { PurchaseInvoiceFormDialog } from '@/components/purchasing/purchase-invoice-form-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { DateText } from '@/components/date-text';
+import { toast } from 'sonner';
 
 const TABS = ['Indents', 'Orders', 'Receipts', 'Invoices'];
 
@@ -70,21 +72,22 @@ export default function PurchasingPage() {
   // Any of these can legitimately be refused — an over-receipt, a consumed lot,
   // an invoice that has been paid, a location the user may not touch. Without
   // this the row simply did not change and nothing said why.
-  const run = (mutation, arg) => {
+  const run = (mutation, arg, done) => {
     setActionError('');
     mutation.mutate(arg, {
+      onSuccess: () => done && toast.success(done),
       onError: (err) => setActionError(err.response?.data?.message || 'That action could not be completed.'),
     });
   };
 
-  const promptAndRun = ({ title, description, label, placeholder, confirmText = 'Submit', mutation, id }) => {
+  const promptAndRun = ({ title, description, label, placeholder, confirmText = 'Submit', mutation, id, done }) => {
     setReasonPrompt({
       title,
       description,
       label,
       placeholder,
       confirmText,
-      onConfirm: (reason) => run(mutation, { id, reason }),
+      onConfirm: (reason) => run(mutation, { id, reason }, done),
     });
   };
 
@@ -98,7 +101,6 @@ export default function PurchasingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Purchasing</h2>
         <p className="text-muted-foreground">Purchase orders, goods receipt, and vendor invoices (M12)</p>
       </div>
 
@@ -125,8 +127,8 @@ export default function PurchasingPage() {
           <DataTable
             columns={[
               { accessorKey: 'indentNumber', header: 'Indent #' },
-              { accessorKey: 'indentDate', header: 'Date' },
-              { accessorKey: 'requiredByDate', header: 'Required By' },
+              { id: 'indentDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.indentDate} /> },
+              { id: 'requiredByDate', header: 'Required By', cell: ({ row }) => <DateText value={row.original.requiredByDate} /> },
               { id: 'lines', header: 'Lines', cell: ({ row }) => row.original.lines?.length ?? 0 },
               { accessorKey: 'remarks', header: 'Remarks' },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase().replace(/_/g, ' ')} /> },
@@ -143,7 +145,7 @@ export default function PurchasingPage() {
                     </button>
                     {row.original.status === 'PENDING_APPROVAL' && canApprove && (
                       <>
-                        <button className="text-xs text-primary hover:underline font-medium" onClick={() => run(approveIndent, row.original.id)}>Approve</button>
+                        <button className="text-xs text-primary hover:underline font-medium" onClick={() => run(approveIndent, row.original.id, 'Indent approved')}>Approve</button>
                         <button
                           className="text-xs text-destructive hover:underline font-medium"
                           onClick={() =>
@@ -154,6 +156,7 @@ export default function PurchasingPage() {
                               placeholder: 'e.g. Budget constraints, incorrect specifications, duplicate requisition...',
                               confirmText: 'Reject Indent',
                               mutation: rejectIndent,
+                              done: 'Indent rejected',
                               id: row.original.id,
                             })
                           }
@@ -186,7 +189,7 @@ export default function PurchasingPage() {
             columns={[
               { accessorKey: 'poNumber', header: 'PO #' },
               { id: 'vendor', header: 'Vendor', cell: ({ row }) => row.original.vendor?.name },
-              { accessorKey: 'orderDate', header: 'Order Date' },
+              { id: 'orderDate', header: 'Order Date', cell: ({ row }) => <DateText value={row.original.orderDate} /> },
               ...(showRates ? [{ id: 'total', header: 'Total', cell: ({ row }) => formatINR(row.original.totalAmountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
@@ -204,7 +207,7 @@ export default function PurchasingPage() {
                       </button>
                     )}
                     {row.original.status === 'DRAFT' && canModify && (
-                      <button className="text-xs text-primary hover:underline" onClick={() => run(confirmPo, row.original.id)}>Confirm</button>
+                      <button className="text-xs text-primary hover:underline" onClick={() => run(confirmPo, row.original.id, 'Purchase order confirmed')}>Confirm</button>
                     )}
                     {!['RECEIVED', 'CANCELLED'].includes(row.original.status) && canModify && (
                       <button
@@ -217,6 +220,7 @@ export default function PurchasingPage() {
                             placeholder: 'e.g. Supplier unavailable, order superseded, specifications revised...',
                             confirmText: 'Cancel Order',
                             mutation: cancelPo,
+                            done: 'Purchase order cancelled',
                             id: row.original.id,
                           })
                         }
@@ -244,7 +248,7 @@ export default function PurchasingPage() {
               { accessorKey: 'grnNumber', header: 'GRN #' },
               { id: 'vendor', header: 'Vendor', cell: ({ row }) => row.original.vendor?.name },
               { id: 'po', header: 'Against PO', cell: ({ row }) => row.original.purchaseOrder?.poNumber || 'Direct' },
-              { accessorKey: 'receiptDate', header: 'Receipt Date' },
+              { id: 'receiptDate', header: 'Receipt Date', cell: ({ row }) => <DateText value={row.original.receiptDate} /> },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
@@ -262,6 +266,7 @@ export default function PurchasingPage() {
                             placeholder: 'Why is this goods receipt being reversed?',
                             confirmText: 'Reverse Receipt',
                             mutation: cancelGrn,
+                            done: 'Goods receipt reversed',
                             id: row.original.id,
                           })
                         }
@@ -289,7 +294,7 @@ export default function PurchasingPage() {
             columns={[
               { accessorKey: 'vendorInvoiceNumber', header: 'Vendor Invoice #' },
               { id: 'vendor', header: 'Vendor', cell: ({ row }) => row.original.vendor?.name },
-              { accessorKey: 'invoiceDate', header: 'Date' },
+              { id: 'invoiceDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.invoiceDate} /> },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.amountPaise) }] : []),
               {
                 id: 'match', header: '',
@@ -329,6 +334,7 @@ export default function PurchasingPage() {
                             placeholder: 'Why is this invoice being cancelled?',
                             confirmText: 'Cancel Invoice',
                             mutation: cancelInvoice,
+                            done: 'Vendor invoice cancelled',
                             id: row.original.id,
                           })
                         }
@@ -357,7 +363,7 @@ export default function PurchasingPage() {
         indent={viewingIndent}
         canApprove={canApprove}
         canCreate={canCreate}
-        onApprove={(id) => run(approveIndent, id)}
+        onApprove={(id) => run(approveIndent, id, 'Indent approved')}
         onReject={(ind) =>
           promptAndRun({
             title: `Reject Indent #${ind.indentNumber}`,
@@ -366,6 +372,7 @@ export default function PurchasingPage() {
             placeholder: 'e.g. Budget constraints, incorrect specifications, duplicate requisition...',
             confirmText: 'Reject Indent',
             mutation: rejectIndent,
+                              done: 'Indent rejected',
             id: ind.id,
           })
         }

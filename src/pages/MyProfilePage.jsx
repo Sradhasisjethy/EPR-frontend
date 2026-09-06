@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { EmployeeDocumentsTab } from '@/components/employees/employee-documents-tab';
 import { User, Mail, Shield, Building2, MapPin, Laptop, Calendar } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
+import { DateText } from '@/components/date-text';
 
 export default function MyProfilePage() {
   const { data: user, isLoading } = useCurrentUser();
@@ -69,7 +70,7 @@ export default function MyProfilePage() {
             {user.dateOfJoining && (
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <Calendar size={16} className="text-primary/70" />
-                <span>Joined {new Date(user.dateOfJoining).toLocaleDateString()}</span>
+                <span>Joined {<DateText value={user.dateOfJoining} />}</span>
               </div>
             )}
             {(user.assetName || user.assetCode) && (

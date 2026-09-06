@@ -10,6 +10,7 @@ import { InitiateTransferDialog } from '@/components/transfer/initiate-transfer-
 import { ReceiveTransferDialog } from '@/components/transfer/receive-transfer-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 const STATUS_STYLES = {
   IN_TRANSIT: 'bg-violet-500/10 text-violet-600',
@@ -43,7 +44,7 @@ export default function TransfersPage() {
             { accessorKey: 'transferNumber', header: 'Transfer #' },
             { id: 'from', header: 'From', cell: ({ row }) => factoryName(row.original.fromFactoryId) },
             { id: 'to', header: 'To', cell: ({ row }) => factoryName(row.original.toFactoryId) },
-            { accessorKey: 'initiatedDate', header: 'Initiated' },
+            { id: 'initiatedDate', header: 'Initiated', cell: ({ row }) => <DateText value={row.original.initiatedDate} /> },
             { id: 'lines', header: 'Lines', cell: ({ row }) => row.original.lines?.length ?? 0 },
             {
               id: 'status', header: 'Status',

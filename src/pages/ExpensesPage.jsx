@@ -13,6 +13,7 @@ import { useExpenses, useCancelExpense } from '@/hooks/use-expenses';
 import { ExpenseFormDialog } from '@/components/expenses/expense-form-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 export default function ExpensesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -43,7 +44,7 @@ export default function ExpensesPage() {
           columns={[
             { accessorKey: 'expenseNumber', header: 'Expense #' },
             { accessorKey: 'category', header: 'Category' },
-            { accessorKey: 'expenseDate', header: 'Date' },
+            { id: 'expenseDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.expenseDate} /> },
             { accessorKey: 'mode', header: 'Mode' },
             { id: 'paidTo', header: 'Paid To', cell: ({ row }) => row.original.paidToParty?.name || '—' },
             ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.amountPaise) }] : []),

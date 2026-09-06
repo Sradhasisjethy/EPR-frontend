@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Bell, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotifications, useUnreadCount, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/use-notifications';
+import { DateText } from '@/components/date-text';
 
 const SEVERITY_DOT = {
   CRITICAL: 'bg-destructive',
@@ -93,7 +94,7 @@ export function NotificationBell() {
                     <p className="text-sm font-medium truncate">{n.title}</p>
                     <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>
                     <p className="text-[10px] text-muted-foreground/70 mt-0.5">
-                      {new Date(n.createdAt).toLocaleString()}
+                      {<DateText value={n.createdAt} withTime />}
                     </p>
                   </div>
                 </Link>

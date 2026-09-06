@@ -11,6 +11,7 @@ import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { useTrialBalance, usePartyLedger, useCashBook } from '@/hooks/use-ledger';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { DateText } from '@/components/date-text';
 
 const TABS = ['Trial Balance', 'Party Ledger', 'Cash Book'];
 
@@ -148,7 +149,7 @@ export default function LedgerPage() {
             ) : (
               <DataTable
                 columns={[
-                  { accessorKey: 'date', header: 'Date' },
+                  { id: 'date', header: 'Date', cell: ({ row }) => <DateText value={row.original.date} /> },
                   { accessorKey: 'narration', header: 'Narration' },
                   { accessorKey: 'referenceType', header: 'Reference' },
                   ...(showRates

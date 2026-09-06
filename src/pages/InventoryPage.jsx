@@ -10,6 +10,8 @@ import { hasPermission } from '@/lib/permissions';
 import { trimDecimals } from '@/lib/decimal';
 import { StockAdjustmentDialog } from '@/components/inventory/stock-adjustment-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
+import { DateText } from '@/components/date-text';
+import { toast } from 'sonner';
 
 // Must match the allow-lists StockLedgerService passes to `toOrder`.
 const SORTABLE = {
@@ -106,7 +108,7 @@ export default function InventoryPage() {
               { accessorKey: 'lotNumber', header: 'Lot #' },
               { id: 'product', header: 'Product', cell: ({ row }) => row.original.product?.name || row.original.productId },
               { accessorKey: 'originType', header: 'Origin' },
-              { accessorKey: 'originDate', header: 'Origin Date' },
+              { id: 'originDate', header: 'Origin Date', cell: ({ row }) => <DateText value={row.original.originDate} /> },
               { accessorKey: 'curingDays', header: 'Curing (d)' },
               { id: 'qty', header: 'Available', cell: ({ row }) => `${trimDecimals(row.original.qtyAvailable)} / ${trimDecimals(row.original.qtyOriginal)}` },
               { id: 'status', header: 'Status', cell: ({ row }) => <LotStatusBadge status={row.original.status} /> },
@@ -172,7 +174,7 @@ export default function InventoryPage() {
         ) : (
           <DataTable
             columns={[
-              { id: 'when', header: 'When', cell: ({ row }) => new Date(row.original.createdAt).toLocaleString() },
+              { id: 'when', header: 'When', cell: ({ row }) => <DateText value={row.original.createdAt} withTime /> },
               { id: 'product', header: 'Product', cell: ({ row }) => row.original.product?.name || row.original.productId },
               { id: 'lot', header: 'Lot', cell: ({ row }) => row.original.lot?.lotNumber || row.original.lotId },
               { accessorKey: 'movementType', header: 'Movement' },
@@ -216,7 +218,7 @@ export default function InventoryPage() {
           <DataTable
             columns={[
               { accessorKey: 'adjustmentNumber', header: 'Adjustment #' },
-              { accessorKey: 'adjustmentDate', header: 'Date' },
+              { id: 'adjustmentDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.adjustmentDate} /> },
               { id: 'product', header: 'Product', cell: ({ row }) => row.original.product?.name || row.original.productId },
               { id: 'lot', header: 'Lot', cell: ({ row }) => row.original.lot?.lotNumber || row.original.lotId },
               { id: 'previous', header: 'System Qty', cell: ({ row }) => trimDecimals(row.original.previousQty) },
@@ -265,6 +267,7 @@ export default function InventoryPage() {
           if (!releasingLot) return;
           setActionError('');
           await releaseEarly.mutateAsync({ lotId: releasingLot.id, reason });
+          toast.success('Lot released early');
         }}
       />
     </div>

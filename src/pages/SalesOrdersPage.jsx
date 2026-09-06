@@ -16,6 +16,8 @@ import {
 import { SalesOrderFormDialog } from '@/components/sales/sales-order-form-dialog';
 import { SalesOrderDetailDialog } from '@/components/sales/sales-order-detail-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
+import { DateText } from '@/components/date-text';
+import { toast } from 'sonner';
 
 const STATUS_MAP = {
   DRAFT: 'pending', CONFIRMED: 'active', IN_PRODUCTION: 'onboarding', PARTIALLY_DISPATCHED: 'onboarding',
@@ -66,14 +68,15 @@ export default function SalesOrdersPage() {
   // Every transition can legitimately be refused by the API (stock shortfall,
   // an invalid status move, a location the user may not touch). Without this
   // the mutation failed and the row simply did not change, with no explanation.
-  const run = (mutation, arg) => {
+  const run = (mutation, arg, done) => {
     setActionError('');
     mutation.mutate(arg, {
+      onSuccess: () => done && toast.success(done),
       onError: (err) => setActionError(err.response?.data?.message || 'That action could not be completed.'),
     });
   };
 
-  const promptAndRun = ({ title, description, label, placeholder, confirmText = 'Submit', variant = 'destructive', mutation, id }) => {
+  const promptAndRun = ({ title, description, label, placeholder, confirmText = 'Submit', variant = 'destructive', mutation, id, done }) => {
     setReasonPrompt({
       title,
       description,
@@ -85,6 +88,7 @@ export default function SalesOrdersPage() {
         setActionError('');
         try {
           await mutation.mutateAsync({ id, reason });
+          if (done) toast.success(done);
         } catch (err) {
           setActionError(err.response?.data?.message || 'That action could not be completed.');
           throw err;
@@ -128,7 +132,7 @@ export default function SalesOrdersPage() {
           columns={[
             { accessorKey: 'orderNumber', header: 'Order #' },
             { id: 'customer', header: 'Customer', cell: ({ row }) => row.original.customer?.name },
-            { accessorKey: 'orderDate', header: 'Order Date' },
+            { id: 'orderDate', header: 'Order Date', cell: ({ row }) => <DateText value={row.original.orderDate} /> },
             { id: 'expected', header: 'Expected', cell: ({ row }) => row.original.expectedDeliveryDate || '—' },
             ...(showRates ? [{ accessorKey: 'totalAmountPaise', header: 'Total', cell: ({ row }) => formatINR(row.original.totalAmountPaise) }] : []),
             { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={STATUS_MAP[row.original.status] || 'pending'} /> },
@@ -158,14 +162,14 @@ export default function SalesOrdersPage() {
                     )}
 
                     {o.status === 'DRAFT' && canModify && (
-                      <button className="text-xs text-primary hover:underline" onClick={() => run(confirmOrder, o.id)}>Confirm</button>
+                      <button className="text-xs text-primary hover:underline" onClick={() => run(confirmOrder, o.id, 'Order confirmed')}>Confirm</button>
                     )}
 
                     {o.status === 'CONFIRMED' && canModify && (
                       <button
                         className="text-xs text-muted-foreground hover:text-foreground hover:underline inline-flex items-center gap-1"
                         title="Flag this order as waiting on manufacture"
-                        onClick={() => run(markInProduction, o.id)}
+                        onClick={() => run(markInProduction, o.id, 'Order moved into production')}
                       >
                         <FactoryIcon size={13} /> In production
                       </button>
@@ -183,6 +187,7 @@ export default function SalesOrdersPage() {
                             confirmText: 'Cancel Order',
                             variant: 'destructive',
                             mutation: cancelOrder,
+                            done: 'Order cancelled',
                             id: o.id,
                           })
                         }
@@ -204,6 +209,7 @@ export default function SalesOrdersPage() {
                             confirmText: 'Short-close Order',
                             variant: 'default',
                             mutation: shortCloseOrder,
+                            done: 'Order short-closed',
                             id: o.id,
                           })
                         }

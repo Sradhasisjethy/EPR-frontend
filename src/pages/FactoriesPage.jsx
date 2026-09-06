@@ -37,6 +37,8 @@ import { FinancialYearPeriodsDialog } from '@/components/factory/financial-year-
 import { FinancialYearCloseWizardDialog } from '@/components/factory/financial-year-close-wizard-dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { DateText } from '@/components/date-text';
+import { toast } from 'sonner';
 
 function FactoryRowActions({ onEdit, onDelete }) {
   return (
@@ -203,20 +205,29 @@ export default function FactoriesPage() {
 
   const handleConfirmDelete = () => {
     if (factoryToDelete) {
-      deleteFactory.mutate(factoryToDelete.id);
+      deleteFactory.mutate(factoryToDelete.id, {
+        onSuccess: () => toast.success('Factory deleted'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Could not delete the factory.'),
+      });
       setFactoryToDelete(null);
     }
   };
 
   const handleConfirmDeleteFy = () => {
     if (fyToDelete) {
-      deleteFy.mutate(fyToDelete.id);
+      deleteFy.mutate(fyToDelete.id, {
+        onSuccess: () => toast.success('Financial year deleted'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Could not delete the financial year.'),
+      });
       setFyToDelete(null);
     }
   };
 
   const handleTogglePostings = (fy, targetStatus) => {
-    updateFyStatus.mutate({ id: fy.id, status: targetStatus });
+    updateFyStatus.mutate({ id: fy.id, status: targetStatus }, {
+      onSuccess: () => toast.success(`Financial year ${targetStatus.toLowerCase()}`),
+      onError: (err) => toast.error(err.response?.data?.message || 'Could not change the financial year status.'),
+    });
   };
 
   return (
@@ -293,12 +304,12 @@ export default function FactoriesPage() {
               {
                 accessorKey: 'startDate',
                 header: 'Start Date',
-                cell: ({ row }) => <span className="font-mono text-xs">{row.original.startDate}</span>,
+                cell: ({ row }) => <span className="font-mono text-xs"><DateText value={row.original.startDate} /></span>,
               },
               {
                 accessorKey: 'endDate',
                 header: 'End Date (12 Mos)',
-                cell: ({ row }) => <span className="font-mono text-xs">{row.original.endDate}</span>,
+                cell: ({ row }) => <span className="font-mono text-xs"><DateText value={row.original.endDate} /></span>,
               },
               {
                 id: 'status',

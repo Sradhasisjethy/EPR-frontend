@@ -12,6 +12,7 @@ import { ProductionEntryFormDialog } from '@/components/production/production-en
 import { WastageFormDialog } from '@/components/production/wastage-form-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 const TABS = ['Plans', 'Orders', 'Entries', 'Consumption', 'Approvals', 'Wastage'];
 
@@ -75,7 +76,7 @@ export default function ProductionPage() {
         planQuery.query.isLoading ? <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" /> : (
           <DataTable
             columns={[
-              { accessorKey: 'planDate', header: 'Plan Date' },
+              { id: 'planDate', header: 'Plan Date', cell: ({ row }) => <DateText value={row.original.planDate} /> },
               { id: 'lines', header: 'Lines', cell: ({ row }) => row.original.lines?.length ?? 0 },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status === 'CONFIRMED' ? 'active' : 'pending'} /> },
               {
@@ -118,7 +119,7 @@ export default function ProductionPage() {
             columns={[
               { accessorKey: 'entryNumber', header: 'Entry #' },
               { id: 'product', header: 'Product', cell: ({ row }) => row.original.product?.name },
-              { accessorKey: 'productionDate', header: 'Date' },
+              { id: 'productionDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.productionDate} /> },
               { accessorKey: 'goodQty', header: 'Good Qty' },
               { accessorKey: 'rejectedQty', header: 'Rejected Qty' },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status === 'POSTED' ? 'active' : 'terminated'} /> },
@@ -248,7 +249,7 @@ export default function ProductionPage() {
         wastageQuery.query.isLoading ? <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" /> : (
           <DataTable
             columns={[
-              { accessorKey: 'recordedDate', header: 'Date' },
+              { id: 'recordedDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.recordedDate} /> },
               { id: 'product', header: 'Product', cell: ({ row }) => row.original.product?.name },
               { id: 'lot', header: 'Lot', cell: ({ row }) => row.original.lot?.lotNumber || 'N/A' },
               { accessorKey: 'stage', header: 'Stage' },

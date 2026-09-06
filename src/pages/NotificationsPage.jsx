@@ -9,6 +9,8 @@ import { useCurrentUser } from '@/hooks/use-auth';
 import { canViewRates } from '@/lib/permissions';
 import { formatINR } from '@/lib/money';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/use-notifications';
+import { DateText } from '@/components/date-text';
+import { toast } from 'sonner';
 
 const SEVERITIES = ['', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
 
@@ -58,10 +60,12 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Notifications</h2>
           <p className="text-muted-foreground">Alerts raised by the nightly jobs — dead stock, overdue money, curing, data integrity (M24)</p>
         </div>
-        <Button variant="outline" onClick={() => markAllRead.mutate()} disabled={markAllRead.isPending}>
+        <Button variant="outline" onClick={() => markAllRead.mutate(undefined, {
+          onSuccess: () => toast.success('All alerts marked read'),
+          onError: (err) => toast.error(err.response?.data?.message || 'Could not mark the alerts read.'),
+        })} disabled={markAllRead.isPending}>
           <CheckCheck size={16} /> Mark all read
         </Button>
       </div>
@@ -107,7 +111,7 @@ export default function NotificationsPage() {
               ),
             },
             { id: 'metadata', header: 'Detail', cell: ({ row }) => <MetadataCell metadata={row.original.metadata} showRates={showRates} /> },
-            { id: 'when', header: 'When', cell: ({ row }) => new Date(row.original.createdAt).toLocaleString() },
+            { id: 'when', header: 'When', cell: ({ row }) => <DateText value={row.original.createdAt} withTime /> },
             {
               id: 'actions', header: '',
               cell: ({ row }) => (

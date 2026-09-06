@@ -14,6 +14,7 @@ import { useDocumentSearch } from '@/hooks/use-analytics';
 import { ReportTypes } from '@/constants/enums';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { DateText } from '@/components/date-text';
 
 /**
  * The M40 saved-report builder and document search.
@@ -155,7 +156,6 @@ export default function SavedReportsPage() {
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Saved Report Builder</h2>
           <p className="text-muted-foreground">Ad-hoc analytics, saved parameter sets and cross-module document search (M39/M40)</p>
         </div>
         <Link
@@ -305,7 +305,7 @@ export default function SavedReportsPage() {
               columns={[
                 { id: 'type', header: 'Document Type', cell: ({ row }) => row.original.documentType.replace(/([A-Z])/g, ' $1').trim() },
                 { accessorKey: 'number', header: 'Number' },
-                { accessorKey: 'date', header: 'Date' },
+                { id: 'date', header: 'Date', cell: ({ row }) => <DateText value={row.original.date} /> },
               ]}
               data={search.data || []}
               searchKey="number"

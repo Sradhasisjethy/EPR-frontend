@@ -16,6 +16,7 @@ import { AdvanceFormDialog } from '@/components/workforce/advance-form-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 const TABS = ['Material Issues', 'Production Entries', 'Attendance', 'Advances'];
 
@@ -46,7 +47,6 @@ export default function WorkforcePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Contractor & Labour</h2>
         <p className="text-muted-foreground">Job-work material issues, piece-rate production, attendance and advances (M26/M27)</p>
       </div>
 
@@ -70,7 +70,7 @@ export default function WorkforcePage() {
             columns={[
               { accessorKey: 'issueNumber', header: 'Issue #' },
               { id: 'contractor', header: 'Contractor', cell: ({ row }) => row.original.contractor?.name },
-              { accessorKey: 'issueDate', header: 'Date' },
+              { id: 'issueDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.issueDate} /> },
               { id: 'lines', header: 'Lines', cell: ({ row }) => row.original.lines?.length || 0 },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
             ]}
@@ -90,7 +90,7 @@ export default function WorkforcePage() {
               { accessorKey: 'entryNumber', header: 'Entry #' },
               { id: 'contractor', header: 'Contractor', cell: ({ row }) => row.original.contractor?.name },
               { id: 'product', header: 'Product', cell: ({ row }) => row.original.product?.name },
-              { accessorKey: 'productionDate', header: 'Date' },
+              { id: 'productionDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.productionDate} /> },
               { accessorKey: 'quantity', header: 'Qty' },
               ...(showRates
                 ? [
@@ -114,7 +114,7 @@ export default function WorkforcePage() {
           <DataTable
             columns={[
               { id: 'labour', header: 'Labourer', cell: ({ row }) => row.original.labour?.name },
-              { accessorKey: 'attendanceDate', header: 'Date' },
+              { id: 'attendanceDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.attendanceDate} /> },
               { accessorKey: 'status', header: 'Status' },
               { accessorKey: 'overtimeHours', header: 'OT Hours' },
               ...(showRates ? [{ id: 'wage', header: 'Wage Accrued', cell: ({ row }) => formatINR(row.original.wageAccruedPaise) }] : []),
@@ -134,7 +134,7 @@ export default function WorkforcePage() {
             columns={[
               { accessorKey: 'advanceNumber', header: 'Advance #' },
               { id: 'party', header: 'Party', cell: ({ row }) => row.original.party?.name },
-              { accessorKey: 'advanceDate', header: 'Date' },
+              { id: 'advanceDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.advanceDate} /> },
               { accessorKey: 'mode', header: 'Mode' },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.amountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },

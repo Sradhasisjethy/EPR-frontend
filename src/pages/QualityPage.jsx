@@ -10,6 +10,7 @@ import { useTabParam } from '@/hooks/use-tab-param';
 import { useQualityInspections, useHeldLots } from '@/hooks/use-quality';
 import { InspectionFormDialog } from '@/components/quality/inspection-form-dialog';
 import { RecordResultDialog } from '@/components/quality/record-result-dialog';
+import { DateText } from '@/components/date-text';
 
 const TABS = ['Awaiting Clearance', 'Inspections'];
 
@@ -63,7 +64,7 @@ export default function QualityPage() {
             columns={[
               { accessorKey: 'lotNumber', header: 'Lot' },
               { id: 'product', header: 'Product', cell: ({ row }) => row.original.product?.name },
-              { accessorKey: 'originDate', header: 'Produced' },
+              { id: 'originDate', header: 'Produced', cell: ({ row }) => <DateText value={row.original.originDate} /> },
               { accessorKey: 'qtyAvailable', header: 'Quantity' },
               {
                 accessorKey: 'status',
@@ -135,7 +136,7 @@ export default function QualityPage() {
                     : `${Number(testedValue)}${unit}`;
                 },
               },
-              { accessorKey: 'inspectionDate', header: 'Date' },
+              { id: 'inspectionDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.inspectionDate} /> },
               {
                 accessorKey: 'result',
                 header: 'Result',

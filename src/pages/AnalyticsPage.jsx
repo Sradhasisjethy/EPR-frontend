@@ -11,6 +11,7 @@ import { useFactories } from '@/hooks/use-factory';
 import { useStockAgeing, useDashboardKpis, useCostingReport, useAlerts, useCancellationAnalytics } from '@/hooks/use-analytics';
 import { useTabParam } from '@/hooks/use-tab-param';
 import AttachRatePage from '@/pages/AttachRatePage';
+import { DateText } from '@/components/date-text';
 
 const TABS = ['Dashboard', 'Stock Ageing', 'Costing', 'Alerts', 'Cancellations', 'Attach Rate'];
 
@@ -50,7 +51,6 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Insights</h2>
         <p className="text-muted-foreground">Dashboards, stock ageing, costing, alerts and cancellation analysis (M32-M38)</p>
       </div>
 
@@ -148,7 +148,7 @@ export default function AnalyticsPage() {
                   columns={[
                     { accessorKey: 'lotNumber', header: 'Lot #' },
                     { accessorKey: 'productName', header: 'Product' },
-                    { accessorKey: 'originDate', header: 'Origin Date' },
+                    { id: 'originDate', header: 'Origin Date', cell: ({ row }) => <DateText value={row.original.originDate} /> },
                     { accessorKey: 'ageDays', header: 'Age (days)' },
                     { accessorKey: 'qtyAvailable', header: 'Qty' },
                     ...(showRates ? [{ id: 'value', header: 'Value', cell: ({ row }) => formatINR(row.original.valuePaise) }] : []),
@@ -164,7 +164,7 @@ export default function AnalyticsPage() {
                   columns={[
                     { accessorKey: 'lotNumber', header: 'Lot #' },
                     { accessorKey: 'productName', header: 'Product' },
-                    { accessorKey: 'originDate', header: 'Origin Date' },
+                    { id: 'originDate', header: 'Origin Date', cell: ({ row }) => <DateText value={row.original.originDate} /> },
                     { accessorKey: 'ageDays', header: 'Age (days)' },
                     { accessorKey: 'bucket', header: 'Bucket' },
                     { accessorKey: 'qtyAvailable', header: 'Qty' },
@@ -217,7 +217,7 @@ export default function AnalyticsPage() {
                   <p>{alert.message}</p>
                   {showRates && alert.outstandingPaise !== undefined && <p className="text-xs">Outstanding: {formatINR(alert.outstandingPaise)}</p>}
                   {showRates && alert.balancePaise !== undefined && <p className="text-xs">Balance: {formatINR(alert.balancePaise)}</p>}
-                  <p className="text-xs opacity-70">{new Date(alert.date).toLocaleDateString()}</p>
+                  <p className="text-xs opacity-70">{<DateText value={alert.date} />}</p>
                 </div>
               </div>
             ))}

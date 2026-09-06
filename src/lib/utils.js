@@ -1,16 +1,21 @@
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { formatDate as formatDateWithPreferences } from './date-format';
 
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Deprecated: prefer <DateText />, which follows Settings > General.
+ *
+ * This was pinned to en-US with a short month name, so four screens printed
+ * "Sep 6, 2026" whatever the tenant's date format said. Kept as a thin
+ * delegate for callers outside a React tree; it uses the default pattern
+ * because it has no access to the setting.
+ */
 export function formatDate(date) {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(date));
+  return formatDateWithPreferences(date);
 }
 
 export function formatCurrency(amount) {

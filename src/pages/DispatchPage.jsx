@@ -10,6 +10,7 @@ import { useDeliveryChallans, useCancelChallan, openChallanPrint } from '@/hooks
 import { CreateChallanDialog } from '@/components/dispatch/create-challan-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 export default function DispatchPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -38,7 +39,7 @@ export default function DispatchPage() {
             { id: 'order', header: 'Order #', cell: ({ row }) => row.original.salesOrder?.orderNumber },
             { id: 'customer', header: 'Customer', cell: ({ row }) => row.original.salesOrder?.customer?.name },
             { accessorKey: 'vehicleNumber', header: 'Vehicle' },
-            { accessorKey: 'dispatchDate', header: 'Date' },
+            { id: 'dispatchDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.dispatchDate} /> },
             { id: 'lines', header: 'Lines', cell: ({ row }) => row.original.lines?.length ?? 0 },
             { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status === 'DISPATCHED' ? 'active' : 'terminated'} /> },
             {

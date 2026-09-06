@@ -16,6 +16,7 @@ import { PaymentFormDialog } from '@/components/payments/payment-form-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 const TABS = ['Receipts', 'Payments', 'Cheques'];
 
@@ -67,7 +68,7 @@ export default function PaymentsPage() {
             columns={[
               { accessorKey: 'receiptNumber', header: 'Receipt #' },
               { id: 'customer', header: 'Customer', cell: ({ row }) => row.original.customer?.name },
-              { accessorKey: 'receiptDate', header: 'Date' },
+              { id: 'receiptDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.receiptDate} /> },
               ...(showRates
                 ? [
                     { id: 'total', header: 'Total', cell: ({ row }) => formatINR(row.original.totalAmountPaise) },
@@ -97,7 +98,7 @@ export default function PaymentsPage() {
             columns={[
               { accessorKey: 'paymentNumber', header: 'Payment #' },
               { id: 'party', header: 'Paid To', cell: ({ row }) => row.original.party?.name },
-              { accessorKey: 'paymentDate', header: 'Date' },
+              { id: 'paymentDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.paymentDate} /> },
               ...(showRates
                 ? [
                     { id: 'total', header: 'Total', cell: ({ row }) => formatINR(row.original.totalAmountPaise) },
@@ -129,7 +130,7 @@ export default function PaymentsPage() {
               { accessorKey: 'bankName', header: 'Bank' },
               { id: 'party', header: 'Party', cell: ({ row }) => row.original.party?.name },
               { accessorKey: 'direction', header: 'Direction' },
-              { accessorKey: 'chequeDate', header: 'Date' },
+              { id: 'chequeDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.chequeDate} /> },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.amountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {

@@ -13,6 +13,7 @@ import { useSalesInvoices, useCancelInvoice, openInvoicePrint } from '@/hooks/us
 import { CreateInvoiceDialog } from '@/components/invoicing/create-invoice-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 export default function InvoicingPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -44,7 +45,7 @@ export default function InvoicingPage() {
           columns={[
             { accessorKey: 'invoiceNumber', header: 'Invoice #' },
             { id: 'customer', header: 'Customer', cell: ({ row }) => row.original.customer?.name },
-            { accessorKey: 'invoiceDate', header: 'Date' },
+            { id: 'invoiceDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.invoiceDate} /> },
             ...(showRates
               ? [
                   { id: 'taxable', header: 'Taxable', cell: ({ row }) => formatINR(row.original.subtotalPaise) },
