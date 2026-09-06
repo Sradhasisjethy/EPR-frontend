@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useGenerateProposal } from '@/hooks/use-production';
 import { useFactories } from '@/hooks/use-factory';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 export function GeneratePlanDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', planDate: '' });
@@ -14,7 +16,7 @@ export function GeneratePlanDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', planDate: new Date().toISOString().slice(0, 10) });
+      setForm({ factoryId: '', planDate: today() });
       setError('');
     }
   }, [open]);
@@ -22,7 +24,7 @@ export function GeneratePlanDialog({ open, onOpenChange }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
-    generateMutation.mutateAsync(form).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to generate proposal.'));
+    generateMutation.mutateAsync(form).then(() => { toast.success('Production plan generated'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to generate proposal.'));
   };
 
   return (

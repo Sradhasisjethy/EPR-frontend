@@ -7,8 +7,13 @@ import { useCreateProduct, useUpdateProduct, useUoms, useProductCategories, useH
 import { toPaise, fromPaise } from '@/lib/money';
 import { ProductType } from '@/constants/enums';
 import { toInput } from '@/lib/decimal';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
-const emptyForm = {
+// A function, not a constant: today() must be evaluated when the dialog
+// opens, not once when the module is imported — otherwise a tab left open
+// overnight offers yesterday.
+const emptyForm = () => ({
   name: '',
   code: '',
   categoryId: '',
@@ -22,17 +27,17 @@ const emptyForm = {
   sellingPriceRupees: '',
   openingStockQty: '',
   openingStockRateRupees: '',
-  openingStockDate: new Date().toISOString().slice(0, 10),
+  openingStockDate: today(),
   defaultLocation: '',
   reorderLevel: '',
   minStock: '',
   maxStock: '',
   status: 'active',
-};
+});
 
 export function ProductFormDialog({ open, onOpenChange, product }) {
   const isEditing = !!product;
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(emptyForm());
   const [error, setError] = useState('');
   const { data: uomData } = useUoms({ page: 1, limit: 100 });
   const { data: categoryData } = useProductCategories({ page: 1, limit: 100 });
@@ -59,14 +64,14 @@ export function ProductFormDialog({ open, onOpenChange, product }) {
               sellingPriceRupees: fromPaise(product.sellingPricePaise),
               openingStockQty: toInput(product.openingStockQty),
               openingStockRateRupees: fromPaise(product.openingStockRatePaise),
-              openingStockDate: product.openingStockDate ? product.openingStockDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
+              openingStockDate: product.openingStockDate ? product.openingStockDate.slice(0, 10) : today(),
               defaultLocation: product.defaultLocation || '',
               reorderLevel: product.reorderLevel != null ? String(product.reorderLevel) : '',
               minStock: product.minStock != null ? String(product.minStock) : '',
               maxStock: product.maxStock != null ? String(product.maxStock) : '',
               status: product.status || 'active',
             }
-          : emptyForm
+          : emptyForm()
       );
       setError('');
     }
@@ -110,7 +115,7 @@ export function ProductFormDialog({ open, onOpenChange, product }) {
       : createMutation.mutateAsync(payload);
 
     mutation
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success(isEditing ? 'Product updated' : 'Product created'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to save product.'));
   };
 

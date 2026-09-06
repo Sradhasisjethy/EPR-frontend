@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreateFactory, useUpdateFactory } from '@/hooks/use-factory';
 import { useOrganizations } from '@/hooks/use-organization';
+import { toast } from 'sonner';
 
 const emptyForm = {
   organizationId: '',
@@ -69,7 +70,7 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
       ? updateMutation.mutateAsync({ id: factory.id, ...payload, status: form.status })
       : createMutation.mutateAsync(payload);
 
-    mutation.then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to save factory.'));
+    mutation.then(() => { toast.success(isEditing ? 'Factory updated' : 'Factory created'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to save factory.'));
   };
 
   return (

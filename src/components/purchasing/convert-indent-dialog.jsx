@@ -9,6 +9,8 @@ import { toPaise, formatINR } from '@/lib/money';
 import { useConvertIndent } from '@/hooks/use-indents';
 import { useParties } from '@/hooks/use-parties';
 import { PartyType } from '@/constants/enums';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 /** Converts an approved indent into a PO, capturing the rate for every line. */
 export function ConvertIndentDialog({ open, onOpenChange, indent }) {
@@ -23,7 +25,7 @@ export function ConvertIndentDialog({ open, onOpenChange, indent }) {
   useEffect(() => {
     if (open) {
       setVendorPartyId('');
-      setOrderDate(new Date().toISOString().slice(0, 10));
+      setOrderDate(today());
       setRates({});
       setError('');
     }
@@ -63,7 +65,7 @@ export function ConvertIndentDialog({ open, onOpenChange, indent }) {
         orderDate,
         lineRates: indent.lines.map((l) => ({ productId: l.productId, ratePaise: toPaise(rates[l.productId]) })),
       })
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success('Purchase order created from indent'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to convert the indent.'));
   };
 

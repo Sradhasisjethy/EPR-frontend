@@ -7,6 +7,7 @@ import { useCreateParty, useUpdateParty, useUpsertWageProfile, useParties } from
 import { PartyType } from '@/constants/enums';
 import { toPaise, fromPaise } from '@/lib/money';
 import { toInput } from '@/lib/decimal';
+import { today } from '@/lib/date-format';
 
 // Mirrors GSTIN_PATTERN in backend src/api/parties/parties.schema.js.
 const GSTIN_PATTERN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
@@ -42,7 +43,10 @@ const PINCODE_MAP = {
   '302': { city: 'Jaipur', state: 'Rajasthan' },
 };
 
-const emptyForm = {
+// A function, not a constant: today() must be evaluated when the dialog
+// opens, not once when the module is imported — otherwise a tab left open
+// overnight offers yesterday.
+const emptyForm = () => ({
   partyType: PartyType.CUSTOMER,
   name: '',
   code: '',
@@ -58,7 +62,7 @@ const emptyForm = {
   gstType: 'Registered Regular',
   legalName: '',
   openingBalance: '',
-  asOfDate: new Date().toISOString().slice(0, 10),
+  asOfDate: today(),
   balanceType: 'TO_RECEIVE', // Customers are debtors by default
   paymentTerms: 'Net 30 Days',
   pincode: '',
@@ -109,7 +113,7 @@ const emptyForm = {
   dailyWageRupees: '',
   overtimeRateMultiplier: '1.5',
   status: 'active',
-};
+});
 
 const PARTY_TYPE_LABELS = {
   [PartyType.CUSTOMER]: 'Customer',
@@ -121,7 +125,7 @@ const PARTY_TYPE_LABELS = {
 
 export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType }) {
   const isEditing = !!party;
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(emptyForm());
   const [error, setError] = useState('');
   const createMutation = useCreateParty();
   const updateMutation = useUpdateParty();
@@ -161,7 +165,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
               gstType: party.gstType || (isContractorInit || isSalesRefInit ? 'Unregistered' : 'Registered Regular'),
               legalName: party.legalName || '',
               openingBalance: toInput(party.openingBalance),
-              asOfDate: party.asOfDate ? party.asOfDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
+              asOfDate: party.asOfDate ? party.asOfDate.slice(0, 10) : today(),
               balanceType: party.balanceType || (isCustomerInit ? 'TO_RECEIVE' : (isPayeeInit || isSalesRefInit) ? 'TO_PAY' : isLabourInit ? 'TO_RECEIVE' : 'TO_RECEIVE'),
               paymentTerms: party.paymentTerms && !['To Receive', 'To Pay'].includes(party.paymentTerms) ? party.paymentTerms : 'Net 30 Days',
               pincode: party.pincode || '',
@@ -208,7 +212,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
               status: party.status || 'active',
             }
           : {
-              ...emptyForm,
+              ...emptyForm(),
               partyType: initialType,
               balanceType: isCustomerInit ? 'TO_RECEIVE' : (isPayeeInit || isSalesRefInit) ? 'TO_PAY' : 'TO_RECEIVE',
               gstType: isContractorInit || isSalesRefInit ? 'Unregistered' : 'Registered Regular',

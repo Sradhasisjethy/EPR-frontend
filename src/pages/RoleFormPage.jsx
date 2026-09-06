@@ -103,7 +103,6 @@ export default function RoleFormPage() {
         <Button type="button" variant="outline" size="icon" onClick={() => navigate('/roles')} aria-label="Back to roles">
           <ArrowLeft size={16} />
         </Button>
-        <h2 className="text-2xl font-bold tracking-tight">{isEditing ? 'Edit Role' : 'Create New Role'}</h2>
       </div>
 
       {error && (

@@ -20,6 +20,7 @@ import { useEmployees } from '@/hooks/use-employees';
 
 import { OfficeFormDialog } from './office-form-dialog';
 import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 const emptyForm = { 
   organizationId: '', 
@@ -108,7 +109,7 @@ export function DepartmentFormDialog({ open, onOpenChange, department, defaultOr
       : createMutation.mutateAsync(payload);
 
     mutation
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success(isEditing ? 'Department updated' : 'Department created'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to save department.'));
   };
 

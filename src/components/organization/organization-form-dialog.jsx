@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreateOrganization, useUpdateOrganization } from '@/hooks/use-organization';
+import { toast } from 'sonner';
 
 const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 const CODE_REGEX = /^[A-Za-z0-9_-]{2,15}$/;
@@ -81,7 +82,7 @@ export function OrganizationFormDialog({ open, onOpenChange, organization }) {
       : createMutation.mutateAsync(payload);
 
     mutation
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success(isEditing ? 'Organisation updated' : 'Organisation created'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to save organization.'));
   };
 

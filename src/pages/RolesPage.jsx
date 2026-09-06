@@ -9,6 +9,7 @@ import { useRoles, useDeleteRole } from '@/hooks/use-roles';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { TableSkeleton } from '@/components/ui/skeleton';
 import { RoleMembersDialog } from '@/components/roles/role-members-dialog';
+import { toast } from 'sonner';
 
 export default function RolesPage() {
   const navigate = useNavigate();
@@ -27,7 +28,10 @@ export default function RolesPage() {
 
   const handleConfirmDelete = () => {
     if (roleToDelete) {
-      deleteMutation.mutate(roleToDelete.id);
+      deleteMutation.mutate(roleToDelete.id, {
+        onSuccess: () => toast.success('Role deleted'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Could not delete the role.'),
+      });
       setRoleToDelete(null);
     }
   };

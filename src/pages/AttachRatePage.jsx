@@ -7,6 +7,7 @@ import { useFactories } from '@/hooks/use-factory';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { hasPermission } from '@/lib/permissions';
 import { WebPermissions } from '@/constants/enums';
+import { today } from '@/lib/date-format';
 
 /**
  * Attach rate: how often an accessory actually goes out with the product it
@@ -19,8 +20,7 @@ import { WebPermissions } from '@/constants/enums';
  * bundle wrong, is one desk quietly dropping it, or is it a regional objection?
  */
 
-const firstOfYear = () => `${new Date().getFullYear()}-01-01`;
-const today = () => new Date().toISOString().slice(0, 10);
+const firstOfYear = () => `${today().slice(0, 4)}-01-01`;
 
 const GROUPINGS = [
   { key: 'product', label: 'By accessory', hint: 'Is the bundle itself wrong?' },

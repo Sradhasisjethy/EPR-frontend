@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useUoms } from '@/hooks/use-products';
 import { useCreateUomConversion, useUpdateUomConversion } from '@/hooks/use-uom-conversions';
+import { toast } from 'sonner';
 
 export function UomConversionDialog({ open, onOpenChange, conversion }) {
   const isEdit = !!conversion;
@@ -51,7 +52,7 @@ export function UomConversionDialog({ open, onOpenChange, conversion }) {
     const mutation = isEdit ? updateMutation : createMutation;
     mutation
       .mutateAsync(isEdit ? { id: conversion.id, ...payload } : payload)
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success(isEdit ? 'Conversion updated' : 'Conversion added'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to save the conversion.'));
   };
 

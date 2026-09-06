@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Lock, Sparkles } from 'lucide-react';
 import { useCreateFinancialYear, useUpdateFinancialYear } from '@/hooks/use-factory';
+import { toast } from 'sonner';
 
 const computeEndDate = (start) => {
   if (!start) return '';
@@ -92,7 +93,7 @@ export function FinancialYearFormDialog({ open, onOpenChange, financialYear }) {
       : createMutation.mutateAsync(payload);
 
     mutation
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success(isEditing ? 'Financial year updated' : 'Financial year created'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to save financial year.'));
   };
 

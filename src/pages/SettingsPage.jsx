@@ -63,6 +63,8 @@ export default function SettingsPage() {
   };
 
   const palettes = [
+    // The house ramp, so the chrome can match the logo.
+    { id: 'infideep', name: 'Infideep', color: 'bg-gradient-to-tr from-[#ff0055] to-[#ff8c00]' },
     { id: 'sapphire', name: 'Sapphire', color: 'bg-blue-500' },
     { id: 'emerald', name: 'Emerald', color: 'bg-emerald-500' },
     { id: 'amber', name: 'Amber', color: 'bg-amber-500' },

@@ -10,6 +10,7 @@ import { useParties } from '@/hooks/use-parties';
 import { PriceType, PartyType } from '@/constants/enums';
 import { toPaise, fromPaise, formatINR } from '@/lib/money';
 import { toInput } from '@/lib/decimal';
+import { toast } from 'sonner';
 
 const emptyLine = {
   productId: '',
@@ -252,7 +253,7 @@ export function PriceListFormDialog({ open, onOpenChange, priceListId }) {
     };
 
     const mutation = isEditing ? updateMutation.mutateAsync({ id: priceListId, ...payload, status: form.status }) : createMutation.mutateAsync(payload);
-    mutation.then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to save price list.'));
+    mutation.then(() => { toast.success(isEditing ? 'Price list updated' : 'Price list created'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to save price list.'));
   };
 
   return (

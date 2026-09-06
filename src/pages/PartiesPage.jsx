@@ -14,6 +14,7 @@ import { PartyAddressesDialog } from '@/components/parties/party-addresses-dialo
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { PartyType } from '@/constants/enums';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { toast } from 'sonner';
 
 const TABS = [
   { key: '', label: 'All' },
@@ -63,6 +64,8 @@ export default function PartiesPage() {
     if (partyToDelete) {
       setDeleteError('');
       deleteParty.mutate(partyToDelete.id, {
+        onSuccess: () => toast.success('Party deleted'),
+        // The failure keeps its page-level banner, which outlives the dialog.
         onError: (err) => setDeleteError(err.response?.data?.message || 'Failed to delete party.'),
       });
       setPartyToDelete(null);

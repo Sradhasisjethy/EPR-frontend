@@ -9,6 +9,8 @@ import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { usePurchaseInvoices } from '@/hooks/use-purchasing';
 import { toPaise } from '@/lib/money';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const emptyMode = { mode: 'CASH', amountRupees: '' };
 
@@ -27,7 +29,7 @@ export function PaymentFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', partyId: '', paymentDate: new Date().toISOString().slice(0, 10) });
+      setForm({ factoryId: '', partyId: '', paymentDate: today() });
       setModes([{ ...emptyMode }]);
       setAllocations({});
       setError('');
@@ -56,7 +58,7 @@ export function PaymentFormDialog({ open, onOpenChange }) {
         .map(([invoiceId, amountRupees]) => ({ invoiceId, allocatedAmountPaise: toPaise(amountRupees) })),
     };
 
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to record payment.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Payment recorded'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to record payment.'));
   };
 
   return (

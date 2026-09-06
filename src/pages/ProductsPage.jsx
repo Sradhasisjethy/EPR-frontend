@@ -24,6 +24,7 @@ import { MixDesignFormDialog } from '@/components/products/mix-design-form-dialo
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { QueryState } from '@/components/query-state';
+import { toast } from 'sonner';
 
 const TABS = ['Products', 'Mix Designs', 'UoM', 'UoM Conversions', 'Categories', 'HSN Codes'];
 
@@ -110,6 +111,8 @@ export default function ProductsPage() {
     if (deleteDialog.entity && deleteDialog.mutation) {
       setDeleteError('');
       deleteDialog.mutation.mutate(deleteDialog.entity.id, {
+        onSuccess: () => toast.success(`${deleteDialog.label} deleted`),
+        // The failure keeps its page-level banner, which outlives the dialog.
         onError: (err) => setDeleteError(err.response?.data?.message || `Failed to delete "${deleteDialog.label}".`),
       });
       setDeleteDialog(prev => ({ ...prev, open: false }));

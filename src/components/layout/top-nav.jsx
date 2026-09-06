@@ -1,8 +1,6 @@
 import { useLocation, Link } from 'react-router-dom';
 import { Moon, Sun, User, LogOut } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useUIStore } from '@/store/ui-store';
-import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { useLogout, useCurrentUser } from '@/hooks/use-auth';
 import { NotificationBell } from '@/components/notifications/notification-bell';
@@ -13,7 +11,6 @@ import { GlobalSearch } from './global-search';
 export function TopNav() {
   const { pathname, search } = useLocation();
   const { theme, setTheme } = useTheme();
-  const { glassMode } = useUIStore();
   const [mounted, setMounted] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -47,24 +44,19 @@ export function TopNav() {
   };
 
   return (
-    <header className={cn(
-      "h-16 flex items-center justify-between px-6 border-b border-border sticky top-0 z-30 transition-all",
-      glassMode ? "bg-background/60 backdrop-blur-md" : "bg-card"
-    )}>
-      <div className="flex items-center">
-        <div className="flex items-center text-sm font-medium text-muted-foreground">
-          {(trail.length > 0 ? trail : segments).map((item, index, arr) => {
-            const isLast = index === arr.length - 1;
-            // Clean up segments like "sales-orders" to "Sales Orders" if using path fallback
-            const label = trail.length > 0 ? item : item.charAt(0).toUpperCase() + item.slice(1).replace(/-/g, ' ');
-            return (
-              <span key={index} className="flex items-center">
-                <span className={isLast ? "text-foreground" : ""}>{label}</span>
-                {!isLast && <span className="mx-2 text-border">/</span>}
-              </span>
-            );
-          })}
-        </div>
+    // No background, no blur, no border, and not sticky. AppShell puts the
+    // scroll container on <main>, and this header is its sibling — the page
+    // scrolls underneath it, never through it. Every wash I tried here was
+    // solving a collision that cannot happen, and over a wallpaper the blur
+    // was itself the white band it was meant to avoid.
+    <header className="h-16 flex items-center justify-between px-6 shrink-0">
+      <div className="flex flex-col justify-center min-w-0">
+        <h1 className="text-xl font-bold tracking-tight truncate leading-none">{title}</h1>
+        {trail.length > 1 && (
+          <p className="text-xs text-muted-foreground truncate mt-1">
+            {trail.slice(0, -1).join(' / ')}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center space-x-4">

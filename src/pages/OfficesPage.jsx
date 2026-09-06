@@ -22,6 +22,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { toast } from 'sonner';
 
 export default function OfficesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -47,7 +48,10 @@ export default function OfficesPage() {
 
   const handleConfirmDelete = () => {
     if (officeToDelete) {
-      deleteMutation.mutate(officeToDelete.id);
+      deleteMutation.mutate(officeToDelete.id, {
+        onSuccess: () => toast.success('Office deleted'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Could not delete the office.'),
+      });
       setOfficeToDelete(null);
     }
   };

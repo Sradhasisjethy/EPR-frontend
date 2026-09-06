@@ -12,6 +12,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { TableSkeleton } from '@/components/ui/skeleton';
 import { EmployeeDocumentsAdminDialog } from '@/components/employees/employee-documents-admin-dialog';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { toast } from 'sonner';
 
 export default function EmployeesPage() {
   const { query, tableProps } = usePaginated(useEmployees);
@@ -33,7 +34,10 @@ export default function EmployeesPage() {
 
   const confirmDelete = () => {
     if (employeeToDelete) {
-      deleteMutation.mutate(employeeToDelete.id);
+      deleteMutation.mutate(employeeToDelete.id, {
+        onSuccess: () => toast.success('Employee deleted'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Could not delete the employee.'),
+      });
     }
   };
 

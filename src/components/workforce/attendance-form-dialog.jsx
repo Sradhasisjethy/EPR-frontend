@@ -7,6 +7,8 @@ import { useMarkAttendance } from '@/hooks/use-workforce';
 import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { PartyType } from '@/constants/enums';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 export function AttendanceFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', labourPartyId: '', attendanceDate: '', status: 'PRESENT', overtimeHours: '' });
@@ -18,7 +20,7 @@ export function AttendanceFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', labourPartyId: '', attendanceDate: new Date().toISOString().slice(0, 10), status: 'PRESENT', overtimeHours: '' });
+      setForm({ factoryId: '', labourPartyId: '', attendanceDate: today(), status: 'PRESENT', overtimeHours: '' });
       setError('');
     }
   }, [open]);
@@ -35,7 +37,7 @@ export function AttendanceFormDialog({ open, onOpenChange }) {
       ...(form.status === 'OVERTIME' ? { overtimeHours: Number(form.overtimeHours || 0) } : {}),
     };
 
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to mark attendance.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Attendance recorded'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to mark attendance.'));
   };
 
   return (

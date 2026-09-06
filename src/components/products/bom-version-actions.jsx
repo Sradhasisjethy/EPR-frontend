@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { formatINR } from '@/lib/money';
 import { useActivateMixDesign, useCloneMixDesign, useMixDesignCost } from '@/hooks/use-products';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const STATUS_STYLES = {
   DRAFT: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
@@ -98,7 +100,7 @@ export function BomCostDialog({ open, onOpenChange, mixDesign }) {
 
 /** Activation asks for the effective date, because that is what decides which version a production entry resolves to. */
 export function ActivateBomDialog({ open, onOpenChange, mixDesign }) {
-  const [effectiveFrom, setEffectiveFrom] = useState(new Date().toISOString().slice(0, 10));
+  const [effectiveFrom, setEffectiveFrom] = useState(today());
   const [error, setError] = useState('');
   const activate = useActivateMixDesign();
 
@@ -107,7 +109,7 @@ export function ActivateBomDialog({ open, onOpenChange, mixDesign }) {
     setError('');
     activate
       .mutateAsync({ id: mixDesign.id, effectiveFrom })
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success('New BOM version created'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to activate this version.'));
   };
 

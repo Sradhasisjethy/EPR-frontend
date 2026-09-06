@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { useCreateWastage } from '@/hooks/use-production';
 import { useFactories } from '@/hooks/use-factory';
 import { useStockLots } from '@/hooks/use-inventory';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const emptyForm = { factoryId: '', lotId: '', stage: 'STACKING', quantity: '', reason: '', recordedDate: '' };
 
@@ -18,7 +20,7 @@ export function WastageFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ ...emptyForm, recordedDate: new Date().toISOString().slice(0, 10) });
+      setForm({ ...emptyForm, recordedDate: today() });
       setError('');
     }
   }, [open]);
@@ -43,7 +45,7 @@ export function WastageFormDialog({ open, onOpenChange }) {
       recordedDate: form.recordedDate,
     };
 
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to record wastage.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Wastage recorded'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to record wastage.'));
   };
 
   return (

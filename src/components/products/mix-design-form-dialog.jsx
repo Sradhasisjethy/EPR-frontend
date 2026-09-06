@@ -8,6 +8,8 @@ import { useCreateMixDesign, useUpdateMixDesign, useProducts, useUoms } from '@/
 import { ProductType } from '@/constants/enums';
 import { toPaise, fromPaise } from '@/lib/money';
 import { toInput } from '@/lib/decimal';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const emptyLine = { rawMaterialProductId: '', quantityPerUnit: '', wastagePercent: '0', uomId: '' };
 
@@ -17,7 +19,7 @@ export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProd
     productId: '',
     name: '',
     outputQuantity: '1',
-    effectiveFrom: new Date().toISOString().slice(0, 10),
+    effectiveFrom: today(),
     laborCostRupees: '',
     overheadCostRupees: '',
   });
@@ -40,7 +42,7 @@ export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProd
           productId: mixDesign.productId || '',
           name: mixDesign.name || '',
           outputQuantity: toInput(mixDesign.outputQuantity, '1'),
-          effectiveFrom: mixDesign.effectiveFrom ? mixDesign.effectiveFrom.slice(0, 10) : new Date().toISOString().slice(0, 10),
+          effectiveFrom: mixDesign.effectiveFrom ? mixDesign.effectiveFrom.slice(0, 10) : today(),
           laborCostRupees: fromPaise(mixDesign.laborCostPaise),
           overheadCostRupees: fromPaise(mixDesign.overheadCostPaise),
         });
@@ -57,7 +59,7 @@ export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProd
           productId: defaultProductId || '',
           name: '',
           outputQuantity: '1',
-          effectiveFrom: new Date().toISOString().slice(0, 10),
+          effectiveFrom: today(),
           laborCostRupees: '',
           overheadCostRupees: '',
         });
@@ -118,7 +120,7 @@ export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProd
 
     const mutation = isEditing ? updateMutation.mutateAsync({ id: mixDesign.id, ...payload }) : createMutation.mutateAsync(payload);
 
-    mutation.then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to save mix design.'));
+    mutation.then(() => { toast.success(isEditing ? 'Mix design updated' : 'Mix design created'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to save mix design.'));
   };
 
   return (

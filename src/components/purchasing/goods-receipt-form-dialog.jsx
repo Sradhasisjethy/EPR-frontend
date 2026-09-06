@@ -11,6 +11,8 @@ import { useParties } from '@/hooks/use-parties';
 import { useProducts } from '@/hooks/use-products';
 import { PartyType } from '@/constants/enums';
 import { fromPaise, toPaise, formatINR } from '@/lib/money';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const emptyLine = { productId: '', receivedQty: '', rejectedQty: '', rejectionReason: '', rateRupees: '', purchaseOrderLineId: '' };
 
@@ -32,7 +34,7 @@ export function GoodsReceiptFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', vendorPartyId: '', purchaseOrderId: '', receiptDate: new Date().toISOString().slice(0, 10) });
+      setForm({ factoryId: '', vendorPartyId: '', purchaseOrderId: '', receiptDate: today() });
       setLines([{ ...emptyLine }]);
       setError('');
     }
@@ -102,7 +104,7 @@ export function GoodsReceiptFormDialog({ open, onOpenChange }) {
 
     createMutation
       .mutateAsync(payload)
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success('Goods receipt recorded'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to post goods receipt.'));
   };
 

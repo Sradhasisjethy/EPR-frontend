@@ -12,6 +12,8 @@ import { useProducts } from '@/hooks/use-products';
 import { PartyType } from '@/constants/enums';
 import { toPaise, formatINR } from '@/lib/money';
 import { toInput } from '@/lib/decimal';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const emptyLine = { productId: '', orderedQty: '', rateRupees: '' };
 
@@ -60,7 +62,7 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
         setLines([{ ...emptyLine }]);
       }
     } else {
-      setForm({ factoryId: '', vendorPartyId: '', orderDate: new Date().toISOString().slice(0, 10) });
+      setForm({ factoryId: '', vendorPartyId: '', orderDate: today() });
       setLines([{ ...emptyLine }]);
     }
     setError('');
@@ -132,7 +134,7 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
     };
 
     (isEditing ? updateMutation.mutateAsync({ id: order.id, ...payload }) : createMutation.mutateAsync(payload))
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success(isEditing ? 'Purchase order updated' : 'Purchase order created'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} purchase order.`));
   };
 

@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { useCreatePurchaseInvoice } from '@/hooks/use-purchasing';
 import { useGoodsReceipts } from '@/hooks/use-purchasing';
 import { toPaise } from '@/lib/money';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const emptyForm = { goodsReceiptId: '', vendorInvoiceNumber: '', invoiceDate: '', dueDate: '', amountRupees: '' };
 
@@ -17,7 +19,7 @@ export function PurchaseInvoiceFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ ...emptyForm, invoiceDate: new Date().toISOString().slice(0, 10) });
+      setForm({ ...emptyForm, invoiceDate: today() });
       setError('');
     }
   }, [open]);
@@ -42,7 +44,7 @@ export function PurchaseInvoiceFormDialog({ open, onOpenChange }) {
       amountPaise: toPaise(form.amountRupees),
     };
 
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to save purchase invoice.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Purchase invoice recorded'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to save purchase invoice.'));
   };
 
   return (

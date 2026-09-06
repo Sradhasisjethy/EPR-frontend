@@ -279,7 +279,6 @@ function ReportHeader({ categories, category, reportSlug, definition }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Reports</h2>
           <p className="text-muted-foreground">Operational and financial reporting across every module</p>
         </div>
         <Link

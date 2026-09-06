@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { useCreateChallan } from '@/hooks/use-dispatch';
 import { useSalesOrders, useSalesOrder } from '@/hooks/use-sales';
 import { toInput } from '@/lib/decimal';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 export function CreateChallanDialog({ open, onOpenChange }) {
   const [salesOrderId, setSalesOrderId] = useState('');
@@ -21,7 +23,7 @@ export function CreateChallanDialog({ open, onOpenChange }) {
   useEffect(() => {
     if (open) {
       setSalesOrderId('');
-      setForm({ vehicleNumber: '', driverName: '', dispatchDate: new Date().toISOString().slice(0, 10) });
+      setForm({ vehicleNumber: '', driverName: '', dispatchDate: today() });
       setQuantities({});
       setError('');
     }
@@ -55,7 +57,7 @@ export function CreateChallanDialog({ open, onOpenChange }) {
     }
 
     const payload = { salesOrderId, vehicleNumber: form.vehicleNumber, driverName: form.driverName || undefined, dispatchDate: form.dispatchDate, lines };
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to dispatch challan.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Delivery challan created'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to dispatch challan.'));
   };
 
   return (

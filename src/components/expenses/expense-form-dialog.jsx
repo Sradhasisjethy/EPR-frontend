@@ -7,6 +7,8 @@ import { useCreateExpense } from '@/hooks/use-expenses';
 import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { toPaise } from '@/lib/money';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 export function ExpenseFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', expenseDate: '', category: '', mode: 'CASH', amountRupees: '', paidToPartyId: '', description: '' });
@@ -18,7 +20,7 @@ export function ExpenseFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', expenseDate: new Date().toISOString().slice(0, 10), category: '', mode: 'CASH', amountRupees: '', paidToPartyId: '', description: '' });
+      setForm({ factoryId: '', expenseDate: today(), category: '', mode: 'CASH', amountRupees: '', paidToPartyId: '', description: '' });
       setError('');
     }
   }, [open]);
@@ -35,7 +37,7 @@ export function ExpenseFormDialog({ open, onOpenChange }) {
       paidToPartyId: form.paidToPartyId || undefined,
       description: form.description || undefined,
     };
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to record expense.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Expense recorded'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to record expense.'));
   };
 
   return (

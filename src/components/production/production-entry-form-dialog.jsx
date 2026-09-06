@@ -7,6 +7,8 @@ import { useCreateProductionEntry } from '@/hooks/use-production';
 import { useFactories } from '@/hooks/use-factory';
 import { useProducts, useResolvedMixDesign, useExplodeMixDesign } from '@/hooks/use-products';
 import { ProductType } from '@/constants/enums';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId, defaultProductId, defaultPlanLineId }) {
   const [form, setForm] = useState({ factoryId: '', productId: '', productionDate: '', goodQty: '', rejectedQty: '0' });
@@ -35,7 +37,7 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
       setForm({
         factoryId: defaultFactoryId || '',
         productId: defaultProductId || '',
-        productionDate: new Date().toISOString().slice(0, 10),
+        productionDate: today(),
         goodQty: '',
         rejectedQty: '0',
       });
@@ -86,7 +88,7 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
       materialLines,
     };
 
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to post production entry.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Production recorded'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to post production entry.'));
   };
 
   return (

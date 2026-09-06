@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { usePriceLists, useDeletePriceList } from '@/hooks/use-pricing';
 import { PriceListFormDialog } from '@/components/pricing/price-list-form-dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { toast } from 'sonner';
 
 export default function PriceListsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -25,7 +26,10 @@ export default function PriceListsPage() {
 
   const handleConfirmDelete = () => {
     if (priceListToDelete) {
-      deletePriceList.mutate(priceListToDelete.id);
+      deletePriceList.mutate(priceListToDelete.id, {
+        onSuccess: () => toast.success('Price list deleted'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Could not delete the price list.'),
+      });
       setPriceListToDelete(null);
     }
   };

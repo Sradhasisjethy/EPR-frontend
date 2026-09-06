@@ -19,6 +19,7 @@ import { OfficeFormDialog } from '@/components/organization/office-form-dialog';
 import { DepartmentFormDialog } from '@/components/organization/department-form-dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { toast } from 'sonner';
 
 export default function OrganizationPage() {
   const [activeTab, setActiveTab] = useTabParam(['organizations', 'offices', 'departments'], 'organizations', 'subtab');
@@ -79,21 +80,30 @@ export default function OrganizationPage() {
 
   const confirmDeleteOrg = () => {
     if (orgToDelete) {
-      deleteOrg.mutate(orgToDelete.id);
+      deleteOrg.mutate(orgToDelete.id, {
+        onSuccess: () => toast.success('Organisation deleted'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Could not delete the organisation.'),
+      });
       setOrgToDelete(null);
     }
   };
 
   const confirmDeleteOffice = () => {
     if (officeToDelete) {
-      deleteOffice.mutate(officeToDelete.id);
+      deleteOffice.mutate(officeToDelete.id, {
+        onSuccess: () => toast.success('Office deleted'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Could not delete the office.'),
+      });
       setOfficeToDelete(null);
     }
   };
 
   const confirmDeleteDept = () => {
     if (deptToDelete) {
-      deleteDept.mutate(deptToDelete.id);
+      deleteDept.mutate(deptToDelete.id, {
+        onSuccess: () => toast.success('Department deleted'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Could not delete the department.'),
+      });
       setDeptToDelete(null);
     }
   };

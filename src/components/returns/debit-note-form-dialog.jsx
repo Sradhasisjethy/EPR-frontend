@@ -8,6 +8,8 @@ import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { PartyType } from '@/constants/enums';
 import { toPaise } from '@/lib/money';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 export function DebitNoteFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', vendorPartyId: '', noteDate: '', reason: '', amountRupees: '' });
@@ -19,7 +21,7 @@ export function DebitNoteFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', vendorPartyId: '', noteDate: new Date().toISOString().slice(0, 10), reason: '', amountRupees: '' });
+      setForm({ factoryId: '', vendorPartyId: '', noteDate: today(), reason: '', amountRupees: '' });
       setError('');
     }
   }, [open]);
@@ -28,7 +30,7 @@ export function DebitNoteFormDialog({ open, onOpenChange }) {
     e.preventDefault();
     setError('');
     const payload = { factoryId: form.factoryId, vendorPartyId: form.vendorPartyId, noteDate: form.noteDate, reason: form.reason, amountPaise: toPaise(form.amountRupees) };
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to create debit note.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Debit note issued'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to create debit note.'));
   };
 
   return (

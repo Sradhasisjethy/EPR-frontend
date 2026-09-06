@@ -8,6 +8,8 @@ import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { PartyType } from '@/constants/enums';
 import { toPaise } from '@/lib/money';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 export function AdvanceFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', partyId: '', advanceDate: '', mode: 'BANK', amountRupees: '', reason: '' });
@@ -21,7 +23,7 @@ export function AdvanceFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', partyId: '', advanceDate: new Date().toISOString().slice(0, 10), mode: 'BANK', amountRupees: '', reason: '' });
+      setForm({ factoryId: '', partyId: '', advanceDate: today(), mode: 'BANK', amountRupees: '', reason: '' });
       setError('');
     }
   }, [open]);
@@ -30,7 +32,7 @@ export function AdvanceFormDialog({ open, onOpenChange }) {
     e.preventDefault();
     setError('');
     const payload = { factoryId: form.factoryId, partyId: form.partyId, advanceDate: form.advanceDate, mode: form.mode, amountPaise: toPaise(form.amountRupees), reason: form.reason || undefined };
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to record advance.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Advance recorded'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to record advance.'));
   };
 
   return (

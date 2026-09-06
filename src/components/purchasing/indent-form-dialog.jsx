@@ -8,6 +8,8 @@ import { cn, formatUom } from '@/lib/utils';
 import { useCreateIndent } from '@/hooks/use-indents';
 import { useFactories } from '@/hooks/use-factory';
 import { useProducts } from '@/hooks/use-products';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const emptyLine = { productId: '', quantity: '' };
 
@@ -28,7 +30,7 @@ export function IndentFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', indentDate: new Date().toISOString().slice(0, 10), requiredByDate: '', remarks: '' });
+      setForm({ factoryId: '', indentDate: today(), requiredByDate: '', remarks: '' });
       setLines([{ ...emptyLine }]);
       setError('');
     }
@@ -85,7 +87,7 @@ export function IndentFormDialog({ open, onOpenChange }) {
         remarks: form.remarks?.trim() || undefined,
         lines: lines.map((l) => ({ productId: l.productId, quantity: Number(l.quantity) })),
       })
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success('Purchase indent raised'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to raise the indent.'));
   };
 

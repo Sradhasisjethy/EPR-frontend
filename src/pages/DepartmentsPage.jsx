@@ -23,6 +23,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { toast } from 'sonner';
 
 export default function DepartmentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -54,7 +55,10 @@ export default function DepartmentsPage() {
 
   const handleConfirmDelete = () => {
     if (departmentToDelete) {
-      deleteMutation.mutate(departmentToDelete.id);
+      deleteMutation.mutate(departmentToDelete.id, {
+        onSuccess: () => toast.success('Department deleted'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Could not delete the department.'),
+      });
       setDepartmentToDelete(null);
     }
   };

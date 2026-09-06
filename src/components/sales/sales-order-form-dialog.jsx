@@ -14,6 +14,7 @@ import { ProductPicker } from '@/components/products/product-picker';
 import { BundlePreviewNote } from '@/components/sales/bundle-preview-note';
 import { toast } from 'sonner';
 import { toInput } from '@/lib/decimal';
+import { today } from '@/lib/date-format';
 
 const emptyLine = { productId: '', orderedQty: '', rateRupees: '', accessoryOverrides: [] };
 
@@ -61,7 +62,7 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
           }))
       );
     } else {
-      setForm({ factoryId: '', customerPartyId: '', orderDate: new Date().toISOString().slice(0, 10), expectedDeliveryDate: '', poReferenceNumber: '' });
+      setForm({ factoryId: '', customerPartyId: '', orderDate: today(), expectedDeliveryDate: '', poReferenceNumber: '' });
       setLines([{ ...emptyLine }]);
     }
     setError(''); setWarning(''); setAllowOverride(false);

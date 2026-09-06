@@ -6,7 +6,11 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Surfaces lift by differing from the ground, not by outlining themselves.
+       These were identical — white card on white background — which left a
+       91.4%-lightness border doing all the separation, and it read as no edge
+       at all. The ground is now a soft grey and the card stays pure white. */
+    --background: 210 20% 96.5%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -22,10 +26,21 @@
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 214 20% 82%;
+    /* Inputs sit a shade darker than dividers — a field should read as a
+       field before it is focused. */
+    --input: 214 20% 80%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.75rem;
+
+    /* Navigation accent. The active rail row is a two-stop gradient, and
+       both stops follow the chosen palette rather than the brand ramp — an
+       emerald scheme with a pink active row looked like a bug. --nav-ink is
+       tuned per palette because a mid-lightness primary (amber especially)
+       does not hold up as text on a tinted ground. */
+    --nav-from: var(--primary);
+    --nav-to: 262 83% 58%;
+    --nav-ink: 221 83% 45%;
 
     /* Sapphire Palette Defaults */
     --sidebar-background: 0 0% 98%;
@@ -39,11 +54,14 @@
   }
 
   .dark {
+    /* Same elevation model inverted: the ground stays near-black and the card
+       lifts towards the light. Both were 4.9% before, so a card was invisible
+       until its border caught the eye — and at 17.5% lightness it rarely did. */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 222 40% 10.5%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 40% 12%;
     --popover-foreground: 210 40% 98%;
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
@@ -55,13 +73,16 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 215 20% 27%;
+    --input: 215 20% 30%;
     --ring: 224.3 76.3% 48%;
+    --nav-ink: 217 91% 68%;
   }
 
   /* Emerald Palette */
   [data-color-scheme="emerald"] {
+    --nav-to: 172 66% 40%;
+    --nav-ink: 142 72% 27%;
     --primary: 142.1 76.2% 36.3%;
     --primary-foreground: 355.7 100% 97.3%;
     --ring: 142.1 76.2% 36.3%;
@@ -69,6 +90,8 @@
 
   /* Amber Palette */
   [data-color-scheme="amber"] {
+    --nav-to: 24 95% 53%;
+    --nav-ink: 27 90% 38%;
     --primary: 47.9 95.8% 53.1%;
     --primary-foreground: 26 83.3% 14.1%;
     --ring: 47.9 95.8% 53.1%;
@@ -76,6 +99,8 @@
 
   /* Ruby Palette */
   [data-color-scheme="ruby"] {
+    --nav-to: 330 81% 55%;
+    --nav-ink: 347 77% 42%;
     --primary: 346.8 77.2% 49.8%;
     --primary-foreground: 355.7 100% 97.3%;
     --ring: 346.8 77.2% 49.8%;
@@ -83,17 +108,53 @@
 
   /* Violet Palette */
   [data-color-scheme="violet"] {
+    --nav-to: 292 84% 61%;
+    /* 50% lightness measured 3.98:1 on a white card — under the 4.5 threshold.
+       45% clears it at 4.76:1 without losing the hue. */
+    --nav-ink: 262 83% 45%;
     --primary: 262.1 83.3% 57.8%;
     --primary-foreground: 210 40% 98%;
     --ring: 262.1 83.3% 57.8%;
   }
 
+  /* Infideep Palette — the brand ramp, pink-red into orange. This is the
+     gradient the rail carried before the accent was made palette-driven; it is
+     a scheme you can pick rather than a default imposed on every other one. */
+  [data-color-scheme="infideep"] {
+    --primary: 343 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 343 100% 50%;
+    --nav-to: 33 100% 50%;
+    --nav-ink: 343 100% 38%;
+  }
+
   /* Slate Palette */
   [data-color-scheme="slate"] {
+    --nav-to: 215 25% 55%;
+    --nav-ink: 215 25% 33%;
     --primary: 215.4 16.3% 46.9%;
     --primary-foreground: 210 40% 98%;
     --ring: 215.4 16.3% 46.9%;
   }
+}
+
+html.dark[data-color-scheme="emerald"] {
+  --nav-ink: 152 69% 52%;
+}
+html.dark[data-color-scheme="amber"] {
+  --nav-ink: 43 96% 62%;
+}
+html.dark[data-color-scheme="ruby"] {
+  --nav-ink: 350 89% 68%;
+}
+html.dark[data-color-scheme="violet"] {
+  --nav-ink: 270 91% 72%;
+}
+html.dark[data-color-scheme="infideep"] {
+  --nav-ink: 350 100% 71%;
+}
+html.dark[data-color-scheme="slate"] {
+  --nav-ink: 213 27% 74%;
 }
 
 @layer base {
@@ -156,7 +217,7 @@ html:not(.dark) .wallpaper-active aside {
   background: rgba(255, 255, 255, 0.88) !important;
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
-  border-right: 1px solid rgba(203, 213, 225, 0.8) !important;
+  border: 1px solid hsl(var(--nav-from) / 0.30) !important;
   color: #0f172a !important;
 }
 
@@ -172,11 +233,12 @@ html:not(.dark) .wallpaper-active aside button:hover {
   background-color: rgba(241, 245, 249, 0.8) !important;
 }
 
+/* The header carries no surface of its own, in glass mode or out of it. It
+   used to be given a white panel with a hard bottom border here, which is the
+   band that survived every change made in the component — !important beat the
+   utility classes. Only the text colour is still needed, so titles stay legible
+   against a bright wallpaper. */
 html:not(.dark) .wallpaper-active header {
-  background: rgba(255, 255, 255, 0.82) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border-bottom: 1px solid rgba(203, 213, 225, 0.8) !important;
   color: #0f172a !important;
 }
 
@@ -212,15 +274,11 @@ html.dark .wallpaper-active aside {
   background: rgba(15, 23, 42, 0.82) !important;
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid hsl(var(--nav-from) / 0.28) !important;
   color: #ffffff !important;
 }
 
 html.dark .wallpaper-active header {
-  background: rgba(15, 23, 42, 0.72) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #ffffff !important;
 }
 
@@ -446,4 +504,110 @@ input:-webkit-autofill:active {
     drop-shadow(0 0 10px rgba(255, 0, 85, 0.45))
     drop-shadow(0 0 26px rgba(255, 90, 40, 0.28))
     drop-shadow(0 0 48px rgba(255, 140, 0, 0.16));
+}
+
+/* Active navigation row — the brand ramp at low opacity, with a matching
+   bloom. A flat tint reads as "hovered" next to the floating panel; the
+   gradient and glow are what make the current module obvious at a glance. */
+.id-nav-active {
+  background: linear-gradient(135deg, hsl(var(--nav-from) / 0.24) 0%, hsl(var(--nav-to) / 0.18) 100%);
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--nav-from) / 0.30),
+    0 4px 14px -4px hsl(var(--nav-from) / 0.35);
+  color: hsl(var(--nav-ink));
+}
+
+:root:not(.dark) .id-nav-active {
+  /* Lighter fill on a light ground; the ink carries the accent instead. */
+  background: linear-gradient(135deg, hsl(var(--nav-from) / 0.16) 0%, hsl(var(--nav-to) / 0.12) 100%);
+}
+
+/* Glass mode paints every rail link a flat slate, which would erase the active
+   row's accent. Restated here so the current module still stands out on a
+   wallpaper — and still follows the palette. */
+html:not(.dark) .wallpaper-active aside a.id-nav-active,
+html:not(.dark) .wallpaper-active aside a.id-nav-active span,
+html.dark .wallpaper-active aside a.id-nav-active,
+html.dark .wallpaper-active aside a.id-nav-active span {
+  color: hsl(var(--nav-ink)) !important;
+}
+
+/* Scrolls, but shows nothing. The rail is a narrow floating panel, so a
+   scrollbar gutter costs a visible slice of a 76px column and cuts across the
+   rounded corner. The list still scrolls by wheel, trackpad and keyboard. */
+.no-scrollbar {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* legacy Edge */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Card elevation.
+   Raising the tokens separates surface from ground; this gives the edge itself
+   some definition. Light gets a soft drop shadow — on white-on-grey a shadow
+   reads more honestly than a heavier outline. Dark gets a shadow plus a
+   one-pixel inner highlight along the top, which is the trick that makes a
+   panel look lit from above rather than like a flat patch of lighter paint. */
+/* Wrapped in :where() so the whole selector weighs nothing. Without it this
+   rule scores 0,3,0 and beats any `shadow-*` utility — which silently killed
+   the accent glow on the dashboard KPI tiles. Anything that sets its own
+   shadow now wins; everything else still gets the default elevation. */
+:where(:root:not(.dark)) :where(.bg-card) {
+  box-shadow:
+    0 1px 2px -1px hsl(222 40% 20% / 0.10),
+    0 4px 12px -6px hsl(222 40% 20% / 0.12);
+}
+
+:where(.dark) :where(.bg-card) {
+  box-shadow:
+    0 1px 2px -1px rgb(0 0 0 / 0.6),
+    0 6px 18px -8px rgb(0 0 0 / 0.55),
+    inset 0 1px 0 0 rgb(255 255 255 / 0.05);
+}
+
+/* Panel edge — the sidebar, and anything else that floats over the ground.
+   A neutral hairline at 82% lightness disappears against a white card, so the
+   edge is tinted with the active colour scheme and backed by a shadow in the
+   same hue. Light mode carries the stronger version: a white panel on a grey
+   ground has no tonal step to help, so the outline is doing all the work. */
+.id-panel-edge {
+  border-color: hsl(var(--nav-from) / 0.30);
+  box-shadow:
+    0 1px 2px hsl(222 40% 20% / 0.10),
+    0 2px 10px -4px hsl(222 40% 20% / 0.16),
+    0 10px 30px -12px hsl(var(--nav-from) / 0.35);
+}
+
+.dark .id-panel-edge {
+  /* Dark already separates by tone, so the edge only needs a hint of accent. */
+  border-color: hsl(var(--nav-from) / 0.22);
+  box-shadow:
+    0 1px 2px -1px rgb(0 0 0 / 0.6),
+    0 10px 30px -12px rgb(0 0 0 / 0.65),
+    inset 0 1px 0 0 rgb(255 255 255 / 0.06);
+}
+
+/* Glass mode: card surfaces let the wallpaper through.
+   The dashboard panels and tiles use `bg-card`, which is an opaque token, so
+   they stayed solid while the sidebar and the settings panels went
+   translucent. Scoped to .wallpaper-active, so nothing changes when glass is
+   off. Left alone deliberately: `aside`, which has its own stronger rule, and
+   `bg-popover` — a dropdown over a photograph has to stay readable. */
+.wallpaper-active .bg-card {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+html:not(.dark) .wallpaper-active .bg-card {
+  background-color: rgb(255 255 255 / 0.72);
+  border-color: hsl(var(--nav-from) / 0.22);
+}
+
+html.dark .wallpaper-active .bg-card {
+  background-color: rgb(15 23 42 / 0.66);
+  border-color: hsl(var(--nav-from) / 0.24);
 }

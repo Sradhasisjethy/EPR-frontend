@@ -7,6 +7,7 @@ import { ActionError } from '@/components/query-state';
 import { useCreateInspection } from '@/hooks/use-quality';
 import { useFactories } from '@/hooks/use-factory';
 import { useStockLots } from '@/hooks/use-inventory';
+import { today } from '@/lib/date-format';
 
 const TYPES = [
   { value: 'FINAL', label: 'Final — releases the lot for sale' },
@@ -43,7 +44,7 @@ export function InspectionFormDialog({ open, onOpenChange, lot, defaultFactoryId
       ...emptyForm,
       factoryId: lot?.factoryId || defaultFactoryId || '',
       lotId: lot?.id || '',
-      inspectionDate: new Date().toISOString().slice(0, 10),
+      inspectionDate: today(),
     });
     setError('');
   }, [open, lot, defaultFactoryId]);

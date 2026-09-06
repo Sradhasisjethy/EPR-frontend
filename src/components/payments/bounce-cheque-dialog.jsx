@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toPaise } from '@/lib/money';
 import { useBounceCheque } from '@/hooks/use-cheques';
+import { toast } from 'sonner';
 
 /**
  * A bounce is not just a status change: it reverses the receipt/payment that
@@ -34,7 +35,7 @@ export function BounceChequeDialog({ open, onOpenChange, cheque }) {
         reason,
         bankChargesPaise: chargesRupees ? toPaise(chargesRupees) : 0,
       })
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success('Cheque marked bounced'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to record the bounce.'));
   };
 

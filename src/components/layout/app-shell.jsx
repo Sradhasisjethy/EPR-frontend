@@ -15,11 +15,11 @@ export function AppShell({ children }) {
       <Sidebar />
       <div className={cn(
         "flex flex-col flex-1 transition-all duration-300 ease-in-out",
-        sidebarCollapsed ? "ml-[80px]" : "ml-[280px]"
+        sidebarCollapsed ? "ml-[88px]" : "ml-[260px]"
       )}>
         <TopNav />
         <main className={cn(
-          "flex-1 overflow-y-auto p-6 transition-colors",
+          "flex-1 overflow-y-auto px-6 pb-6 pt-2 transition-colors",
           isWallpaperActive ? "bg-transparent" : "bg-muted/20 dark:bg-background"
         )}>
           <div className="max-w-7xl mx-auto space-y-6 animate-in">

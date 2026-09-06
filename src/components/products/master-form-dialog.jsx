@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 /**
  * Config-driven CRUD dialog for simple flat masters (UoM, HSN Code,
@@ -40,7 +41,7 @@ export function MasterFormDialog({ open, onOpenChange, entity, title, fields, cr
       ? updateMutation.mutateAsync({ id: entity.id, ...payload, status: form.status })
       : createMutation.mutateAsync(payload);
 
-    mutation.then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to save.'));
+    mutation.then(() => { toast.success(isEditing ? 'Updated' : 'Created'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to save.'));
   };
 
   return (

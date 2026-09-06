@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useConfirmPlan } from '@/hooks/use-production';
 import { toInput } from '@/lib/decimal';
+import { toast } from 'sonner';
 
 export function ConfirmPlanDialog({ open, onOpenChange, plan }) {
   const [quantities, setQuantities] = useState({});
@@ -24,7 +25,7 @@ export function ConfirmPlanDialog({ open, onOpenChange, plan }) {
     e.preventDefault();
     setError('');
     const lines = plan.lines.map((l) => ({ lineId: l.id, confirmedQty: Number(quantities[l.id]) }));
-    confirmMutation.mutateAsync({ id: plan.id, lines }).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to confirm plan.'));
+    confirmMutation.mutateAsync({ id: plan.id, lines }).then(() => { toast.success('Production plan confirmed'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to confirm plan.'));
   };
 
   return (

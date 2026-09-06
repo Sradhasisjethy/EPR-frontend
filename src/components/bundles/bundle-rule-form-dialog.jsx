@@ -8,6 +8,8 @@ import { useProducts } from '@/hooks/use-products';
 import { ProductPicker } from '@/components/products/product-picker';
 import { useCreateBundleRule, useUpdateBundleRule } from '@/hooks/use-bundles';
 import { toInput } from '@/lib/decimal';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const emptyComponent = { componentProductId: '', quantity: '1', scalingMode: 'PROPORTIONAL', uomId: '', uomLabel: '', isMandatory: false, defaultSelected: true };
 
@@ -58,7 +60,7 @@ export function BundleRuleFormDialog({ open, onOpenChange, rule }) {
         }))
       );
     } else {
-      setForm({ code: '', name: '', parentProductId: '', effectiveFrom: new Date().toISOString().slice(0, 10), priority: '100' });
+      setForm({ code: '', name: '', parentProductId: '', effectiveFrom: today(), priority: '100' });
       setComponents([{ ...emptyComponent }]);
     }
   }, [open, rule]);
@@ -125,7 +127,7 @@ export function BundleRuleFormDialog({ open, onOpenChange, rule }) {
       : createRule.mutateAsync({ ...payload, code: form.code });
 
     request
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success(isEditing ? 'Bundle updated' : 'Bundle created'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Could not save this bundle.'));
   };
 
