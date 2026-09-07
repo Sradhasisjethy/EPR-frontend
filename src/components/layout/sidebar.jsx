@@ -71,7 +71,7 @@ export function Sidebar() {
     >
       <div className={cn('flex items-center gap-2 px-3 pt-4 pb-3', sidebarCollapsed && 'flex-col')}>
         <Link to="/" className={cn('flex items-center justify-center', !sidebarCollapsed && 'flex-1 justify-start pl-1')}>
-          <InfideepLogo showWordmark={!sidebarCollapsed} className={sidebarCollapsed ? 'h-8 w-auto' : 'h-8 w-auto'} />
+          <InfideepLogo showWordmark={!sidebarCollapsed} className="h-8 w-auto id-logo-interactive" />
         </Link>
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}

@@ -2,6 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { AppShell } from '@/components/layout/app-shell';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
+import { InfideepLogo } from '@/components/auth/infideep-logo';
 
 /**
  * Route guard for everything behind login. The Next.js version had no client-side
@@ -18,7 +19,10 @@ export function DashboardLayout() {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        {/* The mark rather than a generic ring: this is the one moment the
+            app has nothing to show, so it may as well say whose app it is.
+            It pulses rather than spins — a rotating logo reads as cheap. */}
+        <InfideepLogo showWordmark={false} glow className="h-12 w-auto" />
       </div>
     );
   }

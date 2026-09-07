@@ -214,9 +214,9 @@ html:not(.dark) .glass-card .text-slate-400 {
 }
 
 html:not(.dark) .wallpaper-active aside {
-  background: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  backdrop-filter: blur(28px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
   border: 1px solid hsl(var(--nav-from) / 0.30) !important;
   color: #0f172a !important;
 }
@@ -271,9 +271,9 @@ html.dark .glass-card span.text-muted-foreground {
 }
 
 html.dark .wallpaper-active aside {
-  background: rgba(15, 23, 42, 0.82) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
+  background: rgba(15, 23, 42, 0.55) !important;
+  backdrop-filter: blur(28px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
   border: 1px solid hsl(var(--nav-from) / 0.28) !important;
   color: #ffffff !important;
 }
@@ -610,4 +610,68 @@ html:not(.dark) .wallpaper-active .bg-card {
 html.dark .wallpaper-active .bg-card {
   background-color: rgb(15 23 42 / 0.66);
   border-color: hsl(var(--nav-from) / 0.24);
+}
+
+/* Logo motion.
+   Animation is spent where it means something, not left looping in the chrome.
+   An ERP is a tool people sit in front of all day: a mark that never stops
+   moving in the sidebar becomes noise, and worse, it competes with the signals
+   that should actually pull the eye — an alert count, a status flipping to
+   failed. So there are exactly two behaviours here.
+
+   1. A one-off entrance on the auth screen, where a first impression is the
+      whole job of the page.
+   2. A response to the pointer in the rail, so the logo feels like the live
+      "home" control it is, and is still otherwise.
+
+   Both are switched off under prefers-reduced-motion: brand polish is never
+   worth triggering someone's vestibular disorder. */
+
+@keyframes id-logo-enter {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.96); }
+  60%  { opacity: 1; transform: translateY(0) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes id-logo-bloom {
+  0%, 100% { filter:
+    drop-shadow(0 0 10px rgba(255, 0, 85, 0.45))
+    drop-shadow(0 0 26px rgba(255, 90, 40, 0.28))
+    drop-shadow(0 0 48px rgba(255, 140, 0, 0.16)); }
+  50%      { filter:
+    drop-shadow(0 0 14px rgba(255, 0, 85, 0.60))
+    drop-shadow(0 0 34px rgba(255, 90, 40, 0.38))
+    drop-shadow(0 0 60px rgba(255, 140, 0, 0.24)); }
+}
+
+/* Auth screen: enters once, then breathes slowly. Six seconds is deliberate —
+   fast enough to notice, slow enough that it never reads as a spinner. */
+.id-logo-glow {
+  animation:
+    id-logo-enter 620ms cubic-bezier(0.16, 1, 0.3, 1) both,
+    id-logo-bloom 6s ease-in-out 620ms infinite;
+}
+
+/* Rail: still until pointed at. */
+.id-logo-interactive {
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1), filter 240ms ease;
+}
+
+.id-logo-interactive:hover {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 12px rgba(255, 0, 85, 0.35));
+}
+
+.id-logo-interactive:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .id-logo-glow,
+  .id-logo-interactive,
+  .id-logo-interactive:hover {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
 }
