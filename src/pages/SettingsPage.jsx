@@ -4,6 +4,7 @@ import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/api-client';
 import { Globe, Clock, Calendar, Lock, KeyRound, Timer, Upload, Trash2 } from 'lucide-react';
+import { PALETTES } from '@/constants/palettes';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('appearance');
@@ -62,16 +63,6 @@ export default function SettingsPage() {
     }
   };
 
-  const palettes = [
-    // The house ramp, so the chrome can match the logo.
-    { id: 'infideep', name: 'Infideep', color: 'bg-gradient-to-tr from-[#ff0055] to-[#ff8c00]' },
-    { id: 'sapphire', name: 'Sapphire', color: 'bg-blue-500' },
-    { id: 'emerald', name: 'Emerald', color: 'bg-emerald-500' },
-    { id: 'amber', name: 'Amber', color: 'bg-amber-500' },
-    { id: 'ruby', name: 'Ruby', color: 'bg-rose-500' },
-    { id: 'violet', name: 'Violet', color: 'bg-violet-500' },
-    { id: 'slate', name: 'Slate', color: 'bg-slate-500' },
-  ];
 
   return (
     <div className="space-y-6">
@@ -98,7 +89,7 @@ export default function SettingsPage() {
             <div className="glass-card p-6 rounded-xl">
               <h3 className="text-lg font-medium mb-4">Color Scheme</h3>
               <div className="grid grid-cols-3 gap-4">
-                {palettes.map(p => (
+                {PALETTES.map(p => (
                   <button
                     key={p.id}
                     className={cn(
@@ -107,7 +98,7 @@ export default function SettingsPage() {
                     )}
                     onClick={() => setColorScheme(p.id)}
                   >
-                    <div className={cn("w-6 h-6 rounded-full", p.color)} />
+                    <div className={cn("w-8 h-8 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10", p.color)} />
                     <span className="font-medium text-sm">{p.name}</span>
                   </button>
                 ))}
