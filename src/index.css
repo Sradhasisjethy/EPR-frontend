@@ -675,3 +675,77 @@ html.dark .wallpaper-active .bg-card {
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------- touch ----
+   Pointer-aware rules for iPad, Apple Pencil and touch generally.
+   Keyed on `pointer: coarse` / `hover: none` rather than screen width: an iPad
+   in landscape is as wide as a laptop, so width-based rules hand a tablet the
+   desktop's small hit areas and hover-only affordances. A Pencil reports as a
+   fine pointer but still cannot hover on most iPads, so the two queries are
+   used separately and deliberately. */
+
+/* The 300ms wait for a possible double-tap, gone. Applied to controls only —
+   on the page body it would disable pinch-zoom, which people rely on. */
+button,
+a,
+[role='button'],
+select,
+summary,
+input[type='checkbox'],
+input[type='radio'] {
+  touch-action: manipulation;
+}
+
+/* iOS paints a grey box over anything tapped. Removed, but only because there
+   is a real :active state below to replace it — without one the UI would feel
+   dead to the touch. */
+@media (pointer: coarse) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:active,
+  a:active,
+  [role='button']:active {
+    opacity: 0.72;
+    transition: opacity 60ms ease;
+  }
+
+  /* Safari zooms the page when a focused field is under 16px, which on an iPad
+     yanks the layout sideways mid-typing. The base Input is `text-base
+     md:text-sm`, and an iPad in landscape matches `md`, so it was landing on
+     14px exactly where the zoom bites. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Apple's 44pt minimum. Table row actions are 12px text links — a legible
+     target with a mouse, a coin-flip with a fingertip. Grown vertically only,
+     so adjacent actions cannot start overlapping each other horizontally. */
+  td button,
+  td a,
+  th button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Momentum scrolling inside panels, not just the page. */
+  .overflow-y-auto,
+  .overflow-auto,
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Anything whose only affordance was :hover needs to be visible without one.
+   The rail's active row already carries a gradient, so it is unaffected; this
+   is for the quieter cases. */
+@media (hover: none) {
+  .group:hover .group-hover\:opacity-100,
+  .group-hover\:opacity-100 {
+    opacity: 1;
+  }
+}

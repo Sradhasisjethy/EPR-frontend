@@ -28,8 +28,11 @@ export function TopNav() {
         setIsDropdownOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    // pointerdown, not mousedown: a pen or finger does not always
+    // produce a mouse event before the tap lands, so the menu could
+    // stay open behind whatever was tapped next.
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => document.removeEventListener('pointerdown', handleClickOutside);
   }, []);
 
   // Titles come from the sidebar tree rather than the URL, so a shared route reads

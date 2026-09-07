@@ -62,8 +62,11 @@ export function ProductPicker({
     const onDocumentClick = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
     };
-    document.addEventListener('mousedown', onDocumentClick);
-    return () => document.removeEventListener('mousedown', onDocumentClick);
+    // pointerdown, not mousedown: a pen or finger does not always produce
+    // a mouse event before the tap lands, so the menu could stay open
+    // behind whatever was tapped next.
+    document.addEventListener('pointerdown', onDocumentClick);
+    return () => document.removeEventListener('pointerdown', onDocumentClick);
   }, [open]);
 
   const choose = (product) => {

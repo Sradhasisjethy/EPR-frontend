@@ -45,8 +45,11 @@ export function NotificationBell() {
     const onClickOutside = (event) => {
       if (ref.current && !ref.current.contains(event.target)) setOpen(false);
     };
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
+    // pointerdown, not mousedown: a pen or finger does not always produce
+    // a mouse event before the tap lands, so the menu could stay open
+    // behind whatever was tapped next.
+    document.addEventListener('pointerdown', onClickOutside);
+    return () => document.removeEventListener('pointerdown', onClickOutside);
   }, []);
 
   return (

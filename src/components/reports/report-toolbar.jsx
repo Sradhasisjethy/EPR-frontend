@@ -37,10 +37,13 @@ function ColumnMenu({ columns, hidden, onToggle, onReset }) {
     const onKeyDown = (event) => {
       if (event.key === 'Escape') setOpen(false);
     };
-    document.addEventListener('mousedown', onPointerDown);
+    // pointerdown, not mousedown: a pen or finger does not always produce
+    // a mouse event before the tap lands, so the menu could stay open
+    // behind whatever was tapped next.
+    document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
     return () => {
-      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [open]);
