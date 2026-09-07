@@ -56,7 +56,7 @@ export function AdvanceFormDialog({ open, onOpenChange }) {
               {partyOptions.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.partyType})</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label>Date</Label>
               <Input type="date" value={form.advanceDate} onChange={(e) => setForm({ ...form, advanceDate: e.target.value })} required />

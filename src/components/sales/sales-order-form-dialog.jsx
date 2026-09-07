@@ -183,7 +183,7 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
         {warning && <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-700 rounded-lg text-sm">{warning}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label>Factory</Label>
               <select value={form.factoryId} onChange={(e) => setForm({ ...form, factoryId: e.target.value })} disabled={isEditing} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm disabled:opacity-60" required>

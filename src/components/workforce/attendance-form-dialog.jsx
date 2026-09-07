@@ -61,7 +61,7 @@ export function AttendanceFormDialog({ open, onOpenChange }) {
               {(labourData?.rows || []).map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Date</Label>
               <Input type="date" value={form.attendanceDate} onChange={(e) => setForm({ ...form, attendanceDate: e.target.value })} required />

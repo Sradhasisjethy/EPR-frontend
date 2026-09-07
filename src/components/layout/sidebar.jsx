@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 // import { LogOut } from 'lucide-react';  // for the commented-out footer block
@@ -28,13 +28,17 @@ import { InfideepLogo } from '@/components/auth/infideep-logo';
  * code against this navigation and is gone.
  */
 export function Sidebar() {
-  const { sidebarCollapsed, setSidebarCollapsed, glassMode } = useUIStore();
+  const { sidebarCollapsed, setSidebarCollapsed, sidebarOpen, setSidebarOpen, glassMode } = useUIStore();
   const { pathname, search } = useLocation();
   const { data: user } = useCurrentUser();
   const { hasPermission, hasAnyPermission } = usePermissions();
   // const logoutMutation = useLogout();  // only the footer block below used this
 
   const isActiveHref = (href) => isNavHrefActive(href, pathname, search);
+
+  // A drawer that stays open over the page you just navigated to is the
+  // single most annoying thing a mobile nav can do.
+  useEffect(() => { setSidebarOpen(false); }, [pathname, setSidebarOpen]);
 
   // Hide what the user cannot reach, then drop any group left with nothing in it.
   const navigation = useMemo(() => {
@@ -63,26 +67,34 @@ export function Sidebar() {
       className={cn(
         // Floating panel rather than a full-height edge-to-edge column: the
         // inset and the rounding are what separate the chrome from the content.
-        'fixed top-3 bottom-3 left-3 z-40 flex flex-col rounded-3xl border id-panel-edge',
+        'fixed top-3 bottom-3 left-3 z-50 flex flex-col rounded-3xl border id-panel-edge',
         'transition-all duration-300 ease-in-out overflow-hidden',
         glassMode ? 'bg-background/80 backdrop-blur-2xl' : 'bg-card',
-        sidebarCollapsed ? 'w-[76px]' : 'w-[248px]'
+        // Below lg it is a drawer: off-screen until opened, and always the
+        // labelled width — an icons-only rail inside a drawer makes no sense
+        // when the drawer is already covering the screen.
+        'w-[248px] lg:w-auto',
+        sidebarOpen ? 'translate-x-0' : '-translate-x-[110%] lg:translate-x-0',
+        sidebarCollapsed ? 'lg:w-[76px]' : 'lg:w-[248px]'
       )}
     >
       <div className={cn('flex items-center gap-2 px-3 pt-4 pb-3', sidebarCollapsed && 'flex-col')}>
         <Link to="/" className={cn('flex items-center justify-center', !sidebarCollapsed && 'flex-1 justify-start pl-1')}>
-          <InfideepLogo showWordmark={!sidebarCollapsed} className="h-8 w-auto id-logo-interactive" />
+          <InfideepLogo showWordmark className="h-8 w-auto id-logo-interactive lg:hidden" />
+          <InfideepLogo showWordmark={!sidebarCollapsed} className="h-8 w-auto id-logo-interactive hidden lg:block" />
         </Link>
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
+          // Collapsing is meaningless in a drawer, which is why this is
+          // hidden rather than merely inert below lg.
+          className="hidden lg:block p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={18} />}
         </button>
       </div>
 
-      <nav className={cn('flex-1 overflow-y-auto no-scrollbar px-2 pb-2', sidebarCollapsed ? 'space-y-1' : 'space-y-0.5')}>
+      <nav className={cn('flex-1 overflow-y-auto no-scrollbar px-2 pb-2', 'space-y-0.5 lg:space-y-1')}>
         {navigation.map((item) => {
           const active = isActiveHref(item.href);
 
@@ -93,9 +105,8 @@ export function Sidebar() {
               title={sidebarCollapsed ? item.title : undefined}
               className={cn(
                 'group relative transition-all rounded-2xl',
-                sidebarCollapsed
-                  ? 'flex items-center justify-center h-11 w-11 mx-auto'
-                  : 'flex items-center gap-3 px-3 py-2.5',
+                'flex items-center gap-3 px-3 py-2.5',
+                sidebarCollapsed && 'lg:justify-center lg:gap-0 lg:h-11 lg:w-11 lg:mx-auto lg:px-0',
                 active
                   ? 'id-nav-active font-semibold'
                   : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
@@ -103,7 +114,7 @@ export function Sidebar() {
             >
               <item.icon size={19} className="shrink-0" />
               {/* Collapsed is icons only — the label lives in the tooltip. */}
-              {!sidebarCollapsed && <span className="text-sm font-medium truncate">{item.title}</span>}
+              <span className={cn('text-sm font-medium truncate', sidebarCollapsed && 'lg:hidden')}>{item.title}</span>
             </Link>
           );
         })}

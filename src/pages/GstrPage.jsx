@@ -37,7 +37,7 @@ export default function GstrPage() {
     <div className="space-y-6">
       
 
-      <div className="grid grid-cols-3 gap-4 max-w-2xl">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
         <div className="space-y-1.5">
           <Label>Factory</Label>
           <select value={factoryId} onChange={(e) => setFactoryId(e.target.value)} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
@@ -73,7 +73,7 @@ export default function GstrPage() {
         gstr1.isLoading ? <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" /> : gstr1.data && (
           <div className="space-y-8">
             {showRates && (
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <StatCard label="Taxable Value" value={formatINR(gstr1.data.summary.taxableValuePaise)} />
                 <StatCard label="CGST" value={formatINR(gstr1.data.summary.cgstPaise)} />
                 <StatCard label="SGST" value={formatINR(gstr1.data.summary.sgstPaise)} />
@@ -164,7 +164,7 @@ export default function GstrPage() {
           <div className="space-y-8">
             <div className="space-y-2">
               <h3 className="text-sm font-semibold">3.1(a) Outward Taxable Supplies</h3>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <StatCard label="Taxable Value" value={formatINR(gstr3b.data.outwardSupplies.taxableValuePaise)} />
                 <StatCard label="CGST" value={formatINR(gstr3b.data.outwardSupplies.cgstPaise)} />
                 <StatCard label="SGST" value={formatINR(gstr3b.data.outwardSupplies.sgstPaise)} />
@@ -173,7 +173,7 @@ export default function GstrPage() {
             </div>
             <div className="space-y-2">
               <h3 className="text-sm font-semibold">4. ITC Available (derived from goods receipts billed in the period)</h3>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <StatCard label="Taxable Value" value={formatINR(gstr3b.data.itcAvailable.taxableValuePaise)} />
                 <StatCard label="CGST" value={formatINR(gstr3b.data.itcAvailable.cgstPaise)} />
                 <StatCard label="SGST" value={formatINR(gstr3b.data.itcAvailable.sgstPaise)} />
@@ -182,7 +182,7 @@ export default function GstrPage() {
             </div>
             <div className="space-y-2">
               <h3 className="text-sm font-semibold">Net Tax Payable (informational — final utilization rules apply on the portal)</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <StatCard label="CGST" value={formatINR(gstr3b.data.netTaxPayable.cgstPaise)} />
                 <StatCard label="SGST" value={formatINR(gstr3b.data.netTaxPayable.sgstPaise)} />
                 <StatCard label="IGST" value={formatINR(gstr3b.data.netTaxPayable.igstPaise)} />

@@ -75,7 +75,7 @@ export function StockAdjustmentDialog({ open, onOpenChange, lot }) {
         )}
 
         <form onSubmit={submit} className="space-y-4">
-          <div className="grid grid-cols-3 gap-4 p-3 rounded-lg border border-border bg-muted/30 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-3 rounded-lg border border-border bg-muted/30 text-sm">
             <div>
               <p className="text-xs text-muted-foreground">System quantity</p>
               <p className="font-medium tabular-nums">{systemQty}</p>

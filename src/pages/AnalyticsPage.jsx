@@ -54,7 +54,7 @@ export default function AnalyticsPage() {
         <p className="text-muted-foreground">Dashboards, stock ageing, costing, alerts and cancellation analysis (M32-M38)</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 max-w-2xl">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
         <div className="space-y-1.5">
           <Label>Factory</Label>
           <select value={factoryId} onChange={(e) => setFactoryId(e.target.value)} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
@@ -89,20 +89,20 @@ export default function AnalyticsPage() {
       {activeTab === 'Dashboard' && factoryId && (
         dashboard.isLoading ? <Skeleton /> : dashboard.data && (
           <div className="space-y-8">
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <StatCard label="Sales Value" value={showRates ? formatINR(dashboard.data.salesValuePaise) : '—'} />
               <StatCard label="Purchase Value" value={showRates ? formatINR(dashboard.data.purchaseValuePaise) : '—'} />
               <StatCard label="Dispatches" value={dashboard.data.dispatchCount} />
               <StatCard label="Production Qty" value={dashboard.data.productionQty} />
             </div>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <StatCard label="Cash Balance" value={showRates ? formatINR(dashboard.data.cashBalancePaise) : '—'} />
               <StatCard label="Bank Balance" value={showRates ? formatINR(dashboard.data.bankBalancePaise) : '—'} />
               <StatCard label="Receivables" value={showRates ? formatINR(dashboard.data.outstandingReceivablesPaise) : '—'} hint="Owed to us" />
               <StatCard label="Payables" value={showRates ? formatINR(dashboard.data.outstandingPayablesPaise) : '—'} hint="Owed by us" />
             </div>
 
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold">Top Products</h3>
                 <DataTable
@@ -136,7 +136,7 @@ export default function AnalyticsPage() {
           </div>
           {ageing.isLoading ? <Skeleton /> : ageing.data && (
             <div className="space-y-8">
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 {Object.entries(ageing.data.buckets).map(([bucket, v]) => (
                   <StatCard key={bucket} label={`${bucket} days`} value={`${v.count} lots · ${v.qty} units`} hint={showRates ? formatINR(v.valuePaise) : undefined} />
                 ))}

@@ -54,7 +54,7 @@ export function DebitNoteFormDialog({ open, onOpenChange }) {
               {(vendorData?.rows || []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Note Date</Label>
               <Input type="date" value={form.noteDate} onChange={(e) => setForm({ ...form, noteDate: e.target.value })} required />

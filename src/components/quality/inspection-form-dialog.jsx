@@ -95,7 +95,7 @@ export function InspectionFormDialog({ open, onOpenChange, lot, defaultFactoryId
 
           <ActionError message={error} onDismiss={() => setError('')} />
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="qc-factory">Location</Label>
               <select
@@ -168,7 +168,7 @@ export function InspectionFormDialog({ open, onOpenChange, lot, defaultFactoryId
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="qc-age">Test age (days)</Label>
               <Input

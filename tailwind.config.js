@@ -90,5 +90,24 @@ export default {
       },
     },
   },
-  plugins: [],
+  future: {
+    // Compiles every `hover:` utility inside `@media (hover: hover)`.
+    //
+    // Without it, hover styles apply on devices that cannot really hover, and
+    // iPadOS resolves that by spending the first tap activating the hover state
+    // and only the second as a click — which is why buttons needed several
+    // Pencil taps. It is Tailwind's own recommended default and will be the
+    // behaviour in v4.
+    hoverOnlyWhenSupported: true,
+  },
+
+  plugins: [
+    // `coarse:` targets touch and Pencil without guessing from screen width —
+    // an iPad in landscape is as wide as a laptop, so `lg:` would hand a tablet
+    // the desktop's small hit areas.
+    function coarsePointerVariant({ addVariant }) {
+      addVariant('coarse', '@media (pointer: coarse)');
+      addVariant('fine', '@media (pointer: fine)');
+    },
+  ],
 };

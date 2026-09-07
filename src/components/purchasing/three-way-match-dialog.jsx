@@ -80,7 +80,7 @@ export function ThreeWayMatchDialog({ open, onOpenChange, invoice }) {
             </table>
 
             {showRates && (
-              <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                 <Figure label="Goods accepted" value={formatINR(data.receiptValuePaise)} />
                 <Figure label="Vendor billed" value={formatINR(data.invoiceValuePaise)} />
                 <Figure

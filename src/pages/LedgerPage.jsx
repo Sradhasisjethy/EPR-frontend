@@ -119,7 +119,7 @@ export default function LedgerPage() {
 
       {activeTab === 'Cash Book' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-4 gap-4 max-w-3xl">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 max-w-3xl">
             <div className="space-y-1.5">
               <Label>Factory</Label>
               <select value={factoryId} onChange={(e) => setFactoryId(e.target.value)} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>

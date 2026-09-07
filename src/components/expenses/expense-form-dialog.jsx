@@ -54,7 +54,7 @@ export function ExpenseFormDialog({ open, onOpenChange }) {
               {(factoryData?.rows || []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Category</Label>
               <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="e.g. Diesel, Repairs" required />
@@ -64,7 +64,7 @@ export function ExpenseFormDialog({ open, onOpenChange }) {
               <Input type="date" value={form.expenseDate} onChange={(e) => setForm({ ...form, expenseDate: e.target.value })} required />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Mode</Label>
               <select value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">

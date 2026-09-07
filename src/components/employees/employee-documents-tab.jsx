@@ -53,7 +53,7 @@ export function EmployeeDocumentsTab({ employeeId }) {
       {/* Upload Section */}
       <form onSubmit={handleUpload} className="p-4 border rounded-xl bg-muted/20 space-y-4">
         <h3 className="font-semibold text-sm">Upload New Document</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label>Document Type</Label>
             <select

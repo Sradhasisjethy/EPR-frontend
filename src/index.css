@@ -227,10 +227,12 @@ html:not(.dark) .wallpaper-active aside span {
   color: #334155 !important;
 }
 
-html:not(.dark) .wallpaper-active aside a:hover,
-html:not(.dark) .wallpaper-active aside button:hover {
-  color: #0f172a !important;
-  background-color: rgba(241, 245, 249, 0.8) !important;
+@media (hover: hover) and (pointer: fine) {
+  html:not(.dark) .wallpaper-active aside a:hover,
+  html:not(.dark) .wallpaper-active aside button:hover {
+    color: #0f172a !important;
+    background-color: rgba(241, 245, 249, 0.8) !important;
+  }
 }
 
 /* The header carries no surface of its own, in glass mode or out of it. It
@@ -657,9 +659,14 @@ html.dark .wallpaper-active .bg-card {
   transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1), filter 240ms ease;
 }
 
-.id-logo-interactive:hover {
-  transform: scale(1.06);
-  filter: drop-shadow(0 0 12px rgba(255, 0, 85, 0.35));
+/* Gated like Tailwind's own hover utilities (hoverOnlyWhenSupported). A
+   transform behind :hover is exactly what iPadOS spends a first tap activating
+   before it will deliver a click. */
+@media (hover: hover) and (pointer: fine) {
+  .id-logo-interactive:hover {
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 12px rgba(255, 0, 85, 0.35));
+  }
 }
 
 .id-logo-interactive:active {
@@ -686,15 +693,15 @@ html.dark .wallpaper-active .bg-card {
 
 /* The 300ms wait for a possible double-tap, gone. Applied to controls only —
    on the page body it would disable pinch-zoom, which people rely on. */
-button,
-a,
-[role='button'],
-select,
-summary,
-input[type='checkbox'],
-input[type='radio'] {
-  touch-action: manipulation;
-}
+/* No touch-action rules here, deliberately.
+   They were added to remove the 300ms double-tap wait — but index.html already
+   carries `viewport width=device-width`, which is what actually disables that
+   delay in Safari, so the rules bought nothing.
+   They were not free, though: Radix's dialog scroll lock (react-remove-scroll)
+   manages touch-action itself, and overriding it on the dialog — which gained
+   overflow-y-auto in the mobile pass — put the two in conflict. Pen input is
+   the case that broke; touch kept working, which is what made it look like a
+   Pencil problem rather than a scroll-lock one. */
 
 /* iOS paints a grey box over anything tapped. Removed, but only because there
    is a real :active state below to replace it — without one the UI would feel
@@ -732,12 +739,13 @@ input[type='radio'] {
     align-items: center;
   }
 
-  /* Momentum scrolling inside panels, not just the page. */
-  .overflow-y-auto,
-  .overflow-auto,
-  .overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
-  }
+  /* Deliberately NOT setting -webkit-overflow-scrolling: touch.
+     It is a legacy iOS property — momentum scrolling has been native since iOS
+     13 — and it turns the element into a separate compositing layer with its
+     own hit-testing, which drops taps inside the container for pen input.
+     Adding overflow-y-auto to the dialog in the mobile pass meant every form
+     became one of those containers, which is why Cancel answered a finger but
+     not an Apple Pencil. */
 }
 
 /* Anything whose only affordance was :hover needs to be visible without one.
@@ -749,3 +757,82 @@ input[type='radio'] {
     opacity: 1;
   }
 }
+
+/* The auth screen is exempt from the light-theme glass overrides.
+   `wallpaper-active` is set on <html> and <body> by the UI provider, so it
+   applies on the login page too — and the rule above forces every h1-h4 to
+   #0f172a so headings stay readable on a light wallpaper. The auth screen is
+   always dark-grounded (.infideep-auth, #121414), so that turned "Powering
+   Smarter" and "Welcome back" into near-black text on near-black. It was only
+   visible in light theme, which is why it surfaced the moment the theme toggle
+   moved into the avatar menu.
+
+   Restated with the auth container in the selector so it out-specifies the
+   override rather than fighting it with another blanket !important. */
+html:not(.dark) .wallpaper-active .infideep-auth h1,
+html:not(.dark) .wallpaper-active .infideep-auth h2,
+html:not(.dark) .wallpaper-active .infideep-auth h3,
+html:not(.dark) .wallpaper-active .infideep-auth h4,
+html:not(.dark) .wallpaper-active .infideep-auth .text-white {
+  color: #e2e2e2 !important;   /* infideep.on-surface */
+}
+
+/* The card and body copy on that screen come from the same override family. */
+html:not(.dark) .wallpaper-active .infideep-auth p,
+html:not(.dark) .wallpaper-active .infideep-auth label,
+html:not(.dark) .wallpaper-active .infideep-auth span {
+  color: inherit;
+}
+
+/* ------------------------------------------------ controls on a coarse pointer
+   Every interactive primitive ships under Apple's 44pt minimum: buttons are
+   32-40px, selects 36px, checkboxes 16px, the quantity stepper's +/- 24px.
+   Fine with a mouse or a Pencil tip; a coin-flip with a fingertip.
+
+   Raised here rather than in each component so the desktop sizing is untouched
+   and nothing has to be remembered when a new form is written. Everything grows
+   vertically or in place — never in a way that makes neighbouring controls
+   overlap and steal each other's taps.
+
+   Wrapped in :where() so the whole selector weighs nothing: any component that
+   sets its own height still wins, which is what stopped the card elevation rule
+   from silently overriding the dashboard tiles' accent glow. */
+@media (pointer: coarse) {
+  :where(button, [role='button'], a.btn, select, .btn) {
+    min-height: 44px;
+  }
+
+  /* Icon-only buttons are square, so they need the width too. */
+  :where(button:not(:has(> :not(svg))):not(:has(> *:not(svg)))) {
+    min-width: 44px;
+  }
+
+  :where(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+    min-height: 44px;
+  }
+
+  /* A checkbox cannot simply grow to 44px without looking wrong, and padding it
+     out with a pseudo-element would overlap the next row in a `space-y-2` list
+     and toggle the wrong box. So the control gets a modest bump and its label
+     carries the rest of the target — which is why labels are made clickable
+     below rather than left as decoration. */
+  :where(input[type='checkbox'], input[type='radio'], [role='checkbox'], [role='switch']) {
+    min-height: 22px;
+    min-width: 22px;
+  }
+
+  :where(label:has(input[type='checkbox']), label:has([role='checkbox'])) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  /* Table rows are the densest tap surface in the app. */
+  :where(td) {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+}
+

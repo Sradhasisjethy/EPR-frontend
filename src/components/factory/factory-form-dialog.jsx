@@ -101,7 +101,7 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="factory-name">Name</Label>
               <Input id="factory-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
@@ -117,7 +117,7 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
             <Input id="factory-address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="factory-city">City</Label>
               <Input id="factory-city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />

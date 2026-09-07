@@ -31,7 +31,7 @@ export function OrganizationDetailDialog({ open, onOpenChange, data, type }) {
 
         <div className="space-y-6 pt-4 text-sm">
           {/* Organization Info */}
-          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-muted/30 border border-border">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-muted/30 border border-border">
             <div>
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <Building2 size={13} className="text-primary" /> Organization
@@ -106,7 +106,7 @@ export function OrganizationDetailDialog({ open, onOpenChange, data, type }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
                 <div className="space-y-1">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Network size={13} className="text-primary" /> Level
