@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { useInitiateTransfer } from '@/hooks/use-transfer';
 import { useFactories } from '@/hooks/use-factory';
 import { useStockLots } from '@/hooks/use-inventory';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const emptyLine = { productId: '', sourceLotId: '', quantity: '' };
 
@@ -21,7 +23,7 @@ export function InitiateTransferDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ fromFactoryId: '', toFactoryId: '', vehicleNumber: '', initiatedDate: new Date().toISOString().slice(0, 10) });
+      setForm({ fromFactoryId: '', toFactoryId: '', vehicleNumber: '', initiatedDate: today() });
       setLines([{ ...emptyLine }]);
       setError('');
     }
@@ -62,7 +64,7 @@ export function InitiateTransferDialog({ open, onOpenChange }) {
       lines: lines.map((l) => ({ productId: l.productId, sourceLotId: l.sourceLotId, quantity: Number(l.quantity) })),
     };
 
-    initiateMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to initiate transfer.'));
+    initiateMutation.mutateAsync(payload).then(() => { toast.success('Transfer initiated'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to initiate transfer.'));
   };
 
   return (

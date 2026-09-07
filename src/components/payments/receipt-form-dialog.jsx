@@ -10,6 +10,8 @@ import { useParties } from '@/hooks/use-parties';
 import { useSalesInvoices } from '@/hooks/use-invoicing';
 import { PartyType } from '@/constants/enums';
 import { toPaise } from '@/lib/money';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const emptyMode = { mode: 'CASH', amountRupees: '' };
 
@@ -26,7 +28,7 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', customerPartyId: '', receiptDate: new Date().toISOString().slice(0, 10) });
+      setForm({ factoryId: '', customerPartyId: '', receiptDate: today() });
       setModes([{ ...emptyMode }]);
       setAllocations({});
       setError('');
@@ -55,7 +57,7 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
         .map(([invoiceId, amountRupees]) => ({ invoiceId, allocatedAmountPaise: toPaise(amountRupees) })),
     };
 
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to record receipt.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Receipt recorded'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to record receipt.'));
   };
 
   return (

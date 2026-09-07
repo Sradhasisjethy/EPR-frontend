@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { openApiDocument } from '@/lib/api-document';
 
 export function useDeliveryChallans(params = {}) {
   return useQuery({
     queryKey: ['delivery-challans', params],
     queryFn: async () => (await apiClient.get('/dispatch/challans', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -33,7 +34,12 @@ export function useCancelChallan() {
   });
 }
 
-export const getChallanPrintUrl = (id, format = 'a4') => {
-  const base = apiClient.defaults.baseURL || '/api/v1';
-  return `${base}/dispatch/challans/${id}/print?format=${format}`;
-};
+/**
+ * Opens a challan PDF.
+ *
+ * Fetched rather than linked: the API sits on another origin, and a browser
+ * does not send cookies with a link navigation across origins — the request
+ * arrived unauthenticated and the API answered "Access token is missing".
+ */
+export const openChallanPrint = (id, format = 'a4') =>
+  openApiDocument(`/dispatch/challans/${id}/print`, { params: { format } });

@@ -12,7 +12,9 @@ import { useParties } from '@/hooks/use-parties';
 import { useSavedReports, useCreateSavedReport, useDeleteSavedReport, useRunReport, useRunSavedReport, useExportReport } from '@/hooks/use-reports';
 import { useDocumentSearch } from '@/hooks/use-analytics';
 import { ReportTypes } from '@/constants/enums';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { DateText } from '@/components/date-text';
 
 /**
  * The M40 saved-report builder and document search.
@@ -49,13 +51,15 @@ const LABELS = {
 };
 
 export default function SavedReportsPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Report Builder');
-  const [reportType, setReportType] = useTabParam(REPORT_TYPES, ReportTypes.STOCK_AGEING, 'report');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Report Builder', 'subtab');
+  const [reportType, setReportType] = useTabParam(REPORT_TYPES, ReportTypes.STOCK_AGEING, 'report', 'subtab');
   const [params, setParams] = useState({});
   const [reportName, setReportName] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [reportToDelete, setReportToDelete] = useState(null);
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
   const { data: partyData } = useParties({ page: 1, limit: 100 });
@@ -101,6 +105,18 @@ export default function SavedReportsPage() {
       .catch((err) => setError(err.response?.data?.message || 'Failed to run saved report.'));
   };
 
+  const handleDeleteClick = (report) => {
+    setReportToDelete(report);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (reportToDelete) {
+      deleteReport.mutate(reportToDelete.id);
+      setReportToDelete(null);
+    }
+  };
+
   const renderField = (field) => {
     if (field === 'factoryId') {
       return (
@@ -137,9 +153,9 @@ export default function SavedReportsPage() {
 
   return (
     <div className="space-y-6">
+
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Saved Report Builder</h2>
           <p className="text-muted-foreground">Ad-hoc analytics, saved parameter sets and cross-module document search (M39/M40)</p>
         </div>
         <Link
@@ -243,7 +259,7 @@ export default function SavedReportsPage() {
                           <Play size={16} />
                         </button>
                         <button
-                          onClick={() => { if (window.confirm(`Delete report "${row.original.name}"?`)) deleteReport.mutate(row.original.id); }}
+                          onClick={() => handleDeleteClick(row.original)}
                           className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                           title="Delete"
                         >
@@ -258,6 +274,16 @@ export default function SavedReportsPage() {
               />
             )}
           </div>
+          
+          <ConfirmDialog
+            open={deleteConfirmOpen}
+            onOpenChange={setDeleteConfirmOpen}
+            title="Delete Saved Report"
+            description={`Delete report "${reportToDelete?.name}"?`}
+            onConfirm={handleConfirmDelete}
+            confirmText="Delete"
+            variant="destructive"
+          />
         </div>
       )}
 
@@ -279,7 +305,7 @@ export default function SavedReportsPage() {
               columns={[
                 { id: 'type', header: 'Document Type', cell: ({ row }) => row.original.documentType.replace(/([A-Z])/g, ' $1').trim() },
                 { accessorKey: 'number', header: 'Number' },
-                { accessorKey: 'date', header: 'Date' },
+                { id: 'date', header: 'Date', cell: ({ row }) => <DateText value={row.original.date} /> },
               ]}
               data={search.data || []}
               searchKey="number"

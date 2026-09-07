@@ -44,7 +44,16 @@ export function DataTable({
   searchValue,
   onSearchChange,
   isFetching = false,
+  // A failed fetch used to fall through to `emptyMessage`, so a 500 or a
+  // permission error was indistinguishable from "there is genuinely no data" —
+  // the worst possible confusion on a stock or ledger screen. Pass the query's
+  // isError (and optionally its refetch) to say what actually happened.
+  isError = false,
+  onRetry,
+  errorMessage = 'Could not load this data.',
   emptyMessage = 'No results.',
+  filtersNode,
+  actionsNode,
   sorting: serverSorting,
   onSortingChange: onServerSortingChange,
   sortableColumns,
@@ -95,31 +104,39 @@ export function DataTable({
 
   const handleSearch = (value) => {
     if (serverSearch) onSearchChange(value);
-    else table.getColumn(searchKey)?.setFilterValue(value);
+    else if (searchKey) table.getColumn(searchKey)?.setFilterValue(value);
   };
-  const currentSearch = serverSearch ? searchValue ?? '' : table.getColumn(searchKey)?.getFilterValue() ?? '';
+  const currentSearch = serverSearch ? searchValue ?? '' : (searchKey ? table.getColumn(searchKey)?.getFilterValue() ?? '' : '');
 
   return (
     <div className="w-full space-y-4">
-      {showSearch && (
+      {(showSearch || filtersNode || actionsNode) && (
         <div className="flex items-center justify-between">
-          <div className="relative w-72">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <input
-              placeholder={searchPlaceholder || 'Search...'}
-              value={currentSearch}
-              onChange={(event) => handleSearch(event.target.value)}
-              className={cn(
-                'h-9 w-full rounded-md border border-input pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-all',
-                glassMode ? 'glass-surface' : 'bg-background'
-              )}
-            />
+          <div className="flex items-center gap-4 flex-wrap">
+            {showSearch && (
+              <div className="relative w-72">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <input
+                  placeholder={searchPlaceholder || 'Search...'}
+                  value={currentSearch}
+                  onChange={(event) => handleSearch(event.target.value)}
+                  className={cn(
+                    'h-9 w-full rounded-md border border-input pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-all',
+                    glassMode ? 'glass-surface' : 'bg-background'
+                  )}
+                />
+              </div>
+            )}
+            {filtersNode}
+            {actionsNode}
           </div>
-          {isFetching && (
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Loader2 size={14} className="animate-spin" /> Updating…
-            </span>
-          )}
+          <div className="flex items-center gap-4">
+            {isFetching && (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Loader2 size={14} className="animate-spin" /> Updating…
+              </span>
+            )}
+          </div>
         </div>
       )}
 
@@ -170,8 +187,28 @@ export function DataTable({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                    {isFetching ? 'Loading…' : emptyMessage}
+                  <td
+                    colSpan={columns.length}
+                    className={cn('h-24 text-center', isError ? 'text-destructive' : 'text-muted-foreground')}
+                  >
+                    {isError ? (
+                      <span className="inline-flex items-center gap-2">
+                        {errorMessage}
+                        {onRetry && (
+                          <button
+                            type="button"
+                            onClick={onRetry}
+                            className="underline hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                          >
+                            Retry
+                          </button>
+                        )}
+                      </span>
+                    ) : isFetching ? (
+                      'Loading…'
+                    ) : (
+                      emptyMessage
+                    )}
                   </td>
                 </tr>
               )}

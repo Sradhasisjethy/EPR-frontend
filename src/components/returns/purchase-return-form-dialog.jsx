@@ -10,6 +10,8 @@ import { useParties } from '@/hooks/use-parties';
 import { useProducts } from '@/hooks/use-products';
 import { PartyType } from '@/constants/enums';
 import { toPaise } from '@/lib/money';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const emptyLine = { productId: '', quantity: '', rateRupees: '' };
 
@@ -25,7 +27,7 @@ export function PurchaseReturnFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', vendorPartyId: '', returnDate: new Date().toISOString().slice(0, 10), reason: '' });
+      setForm({ factoryId: '', vendorPartyId: '', returnDate: today(), reason: '' });
       setLines([{ ...emptyLine }]);
       setError('');
     }
@@ -48,7 +50,7 @@ export function PurchaseReturnFormDialog({ open, onOpenChange }) {
       lines: lines.map((l) => ({ productId: l.productId, quantity: Number(l.quantity), ratePaise: toPaise(l.rateRupees) })),
     };
 
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to record purchase return.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Purchase return recorded'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to record purchase return.'));
   };
 
   return (

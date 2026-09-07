@@ -11,7 +11,7 @@ const invalidate = (qc) => {
 
 // Receipts (from customers)
 export function useReceipts(params = {}) {
-  return useQuery({ queryKey: ['receipts', params], queryFn: async () => (await apiClient.get('/receipts', { params })).data.data, keepPreviousData: true });
+  return useQuery({ queryKey: ['receipts', params], queryFn: async () => (await apiClient.get('/receipts', { params })).data.data, placeholderData: (prev) => prev });
 }
 export function useCreateReceipt() {
   const qc = useQueryClient();
@@ -30,7 +30,7 @@ export function useCancelReceipt() {
 
 // Payments (to vendors/contractors)
 export function usePayments(params = {}) {
-  return useQuery({ queryKey: ['payments', params], queryFn: async () => (await apiClient.get('/payments', { params })).data.data, keepPreviousData: true });
+  return useQuery({ queryKey: ['payments', params], queryFn: async () => (await apiClient.get('/payments', { params })).data.data, placeholderData: (prev) => prev });
 }
 export function useCreatePayment() {
   const qc = useQueryClient();

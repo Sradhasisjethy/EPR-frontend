@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
-export function useNotifications(params = {}) {
+export function useNotifications(params = {}, options = {}) {
   return useQuery({
     queryKey: ['notifications', params],
     queryFn: async () => (await apiClient.get('/notifications', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
+    ...options,
   });
 }
 

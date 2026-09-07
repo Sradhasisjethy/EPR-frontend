@@ -5,8 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreateProductionEntry } from '@/hooks/use-production';
 import { useFactories } from '@/hooks/use-factory';
-import { useProducts, useMixDesigns } from '@/hooks/use-products';
+import { useProducts, useResolvedMixDesign, useExplodeMixDesign } from '@/hooks/use-products';
 import { ProductType } from '@/constants/enums';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId, defaultProductId, defaultPlanLineId }) {
   const [form, setForm] = useState({ factoryId: '', productId: '', productionDate: '', goodQty: '', rejectedQty: '0' });
@@ -15,8 +17,19 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
   const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.FINISHED_GOOD });
-  const { data: mixDesignData } = useMixDesigns({ page: 1, limit: 100, productId: form.productId || undefined });
-  const activeMixDesign = (mixDesignData?.rows || []).find((m) => m.isActive);
+  // Resolved by production date, matching what the server will actually
+  // consume. Selecting the `isActive` version instead meant a backdated entry
+  // showed one recipe and posted another.
+  const mixDesignQuery = useResolvedMixDesign(form.productId, form.productionDate);
+  const activeMixDesign = mixDesignQuery.data;
+  // The server works out what a run actually consumes: wastage applied, and
+  // each BOM unit converted into the one the material is stocked in. Doing that
+  // arithmetic here as well is how the screen came to promise "11400 KG" while
+  // the recipe really meant 7.75 CUM.
+  const explodeQuery = useExplodeMixDesign(
+    activeMixDesign?.id,
+    Number(form.goodQty) > 0 ? Number(form.goodQty) : 0
+  );
   const createMutation = useCreateProductionEntry();
 
   useEffect(() => {
@@ -24,7 +37,7 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
       setForm({
         factoryId: defaultFactoryId || '',
         productId: defaultProductId || '',
-        productionDate: new Date().toISOString().slice(0, 10),
+        productionDate: today(),
         goodQty: '',
         rejectedQty: '0',
       });
@@ -33,14 +46,29 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
     }
   }, [open, defaultFactoryId, defaultProductId]);
 
-  const expectedQty = (line) => (Number(line.quantityPerUnit) * Number(form.goodQty || 0));
+  // Changing the product or the production date can resolve a different recipe.
+  // Overrides are keyed by material, so without this a quantity typed against
+  // one version would silently carry into another that happens to share it.
+  const resolvedMixDesignId = activeMixDesign?.id;
+  useEffect(() => {
+    setMaterialOverrides({});
+  }, [resolvedMixDesignId]);
+
+  const requirementFor = (line) =>
+    (explodeQuery.data?.requirements || []).find((r) => r.rawMaterialProductId === line.rawMaterialProductId);
+
+  const expectedQty = (line) => Number(requirementFor(line)?.quantity ?? 0);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
 
     if (!activeMixDesign) {
-      setError('This product has no active mix design — configure one under Products & BOM.');
+      setError(
+        mixDesignQuery.isError
+          ? `No mix design is effective for this product on ${form.productionDate}. Activate one from that date, or change the production date.`
+          : 'This product has no active mix design — configure one under Products & BOM.'
+      );
       return;
     }
 
@@ -60,7 +88,7 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
       materialLines,
     };
 
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to post production entry.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Production recorded'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to post production entry.'));
   };
 
   return (
@@ -103,13 +131,31 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
             </div>
           </div>
 
-          {form.productId && !activeMixDesign && (
-            <p className="text-sm text-destructive">No active mix design for this product.</p>
+          {form.productId && form.productionDate && mixDesignQuery.isLoading && (
+            <p className="text-sm text-muted-foreground">Loading the mix design in force on {form.productionDate}…</p>
+          )}
+
+          {form.productId && form.productionDate && !mixDesignQuery.isLoading && !activeMixDesign && (
+            <p className="text-sm text-destructive">
+              No mix design is effective for this product on {form.productionDate}.
+            </p>
           )}
 
           {activeMixDesign && (
             <div className="space-y-2">
-              <Label>Raw Material Consumption (from active mix design — edit if actuals differ)</Label>
+              <Label>Raw Material Consumption (per the mix design in force on {form.productionDate} — edit if actuals differ)</Label>
+
+              {/* If the server cannot work out the requirement — usually a
+                  recipe unit with no conversion to the stocking unit — say so.
+                  Otherwise every row silently reads "expected 0.00" and the
+                  operator has no idea the figures are missing rather than zero. */}
+              {explodeQuery.isError && (
+                <div className="p-3 rounded-md bg-destructive/10 text-destructive text-xs">
+                  {explodeQuery.error?.response?.data?.message
+                    || 'The expected quantities could not be worked out for this recipe.'}
+                </div>
+              )}
+
               {activeMixDesign.lines.map((line) => {
                 const expected = expectedQty(line);
                 const override = materialOverrides[line.rawMaterialProductId] || {};
@@ -118,8 +164,16 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
                 return (
                   <div key={line.id} className="p-2 rounded-md border border-border space-y-1">
                     <div className="grid grid-cols-[1fr_100px_100px] gap-2 items-center text-sm">
-                      <span>{line.rawMaterial?.name}</span>
-                      <span className="text-muted-foreground text-xs">expected {expected.toFixed(2)}</span>
+                      {/* A blank name here means the mix design was resolved
+                          without its materials — an operator being asked to
+                          confirm a quantity of something unnamed. */}
+                      <span>{line.rawMaterial?.name || <span className="text-destructive">Unnamed material</span>}</span>
+                      <span className="text-muted-foreground text-xs">
+                        {/* The unit the server converted INTO, not the one the
+                            recipe was written in — otherwise 7.75 CUM gets
+                            labelled "KG". */}
+                        expected {expected.toFixed(2)} {requirementFor(line)?.uomCode || ''}
+                      </span>
                       <Input
                         type="number" step="0.0001" min="0" placeholder="Actual"
                         value={override.actualQty ?? ''}

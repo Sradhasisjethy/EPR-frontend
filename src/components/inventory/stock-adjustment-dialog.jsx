@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreateStockAdjustment } from '@/hooks/use-inventory';
+import { toast } from 'sonner';
 
 /**
  * Records a physical stock count against one lot.
@@ -58,7 +59,7 @@ export function StockAdjustmentDialog({ open, onOpenChange, lot }) {
         countedQty: counted,
         reason: reason.trim(),
       })
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success('Stock adjusted'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to record the adjustment.'));
   };
 

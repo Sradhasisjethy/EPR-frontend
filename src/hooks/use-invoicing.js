@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { openApiDocument } from '@/lib/api-document';
 
 export function useSalesInvoices(params = {}) {
   return useQuery({
     queryKey: ['sales-invoices', params],
     queryFn: async () => (await apiClient.get('/invoices', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -38,3 +39,10 @@ export function useCancelInvoice() {
     onSuccess: () => invalidate(qc),
   });
 }
+
+/**
+ * Fetched rather than linked, for the same reason as the challan print: the API
+ * sits on another origin and a browser sends no cookie with a cross-origin link
+ * navigation, so a plain <a href> arrived unauthenticated.
+ */
+export const openInvoicePrint = (id) => openApiDocument(`/invoices/${id}/print`);

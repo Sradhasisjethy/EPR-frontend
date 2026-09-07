@@ -5,7 +5,7 @@ export function useUomConversions(params = {}) {
   return useQuery({
     queryKey: ['uom-conversions', params],
     queryFn: async () => (await apiClient.get('/uom-conversions', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 

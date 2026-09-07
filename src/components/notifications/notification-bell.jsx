@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Bell, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotifications, useUnreadCount, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/use-notifications';
+import { DateText } from '@/components/date-text';
 
 const SEVERITY_DOT = {
   CRITICAL: 'bg-destructive',
@@ -34,7 +35,7 @@ export function NotificationBell() {
   const { data: countData } = useUnreadCount();
   // Only fetch the list while the panel is open — the bell itself only needs
   // the count, which is far cheaper to poll.
-  const { data } = useNotifications(open ? { limit: 8, unreadOnly: 'true' } : { limit: 0 });
+  const { data } = useNotifications({ limit: 8, unreadOnly: 'true' }, { enabled: open });
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
 
@@ -44,8 +45,11 @@ export function NotificationBell() {
     const onClickOutside = (event) => {
       if (ref.current && !ref.current.contains(event.target)) setOpen(false);
     };
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
+    // pointerdown, not mousedown: a pen or finger does not always produce
+    // a mouse event before the tap lands, so the menu could stay open
+    // behind whatever was tapped next.
+    document.addEventListener('pointerdown', onClickOutside);
+    return () => document.removeEventListener('pointerdown', onClickOutside);
   }, []);
 
   return (
@@ -93,7 +97,7 @@ export function NotificationBell() {
                     <p className="text-sm font-medium truncate">{n.title}</p>
                     <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>
                     <p className="text-[10px] text-muted-foreground/70 mt-0.5">
-                      {new Date(n.createdAt).toLocaleString()}
+                      {<DateText value={n.createdAt} withTime />}
                     </p>
                   </div>
                 </Link>

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { IndentFormDialog } from '@/components/purchasing/indent-form-dialog';
+import { IndentDetailsDialog } from '@/components/purchasing/indent-details-dialog';
 import { ConvertIndentDialog } from '@/components/purchasing/convert-indent-dialog';
 import { ThreeWayMatchDialog } from '@/components/purchasing/three-way-match-dialog';
 import { useIndents, useApproveIndent, useRejectIndent } from '@/hooks/use-indents';
 import { usePaginated } from '@/hooks/use-paginated';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, Eye } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,10 @@ import {
 import { PurchaseOrderFormDialog } from '@/components/purchasing/purchase-order-form-dialog';
 import { GoodsReceiptFormDialog } from '@/components/purchasing/goods-receipt-form-dialog';
 import { PurchaseInvoiceFormDialog } from '@/components/purchasing/purchase-invoice-form-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { DateText } from '@/components/date-text';
+import { toast } from 'sonner';
 
 const TABS = ['Indents', 'Orders', 'Receipts', 'Invoices'];
 
@@ -33,8 +37,9 @@ const SORTABLE = {
 const PAYMENT_LABEL = { UNPAID: 'Unpaid', PARTIALLY_PAID: 'Partially Paid', PAID: 'Paid' };
 
 export default function PurchasingPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Indents');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Indents', 'subtab');
   const [indentDialogOpen, setIndentDialogOpen] = useState(false);
+  const [viewingIndent, setViewingIndent] = useState(null);
   const [convertingIndent, setConvertingIndent] = useState(null);
   const [matchingInvoice, setMatchingInvoice] = useState(null);
   const [poDialogOpen, setPoDialogOpen] = useState(false);
@@ -51,6 +56,7 @@ export default function PurchasingPage() {
   const canReverse = hasPermission(user, 'PURCHASE_DELETE');
   const [editingPo, setEditingPo] = useState(null);
   const [actionError, setActionError] = useState('');
+  const [reasonPrompt, setReasonPrompt] = useState(null);
 
   const indentQuery = usePaginated(useIndents);
   const approveIndent = useApproveIndent();
@@ -66,16 +72,23 @@ export default function PurchasingPage() {
   // Any of these can legitimately be refused — an over-receipt, a consumed lot,
   // an invoice that has been paid, a location the user may not touch. Without
   // this the row simply did not change and nothing said why.
-  const run = (mutation, arg) => {
+  const run = (mutation, arg, done) => {
     setActionError('');
     mutation.mutate(arg, {
+      onSuccess: () => done && toast.success(done),
       onError: (err) => setActionError(err.response?.data?.message || 'That action could not be completed.'),
     });
   };
 
-  const promptAndRun = (message, mutation, id) => {
-    const reason = window.prompt(message);
-    if (reason) run(mutation, { id, reason });
+  const promptAndRun = ({ title, description, label, placeholder, confirmText = 'Submit', mutation, id, done }) => {
+    setReasonPrompt({
+      title,
+      description,
+      label,
+      placeholder,
+      confirmText,
+      onConfirm: (reason) => run(mutation, { id, reason }, done),
+    });
   };
 
   const addHandlers = {
@@ -87,15 +100,11 @@ export default function PurchasingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Purchasing</h2>
-          <p className="text-muted-foreground">Purchase orders, goods receipt, and vendor invoices (M12)</p>
-        </div>
-        {canCreate && (
-          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
-        )}
+      <div>
+        <p className="text-muted-foreground">Purchase orders, goods receipt, and vendor invoices (M12)</p>
       </div>
+
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -118,28 +127,46 @@ export default function PurchasingPage() {
           <DataTable
             columns={[
               { accessorKey: 'indentNumber', header: 'Indent #' },
-              { accessorKey: 'indentDate', header: 'Date' },
-              { accessorKey: 'requiredByDate', header: 'Required By' },
+              { id: 'indentDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.indentDate} /> },
+              { id: 'requiredByDate', header: 'Required By', cell: ({ row }) => <DateText value={row.original.requiredByDate} /> },
               { id: 'lines', header: 'Lines', cell: ({ row }) => row.original.lines?.length ?? 0 },
               { accessorKey: 'remarks', header: 'Remarks' },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase().replace(/_/g, ' ')} /> },
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => (
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-end gap-2.5 items-center">
+                    <button
+                      className="text-xs text-muted-foreground hover:text-foreground hover:underline flex items-center gap-1 font-medium"
+                      onClick={() => setViewingIndent(row.original)}
+                      title="View indent details and requisition lines"
+                    >
+                      <Eye size={13} /> View
+                    </button>
                     {row.original.status === 'PENDING_APPROVAL' && canApprove && (
                       <>
-                        <button className="text-xs text-primary hover:underline" onClick={() => run(approveIndent, row.original.id)}>Approve</button>
+                        <button className="text-xs text-primary hover:underline font-medium" onClick={() => run(approveIndent, row.original.id, 'Indent approved')}>Approve</button>
                         <button
-                          className="text-xs text-destructive hover:underline"
-                          onClick={() => promptAndRun('Rejection reason:', rejectIndent, row.original.id)}
+                          className="text-xs text-destructive hover:underline font-medium"
+                          onClick={() =>
+                            promptAndRun({
+                              title: `Reject Indent #${row.original.indentNumber}`,
+                              description: 'Please provide a reason for rejecting this purchase indent.',
+                              label: 'Rejection Reason',
+                              placeholder: 'e.g. Budget constraints, incorrect specifications, duplicate requisition...',
+                              confirmText: 'Reject Indent',
+                              mutation: rejectIndent,
+                              done: 'Indent rejected',
+                              id: row.original.id,
+                            })
+                          }
                         >
                           Reject
                         </button>
                       </>
                     )}
                     {row.original.status === 'APPROVED' && canCreate && (
-                      <button className="text-xs text-primary hover:underline" onClick={() => setConvertingIndent(row.original)}>
+                      <button className="text-xs text-primary hover:underline font-medium" onClick={() => setConvertingIndent(row.original)}>
                         Convert to PO
                       </button>
                     )}
@@ -149,6 +176,9 @@ export default function PurchasingPage() {
             ]}
             {...indentQuery.tableProps}
             searchPlaceholder="Search indent number…"
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
           />
         )
       )}
@@ -159,7 +189,7 @@ export default function PurchasingPage() {
             columns={[
               { accessorKey: 'poNumber', header: 'PO #' },
               { id: 'vendor', header: 'Vendor', cell: ({ row }) => row.original.vendor?.name },
-              { accessorKey: 'orderDate', header: 'Order Date' },
+              { id: 'orderDate', header: 'Order Date', cell: ({ row }) => <DateText value={row.original.orderDate} /> },
               ...(showRates ? [{ id: 'total', header: 'Total', cell: ({ row }) => formatINR(row.original.totalAmountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
@@ -177,12 +207,23 @@ export default function PurchasingPage() {
                       </button>
                     )}
                     {row.original.status === 'DRAFT' && canModify && (
-                      <button className="text-xs text-primary hover:underline" onClick={() => run(confirmPo, row.original.id)}>Confirm</button>
+                      <button className="text-xs text-primary hover:underline" onClick={() => run(confirmPo, row.original.id, 'Purchase order confirmed')}>Confirm</button>
                     )}
                     {!['RECEIVED', 'CANCELLED'].includes(row.original.status) && canModify && (
                       <button
                         className="text-xs text-destructive hover:underline"
-                        onClick={() => promptAndRun('Cancellation reason:', cancelPo, row.original.id)}
+                        onClick={() =>
+                          promptAndRun({
+                            title: `Cancel Purchase Order #${row.original.poNumber}`,
+                            description: 'Please provide a reason for cancelling this purchase order.',
+                            label: 'Cancellation Reason',
+                            placeholder: 'e.g. Supplier unavailable, order superseded, specifications revised...',
+                            confirmText: 'Cancel Order',
+                            mutation: cancelPo,
+                            done: 'Purchase order cancelled',
+                            id: row.original.id,
+                          })
+                        }
                       >
                         Cancel
                       </button>
@@ -193,6 +234,9 @@ export default function PurchasingPage() {
             ]}
             {...poQuery.tableProps}
             searchPlaceholder="Search PO number…"
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
           />
         )
       )}
@@ -204,7 +248,7 @@ export default function PurchasingPage() {
               { accessorKey: 'grnNumber', header: 'GRN #' },
               { id: 'vendor', header: 'Vendor', cell: ({ row }) => row.original.vendor?.name },
               { id: 'po', header: 'Against PO', cell: ({ row }) => row.original.purchaseOrder?.poNumber || 'Direct' },
-              { accessorKey: 'receiptDate', header: 'Receipt Date' },
+              { id: 'receiptDate', header: 'Receipt Date', cell: ({ row }) => <DateText value={row.original.receiptDate} /> },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
@@ -215,11 +259,16 @@ export default function PurchasingPage() {
                         className="text-xs text-destructive hover:underline"
                         title="Reverse this receipt and take its stock back out"
                         onClick={() =>
-                          promptAndRun(
-                            'Why is this receipt being reversed?\n\nIts stock will be taken back out. This is refused if the material has already been consumed or invoiced.',
-                            cancelGrn,
-                            row.original.id
-                          )
+                          promptAndRun({
+                            title: `Reverse Goods Receipt #${row.original.grnNumber}`,
+                            description: 'Its inventory stock will be taken back out. This will be refused if the material has already been consumed or invoiced.',
+                            label: 'Reversal Reason',
+                            placeholder: 'Why is this goods receipt being reversed?',
+                            confirmText: 'Reverse Receipt',
+                            mutation: cancelGrn,
+                            done: 'Goods receipt reversed',
+                            id: row.original.id,
+                          })
                         }
                       >
                         Cancel &amp; reverse
@@ -231,6 +280,9 @@ export default function PurchasingPage() {
             ]}
             {...grnQuery.tableProps}
             emptyMessage="No goods receipts yet. Receiving against a purchase order is what puts stock in."
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
             searchPlaceholder="Search GRN number…"
           />
         )
@@ -242,7 +294,7 @@ export default function PurchasingPage() {
             columns={[
               { accessorKey: 'vendorInvoiceNumber', header: 'Vendor Invoice #' },
               { id: 'vendor', header: 'Vendor', cell: ({ row }) => row.original.vendor?.name },
-              { accessorKey: 'invoiceDate', header: 'Date' },
+              { id: 'invoiceDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.invoiceDate} /> },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.amountPaise) }] : []),
               {
                 id: 'match', header: '',
@@ -275,11 +327,16 @@ export default function PurchasingPage() {
                         className="text-xs text-destructive hover:underline"
                         title="Reverse this bill and its payable"
                         onClick={() =>
-                          promptAndRun(
-                            'Why is this vendor bill being cancelled?\n\nIts payable will be reversed. This is refused if any payment has been made against it.',
-                            cancelInvoice,
-                            row.original.id
-                          )
+                          promptAndRun({
+                            title: `Cancel Vendor Invoice #${row.original.vendorInvoiceNumber}`,
+                            description: 'Its payable entry will be reversed. This will be refused if any payment has already been recorded against it.',
+                            label: 'Cancellation Reason',
+                            placeholder: 'Why is this invoice being cancelled?',
+                            confirmText: 'Cancel Invoice',
+                            mutation: cancelInvoice,
+                            done: 'Vendor invoice cancelled',
+                            id: row.original.id,
+                          })
                         }
                       >
                         Cancel
@@ -291,17 +348,52 @@ export default function PurchasingPage() {
             ]}
             {...invoiceQuery.tableProps}
             emptyMessage="No vendor bills yet. Raise one against a goods receipt to book the payable."
+          actionsNode={canCreate && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
             searchPlaceholder="Search vendor invoice…"
           />
         )
       )}
 
       <IndentFormDialog open={indentDialogOpen} onOpenChange={setIndentDialogOpen} />
+      <IndentDetailsDialog
+        open={!!viewingIndent}
+        onOpenChange={(v) => !v && setViewingIndent(null)}
+        indent={viewingIndent}
+        canApprove={canApprove}
+        canCreate={canCreate}
+        onApprove={(id) => run(approveIndent, id, 'Indent approved')}
+        onReject={(ind) =>
+          promptAndRun({
+            title: `Reject Indent #${ind.indentNumber}`,
+            description: 'Please provide a reason for rejecting this purchase indent.',
+            label: 'Rejection Reason',
+            placeholder: 'e.g. Budget constraints, incorrect specifications, duplicate requisition...',
+            confirmText: 'Reject Indent',
+            mutation: rejectIndent,
+                              done: 'Indent rejected',
+            id: ind.id,
+          })
+        }
+        onConvertToPo={(ind) => setConvertingIndent(ind)}
+      />
       <ConvertIndentDialog open={!!convertingIndent} onOpenChange={(v) => !v && setConvertingIndent(null)} indent={convertingIndent} />
       <ThreeWayMatchDialog open={!!matchingInvoice} onOpenChange={(v) => !v && setMatchingInvoice(null)} invoice={matchingInvoice} />
       <PurchaseOrderFormDialog open={poDialogOpen} onOpenChange={setPoDialogOpen} order={editingPo} />
       <GoodsReceiptFormDialog open={grnDialogOpen} onOpenChange={setGrnDialogOpen} />
       <PurchaseInvoiceFormDialog open={invoiceDialogOpen} onOpenChange={setInvoiceDialogOpen} />
+
+      <ReasonDialog
+        open={!!reasonPrompt}
+        onOpenChange={(open) => !open && setReasonPrompt(null)}
+        title={reasonPrompt?.title}
+        description={reasonPrompt?.description}
+        label={reasonPrompt?.label}
+        placeholder={reasonPrompt?.placeholder}
+        confirmText={reasonPrompt?.confirmText}
+        onConfirm={reasonPrompt?.onConfirm}
+      />
     </div>
   );
 }

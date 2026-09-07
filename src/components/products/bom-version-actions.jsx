@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle2, Copy, IndianRupee } from 'lucide-react';
+import { CheckCircle2, Copy, IndianRupee, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { formatINR } from '@/lib/money';
 import { useActivateMixDesign, useCloneMixDesign, useMixDesignCost } from '@/hooks/use-products';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const STATUS_STYLES = {
   DRAFT: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
@@ -24,7 +26,8 @@ export function BomStatusBadge({ status, version }) {
 
 /** Cost rollup for one BOM version (FR-M03-10). */
 export function BomCostDialog({ open, onOpenChange, mixDesign }) {
-  const { data, isLoading } = useMixDesignCost(open ? mixDesign?.id : null);
+  const { data, isLoading, error } = useMixDesignCost(open ? mixDesign?.id : null);
+  const errorMessage = error?.response?.data?.message || error?.message;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -32,7 +35,22 @@ export function BomCostDialog({ open, onOpenChange, mixDesign }) {
         <DialogHeader><DialogTitle>Material cost — {mixDesign?.name}</DialogTitle></DialogHeader>
         {isLoading ? (
           <div className="h-40 rounded-lg border border-border bg-card animate-pulse" />
-        ) : !data ? null : (
+        ) : error ? (
+          <div className="space-y-3 py-2">
+            <div className="p-3.5 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm font-medium">
+              {errorMessage || 'Failed to calculate material cost.'}
+            </div>
+            {errorMessage?.includes('No conversion is defined') && (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                The recipe uses a unit that differs from the raw material&apos;s stocking unit. To resolve this, define a conversion factor between these units under <strong>Masters &gt; Products &amp; BOM &gt; UoM Conversions</strong> (e.g. 1 CUM = 1500 KG), or edit the mix design lines to match the stocking unit.
+              </p>
+            )}
+          </div>
+        ) : !data || !data.lines || data.lines.length === 0 ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">
+            No material lines found in this mix design.
+          </div>
+        ) : (
           <div className="space-y-3">
             <table className="w-full text-sm">
               <thead className="text-muted-foreground border-b border-border">
@@ -67,6 +85,11 @@ export function BomCostDialog({ open, onOpenChange, mixDesign }) {
             </table>
             <p className="text-xs text-muted-foreground">
               Valued at each material&apos;s current standard cost, including the wastage allowance on every line.
+              {data.totalCostPaise === 0 && (
+                <span className="block text-amber-600 dark:text-amber-400 mt-1">
+                  Note: Total cost is ₹0.00 because standard costs have not been set on the raw materials yet. You can configure them in the Products master.
+                </span>
+              )}
             </p>
           </div>
         )}
@@ -77,7 +100,7 @@ export function BomCostDialog({ open, onOpenChange, mixDesign }) {
 
 /** Activation asks for the effective date, because that is what decides which version a production entry resolves to. */
 export function ActivateBomDialog({ open, onOpenChange, mixDesign }) {
-  const [effectiveFrom, setEffectiveFrom] = useState(new Date().toISOString().slice(0, 10));
+  const [effectiveFrom, setEffectiveFrom] = useState(today());
   const [error, setError] = useState('');
   const activate = useActivateMixDesign();
 
@@ -86,7 +109,7 @@ export function ActivateBomDialog({ open, onOpenChange, mixDesign }) {
     setError('');
     activate
       .mutateAsync({ id: mixDesign.id, effectiveFrom })
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success('New BOM version created'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to activate this version.'));
   };
 
@@ -119,32 +142,41 @@ export function ActivateBomDialog({ open, onOpenChange, mixDesign }) {
 }
 
 /** Row actions for a BOM version. */
-export function BomRowActions({ mixDesign, onShowCost, onActivate }) {
+export function BomRowActions({ mixDesign, onShowCost, onActivate, onDelete }) {
   const clone = useCloneMixDesign();
 
   return (
     <div className="flex items-center justify-end gap-1">
       <button
         onClick={() => onShowCost(mixDesign)}
-        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
+        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
         title="Material cost"
       >
         <IndianRupee size={16} />
       </button>
       <button
         onClick={() => clone.mutate({ id: mixDesign.id })}
-        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
+        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
         title="Clone as a new draft"
       >
         <Copy size={16} />
       </button>
-      {mixDesign.status === 'DRAFT' && (
+      {mixDesign.status === 'DRAFT' && onActivate && (
         <button
           onClick={() => onActivate(mixDesign)}
-          className="p-1.5 rounded-md hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-600"
+          className="p-1.5 rounded-md hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-600 transition-colors"
           title="Activate this version"
         >
           <CheckCircle2 size={16} />
+        </button>
+      )}
+      {mixDesign.status === 'DRAFT' && onDelete && (
+        <button
+          onClick={() => onDelete(mixDesign)}
+          className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+          title="Delete draft"
+        >
+          <Trash2 size={16} />
         </button>
       )}
     </div>

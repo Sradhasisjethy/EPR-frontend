@@ -10,7 +10,7 @@ const invalidateStock = (qc) => {
 
 // Sales Returns
 export function useSalesReturns(params = {}) {
-  return useQuery({ queryKey: ['sales-returns', params], queryFn: async () => (await apiClient.get('/returns/sales-returns', { params })).data.data, keepPreviousData: true });
+  return useQuery({ queryKey: ['sales-returns', params], queryFn: async () => (await apiClient.get('/returns/sales-returns', { params })).data.data, placeholderData: (prev) => prev });
 }
 export function useCreateSalesReturn() {
   const qc = useQueryClient();
@@ -29,7 +29,7 @@ export function useCancelSalesReturn() {
 
 // Purchase Returns
 export function usePurchaseReturns(params = {}) {
-  return useQuery({ queryKey: ['purchase-returns', params], queryFn: async () => (await apiClient.get('/returns/purchase-returns', { params })).data.data, keepPreviousData: true });
+  return useQuery({ queryKey: ['purchase-returns', params], queryFn: async () => (await apiClient.get('/returns/purchase-returns', { params })).data.data, placeholderData: (prev) => prev });
 }
 export function useCreatePurchaseReturn() {
   const qc = useQueryClient();
@@ -48,7 +48,7 @@ export function useCancelPurchaseReturn() {
 
 // Credit Notes
 export function useCreditNotes(params = {}) {
-  return useQuery({ queryKey: ['credit-notes', params], queryFn: async () => (await apiClient.get('/returns/credit-notes', { params })).data.data, keepPreviousData: true });
+  return useQuery({ queryKey: ['credit-notes', params], queryFn: async () => (await apiClient.get('/returns/credit-notes', { params })).data.data, placeholderData: (prev) => prev });
 }
 export function useCreateCreditNote() {
   const qc = useQueryClient();
@@ -67,7 +67,7 @@ export function useCancelCreditNote() {
 
 // Debit Notes
 export function useDebitNotes(params = {}) {
-  return useQuery({ queryKey: ['debit-notes', params], queryFn: async () => (await apiClient.get('/returns/debit-notes', { params })).data.data, keepPreviousData: true });
+  return useQuery({ queryKey: ['debit-notes', params], queryFn: async () => (await apiClient.get('/returns/debit-notes', { params })).data.data, placeholderData: (prev) => prev });
 }
 export function useCreateDebitNote() {
   const qc = useQueryClient();

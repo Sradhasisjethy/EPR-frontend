@@ -13,6 +13,9 @@ export function useCurrentUser() {
         name: `${data.firstName} ${data.lastName}`,
         role: data.role,
         permissions: data.permissions || [],
+        // The tenant's sidebar customisation, served with the session so every
+        // user gets it — not only those who can read settings.
+        navigationPreferences: data.navigationPreferences || null,
       };
     },
     retry: false,
@@ -24,6 +27,14 @@ export function useLogin() {
   return useMutation({
     mutationFn: async (credentials) => {
       const response = await apiClient.post('/auth/login', credentials);
+      const token = response.data?.data?.accessToken;
+      const refreshToken = response.data?.data?.refreshToken;
+      if (token) {
+        localStorage.setItem('infideep-access-token', token);
+      }
+      if (refreshToken) {
+        localStorage.setItem('infideep-refresh-token', refreshToken);
+      }
       return response.data;
     },
     onSuccess: () => {
@@ -36,9 +47,16 @@ export function useLogout() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      await apiClient.post('/auth/logout');
+      try {
+        const storedRefreshToken = localStorage.getItem('infideep-refresh-token');
+        await apiClient.post('/auth/logout', { refreshToken: storedRefreshToken || undefined });
+      } catch {
+        // Ignore logout network errors so client cleanup proceeds
+      }
     },
     onSettled: () => {
+      localStorage.removeItem('infideep-access-token');
+      localStorage.removeItem('infideep-refresh-token');
       queryClient.clear();
       window.location.href = '/login';
     },

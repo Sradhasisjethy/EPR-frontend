@@ -11,8 +11,10 @@ import { formatINR } from '@/lib/money';
 import { useParties, useDeleteParty } from '@/hooks/use-parties';
 import { PartyFormDialog } from '@/components/parties/party-form-dialog';
 import { PartyAddressesDialog } from '@/components/parties/party-addresses-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { PartyType } from '@/constants/enums';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { toast } from 'sonner';
 
 const TABS = [
   { key: '', label: 'All' },
@@ -31,10 +33,12 @@ const TAB_KEYS = TABS.map((tab) => tab.key);
 const SORTABLE_COLUMNS = ['name', 'partyType', 'status'];
 
 export default function PartiesPage() {
-  const [activeTab, setActiveTab] = useTabParam(TAB_KEYS, '');
+  const [activeTab, setActiveTab] = useTabParam(TAB_KEYS, '', 'subtab');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingParty, setEditingParty] = useState(null);
   const [addressesFor, setAddressesFor] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [partyToDelete, setPartyToDelete] = useState(null);
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
 
@@ -51,36 +55,27 @@ export default function PartiesPage() {
   const deleteParty = useDeleteParty();
   const [deleteError, setDeleteError] = useState('');
 
-  // The API refuses to delete a party that any document references (409) —
-  // deactivating is the supported way to retire one. Say so up front, and
-  // surface the server's reason when it does refuse, instead of the mutation
-  // failing silently.
-  const handleDelete = (party) => {
-    setDeleteError('');
-    const confirmed = window.confirm(
-      `Delete party "${party.name}"?\n\n` +
-        'Only a party with no orders, invoices, payments or ledger entries can be deleted. ' +
-        'To retire one that has history, edit it and set its status to Inactive instead.'
-    );
-    if (!confirmed) return;
-    deleteParty.mutate(party.id, {
-      onError: (err) => setDeleteError(err.response?.data?.message || 'Failed to delete party.'),
-    });
+  const handleDeleteClick = (party) => {
+    setPartyToDelete(party);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (partyToDelete) {
+      setDeleteError('');
+      deleteParty.mutate(partyToDelete.id, {
+        onSuccess: () => toast.success('Party deleted'),
+        // The failure keeps its page-level banner, which outlives the dialog.
+        onError: (err) => setDeleteError(err.response?.data?.message || 'Failed to delete party.'),
+      });
+      setPartyToDelete(null);
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Parties</h2>
-          <p className="text-muted-foreground">Customers, vendors, contractors, labour and sales references (M04)</p>
-        </div>
-        {canCreate && (
-          <Button onClick={() => { setEditingParty(null); setDialogOpen(true); }}>
-            <Plus size={16} /> Add Party
-          </Button>
-        )}
-      </div>
+
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -147,7 +142,7 @@ export default function PartiesPage() {
                   )}
                   {canDelete && (
                     <button
-                      onClick={() => handleDelete(row.original)}
+                      onClick={() => handleDeleteClick(row.original)}
                       className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                       title="Delete"
                     >
@@ -160,12 +155,26 @@ export default function PartiesPage() {
           ]}
           {...tableProps}
           searchPlaceholder="Search name, code, GSTIN or phone…"
+          actionsNode={canCreate && (
+          <Button onClick={() => { setEditingParty(null); setDialogOpen(true); }}>
+            <Plus size={16} /> Add Party
+          </Button>
+        )}
           emptyMessage="No parties yet. Add a customer, vendor, contractor or labourer to get started."
         />
       )}
 
       <PartyAddressesDialog open={!!addressesFor} onOpenChange={(v) => !v && setAddressesFor(null)} party={addressesFor} />
       <PartyFormDialog open={dialogOpen} onOpenChange={setDialogOpen} party={editingParty} defaultPartyType={activeTab || PartyType.CUSTOMER} />
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Party"
+        description={`Delete party "${partyToDelete?.name}"? Only a party with no orders, invoices, payments or ledger entries can be deleted. To retire one that has history, edit it and set its status to Inactive instead.`}
+        onConfirm={handleConfirmDelete}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

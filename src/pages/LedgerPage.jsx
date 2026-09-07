@@ -11,11 +11,12 @@ import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { useTrialBalance, usePartyLedger, useCashBook } from '@/hooks/use-ledger';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { DateText } from '@/components/date-text';
 
 const TABS = ['Trial Balance', 'Party Ledger', 'Cash Book'];
 
 export default function LedgerPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Trial Balance');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Trial Balance', 'subtab');
   const [factoryId, setFactoryId] = useState('');
   const [partyId, setPartyId] = useState('');
   const [cashRange, setCashRange] = useState({ from: '', to: '', accountKey: 'CASH' });
@@ -24,7 +25,7 @@ export default function LedgerPage() {
   const showRates = canViewRates(user);
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: partyData } = useParties({ page: 1, limit: 200 });
+  const { data: partyData } = useParties({ page: 1, limit: 100 });
 
   const trialBalance = useTrialBalance(factoryId || undefined);
   const partyLedger = usePaginated(usePartyLedger, { partyId: partyId || undefined });
@@ -32,10 +33,7 @@ export default function LedgerPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Ledger Reports</h2>
-        <p className="text-muted-foreground">Chart of accounts, trial balance, party ledger and cash book (M30)</p>
-      </div>
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -151,7 +149,7 @@ export default function LedgerPage() {
             ) : (
               <DataTable
                 columns={[
-                  { accessorKey: 'date', header: 'Date' },
+                  { id: 'date', header: 'Date', cell: ({ row }) => <DateText value={row.original.date} /> },
                   { accessorKey: 'narration', header: 'Narration' },
                   { accessorKey: 'referenceType', header: 'Reference' },
                   ...(showRates

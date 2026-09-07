@@ -5,7 +5,7 @@ export function useOrganizations(params = {}) {
   return useQuery({
     queryKey: ['organizations', params],
     queryFn: async () => (await apiClient.get('/organizations', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -13,7 +13,7 @@ export function useOffices(params = {}) {
   return useQuery({
     queryKey: ['offices', params],
     queryFn: async () => (await apiClient.get('/offices', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -21,7 +21,7 @@ export function useDepartments(params = {}) {
   return useQuery({
     queryKey: ['departments', params],
     queryFn: async () => (await apiClient.get('/departments', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 

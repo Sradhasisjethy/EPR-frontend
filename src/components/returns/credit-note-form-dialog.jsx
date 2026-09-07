@@ -8,6 +8,8 @@ import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { PartyType } from '@/constants/enums';
 import { toPaise } from '@/lib/money';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 export function CreditNoteFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', customerPartyId: '', noteDate: '', reason: '', amountRupees: '' });
@@ -19,7 +21,7 @@ export function CreditNoteFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', customerPartyId: '', noteDate: new Date().toISOString().slice(0, 10), reason: '', amountRupees: '' });
+      setForm({ factoryId: '', customerPartyId: '', noteDate: today(), reason: '', amountRupees: '' });
       setError('');
     }
   }, [open]);
@@ -28,7 +30,7 @@ export function CreditNoteFormDialog({ open, onOpenChange }) {
     e.preventDefault();
     setError('');
     const payload = { factoryId: form.factoryId, customerPartyId: form.customerPartyId, noteDate: form.noteDate, reason: form.reason, amountPaise: toPaise(form.amountRupees) };
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to create credit note.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Credit note issued'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to create credit note.'));
   };
 
   return (

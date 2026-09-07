@@ -6,11 +6,15 @@ import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { KeyHint } from '@/components/key-hint';
 import { useHotkey } from '@/hooks/use-hotkey';
-import { useDeliveryChallans, useCancelChallan, getChallanPrintUrl } from '@/hooks/use-dispatch';
+import { useDeliveryChallans, useCancelChallan, openChallanPrint } from '@/hooks/use-dispatch';
 import { CreateChallanDialog } from '@/components/dispatch/create-challan-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
+import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 export default function DispatchPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [cancellingChallan, setCancellingChallan] = useState(null);
   const { query, tableProps } = usePaginated(useDeliveryChallans);
   const { isLoading, isError } = query;
   const cancelChallan = useCancelChallan();
@@ -21,15 +25,8 @@ export default function DispatchPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Dispatch</h2>
-          <p className="text-muted-foreground">Delivery challans, vehicle-wise dispatch and printing (M15/M18)</p>
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus size={16} /> New Delivery Challan <KeyHint>N</KeyHint>
-        </Button>
-      </div>
+
+      
 
       {isLoading ? (
         <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
@@ -42,34 +39,31 @@ export default function DispatchPage() {
             { id: 'order', header: 'Order #', cell: ({ row }) => row.original.salesOrder?.orderNumber },
             { id: 'customer', header: 'Customer', cell: ({ row }) => row.original.salesOrder?.customer?.name },
             { accessorKey: 'vehicleNumber', header: 'Vehicle' },
-            { accessorKey: 'dispatchDate', header: 'Date' },
+            { id: 'dispatchDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.dispatchDate} /> },
             { id: 'lines', header: 'Lines', cell: ({ row }) => row.original.lines?.length ?? 0 },
             { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status === 'DISPATCHED' ? 'active' : 'terminated'} /> },
             {
               id: 'actions', header: '',
               cell: ({ row }) => (
                 <div className="flex justify-end gap-3">
-                  <a
-                    href={getChallanPrintUrl(row.original.id, 'a4')}
-                    target="_blank" rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                  >
-                    <Printer size={12} /> A4
-                  </a>
-                  <a
-                    href={getChallanPrintUrl(row.original.id, 'thermal')}
-                    target="_blank" rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                  >
-                    <Printer size={12} /> Thermal
-                  </a>
+                  {['a4', 'thermal'].map((format) => (
+                    <button
+                      key={format}
+                      type="button"
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                      onClick={() =>
+                        openChallanPrint(row.original.id, format).catch((err) =>
+                          toast.error(err.response?.data?.message || 'Could not open the challan.')
+                        )
+                      }
+                    >
+                      <Printer size={12} /> {format === 'a4' ? 'A4' : 'Thermal'}
+                    </button>
+                  ))}
                   {row.original.status === 'DISPATCHED' && (
                     <button
                       className="text-xs text-destructive hover:underline"
-                      onClick={() => {
-                        const reason = window.prompt('Cancellation reason:');
-                        if (reason) cancelChallan.mutate({ id: row.original.id, reason });
-                      }}
+                      onClick={() => setCancellingChallan(row.original)}
                     >
                       Cancel
                     </button>
@@ -80,10 +74,36 @@ export default function DispatchPage() {
           ]}
           {...tableProps}
           searchPlaceholder="Search challan no, vehicle, driver…"
+          actionsNode={
+            <Button onClick={() => setDialogOpen(true)}>
+          <Plus size={16} /> New Delivery Challan <KeyHint>N</KeyHint>
+        </Button>
+          }
         />
       )}
 
       <CreateChallanDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+
+      <ReasonDialog
+        open={!!cancellingChallan}
+        onOpenChange={(open) => !open && setCancellingChallan(null)}
+        title={`Cancel Delivery Challan — ${cancellingChallan?.challanNumber}`}
+        description="Are you sure you want to cancel this delivery challan? This action will reverse the dispatched inventory and mark the challan as cancelled."
+        label="Cancellation Reason"
+        placeholder="e.g. Dispatched by mistake, customer cancelled order, vehicle breakdown..."
+        confirmText="Cancel Challan"
+        variant="destructive"
+        onConfirm={async (reason) => {
+          if (!cancellingChallan) return;
+          try {
+            await cancelChallan.mutateAsync({ id: cancellingChallan.id, reason });
+            toast.success('Delivery challan cancelled successfully');
+          } catch (err) {
+            toast.error(err.response?.data?.message || 'Could not cancel the challan.');
+            throw err;
+          }
+        }}
+      />
     </div>
   );
 }

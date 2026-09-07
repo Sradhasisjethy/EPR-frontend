@@ -8,6 +8,9 @@ import { useTransfers, useCancelTransfer } from '@/hooks/use-transfer';
 import { useFactories } from '@/hooks/use-factory';
 import { InitiateTransferDialog } from '@/components/transfer/initiate-transfer-dialog';
 import { ReceiveTransferDialog } from '@/components/transfer/receive-transfer-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
+import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 const STATUS_STYLES = {
   IN_TRANSIT: 'bg-violet-500/10 text-violet-600',
@@ -18,6 +21,7 @@ const STATUS_STYLES = {
 export default function TransfersPage() {
   const [initiateOpen, setInitiateOpen] = useState(false);
   const [receivingTransfer, setReceivingTransfer] = useState(null);
+  const [cancellingTransfer, setCancellingTransfer] = useState(null);
 
   const { query, tableProps } = usePaginated(useTransfers);
   const { isLoading, isError } = query;
@@ -27,13 +31,8 @@ export default function TransfersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Inter-Factory Transfers</h2>
-          <p className="text-muted-foreground">Multi-location stock with in-transit tracking (M14)</p>
-        </div>
-        <Button onClick={() => setInitiateOpen(true)}><Plus size={16} /> Initiate Transfer</Button>
-      </div>
+
+      
 
       {isLoading ? (
         <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
@@ -45,7 +44,7 @@ export default function TransfersPage() {
             { accessorKey: 'transferNumber', header: 'Transfer #' },
             { id: 'from', header: 'From', cell: ({ row }) => factoryName(row.original.fromFactoryId) },
             { id: 'to', header: 'To', cell: ({ row }) => factoryName(row.original.toFactoryId) },
-            { accessorKey: 'initiatedDate', header: 'Initiated' },
+            { id: 'initiatedDate', header: 'Initiated', cell: ({ row }) => <DateText value={row.original.initiatedDate} /> },
             { id: 'lines', header: 'Lines', cell: ({ row }) => row.original.lines?.length ?? 0 },
             {
               id: 'status', header: 'Status',
@@ -64,10 +63,7 @@ export default function TransfersPage() {
                       <button className="text-xs text-primary hover:underline" onClick={() => setReceivingTransfer(row.original)}>Receive</button>
                       <button
                         className="text-xs text-destructive hover:underline"
-                        onClick={() => {
-                          const reason = window.prompt('Cancellation reason:');
-                          if (reason) cancelTransfer.mutate({ id: row.original.id, reason });
-                        }}
+                        onClick={() => setCancellingTransfer(row.original)}
                       >
                         Cancel
                       </button>
@@ -79,11 +75,35 @@ export default function TransfersPage() {
           ]}
           {...tableProps}
           searchPlaceholder="Search transfer no, vehicle…"
+          actionsNode={
+            <Button onClick={() => setInitiateOpen(true)}><Plus size={16} /> Initiate Transfer</Button>
+          }
         />
       )}
 
       <InitiateTransferDialog open={initiateOpen} onOpenChange={setInitiateOpen} />
       <ReceiveTransferDialog open={!!receivingTransfer} onOpenChange={(open) => !open && setReceivingTransfer(null)} transfer={receivingTransfer} />
+
+      <ReasonDialog
+        open={!!cancellingTransfer}
+        onOpenChange={(open) => !open && setCancellingTransfer(null)}
+        title={`Cancel Transfer — ${cancellingTransfer?.transferNumber}`}
+        description="Are you sure you want to cancel this transfer? This action will restore transferred stock to the sending factory and cannot be undone."
+        label="Cancellation Reason"
+        placeholder="e.g. Transfer cancelled, wrong destination factory, vehicle issue..."
+        confirmText="Cancel Transfer"
+        variant="destructive"
+        onConfirm={async (reason) => {
+          if (!cancellingTransfer) return;
+          try {
+            await cancelTransfer.mutateAsync({ id: cancellingTransfer.id, reason });
+            toast.success('Transfer cancelled successfully');
+          } catch (err) {
+            toast.error(err.response?.data?.message || 'Could not cancel transfer.');
+            throw err;
+          }
+        }}
+      />
     </div>
   );
 }

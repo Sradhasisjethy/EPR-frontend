@@ -8,9 +8,21 @@ export function StatusBadge({ status }) {
     terminated: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', dot: 'bg-red-500' },
     pending: { bg: 'bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', dot: 'bg-amber-500' },
     suspended: { bg: 'bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400', dot: 'bg-orange-500' },
+    // Quality verdicts. FAIL is red rather than orange because a failed lot is
+    // quarantined stock, not a warning about one.
+    PASS: { bg: 'bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500' },
+    FAIL: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', dot: 'bg-red-500' },
+    PENDING: { bg: 'bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', dot: 'bg-amber-500', pulse: true },
+    QC_HOLD: { bg: 'bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', dot: 'bg-amber-500', pulse: true },
+    QC_FAILED: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', dot: 'bg-red-500' },
   };
 
   const style = styles[status] || styles.inactive;
+
+  // Enum-shaped statuses (QC_HOLD) read as words, not as identifiers.
+  const label = /^[A-Z_]+$/.test(status)
+    ? status.replace(/_/g, ' ').toLowerCase().replace(/^./, (c) => c.toUpperCase())
+    : status.charAt(0).toUpperCase() + status.slice(1);
 
   return (
     <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-transparent shadow-sm", style.bg, style.text)}>
@@ -20,7 +32,7 @@ export function StatusBadge({ status }) {
         )}
         <span className={cn("relative inline-flex rounded-full h-2 w-2", style.dot)}></span>
       </span>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {label}
     </span>
   );
 }

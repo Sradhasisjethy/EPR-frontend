@@ -9,6 +9,7 @@ import { formatINR } from '@/lib/money';
 import { useFactories } from '@/hooks/use-factory';
 import { useGstr1, useGstr3b } from '@/hooks/use-gstr';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { DateText } from '@/components/date-text';
 
 const TABS = ['GSTR-1', 'GSTR-3B'];
 
@@ -20,7 +21,7 @@ const StatCard = ({ label, value }) => (
 );
 
 export default function GstrPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'GSTR-1');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'GSTR-1', 'subtab');
   const [factoryId, setFactoryId] = useState('');
   const [range, setRange] = useState({ fromDate: '', toDate: '' });
 
@@ -34,10 +35,7 @@ export default function GstrPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">GST Returns</h2>
-        <p className="text-muted-foreground">GSTR-1 and GSTR-3B data export for portal filing (M31)</p>
-      </div>
+      
 
       <div className="grid grid-cols-3 gap-4 max-w-2xl">
         <div className="space-y-1.5">
@@ -88,7 +86,7 @@ export default function GstrPage() {
               <DataTable
                 columns={[
                   { accessorKey: 'invoiceNumber', header: 'Invoice #' },
-                  { accessorKey: 'invoiceDate', header: 'Date' },
+                  { id: 'invoiceDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.invoiceDate} /> },
                   { accessorKey: 'customerName', header: 'Customer' },
                   { accessorKey: 'customerGstin', header: 'GSTIN' },
                   { accessorKey: 'placeOfSupply', header: 'Place of Supply' },
@@ -109,7 +107,7 @@ export default function GstrPage() {
               <DataTable
                 columns={[
                   { accessorKey: 'invoiceNumber', header: 'Invoice #' },
-                  { accessorKey: 'invoiceDate', header: 'Date' },
+                  { id: 'invoiceDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.invoiceDate} /> },
                   { accessorKey: 'placeOfSupply', header: 'Place of Supply' },
                   ...(showRates
                     ? [
@@ -148,7 +146,7 @@ export default function GstrPage() {
                 columns={[
                   { accessorKey: 'noteNumber', header: 'Note #' },
                   { accessorKey: 'noteType', header: 'Type' },
-                  { accessorKey: 'noteDate', header: 'Date' },
+                  { id: 'noteDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.noteDate} /> },
                   { accessorKey: 'customerName', header: 'Customer' },
                   { accessorKey: 'originalInvoiceNumber', header: 'Against Invoice' },
                   ...(showRates ? [{ id: 'value', header: 'Value', cell: ({ row }) => formatINR(row.original.valuePaise) }] : []),

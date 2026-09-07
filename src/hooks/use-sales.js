@@ -5,7 +5,7 @@ export function useSalesOrders(params = {}) {
   return useQuery({
     queryKey: ['sales-orders', params],
     queryFn: async () => (await apiClient.get('/sales/orders', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 export function useSalesOrder(id) {

@@ -1,22 +1,20 @@
 import { Outlet } from 'react-router-dom';
+import { InfideepLogo } from '@/components/auth/infideep-logo';
 
+/**
+ * Centred-card shell for the secondary auth screens (reset password).
+ *
+ * Login renders its own full-viewport split layout and does not pass through
+ * here, but both share the INFIDEEP dark ground so the flow reads as one piece.
+ */
 export function AuthLayout() {
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-950">
-      {/* High Definition Cement Factory Industrial Wallpaper */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700 scale-105"
-        style={{ backgroundImage: "url('/cement-factory-bg.png')" }}
-      />
+    <div className="infideep-auth min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-infideep-bg text-infideep-on-surface font-sans px-4 py-8 tall:py-10 selection:bg-infideep-primary selection:text-[#660026]">
+      <div className="absolute inset-0 id-bg-glow z-0 pointer-events-none mix-blend-screen" />
+      <div className="absolute inset-0 id-grid-lines z-0 pointer-events-none" />
 
-      {/* Dark Translucent Glassmorphism Overlay */}
-      <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-md" />
-
-      {/* Glowing Industrial Accent Flares */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/15 blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-amber-500/10 blur-[140px] pointer-events-none" />
-
-      <div className="relative z-10 w-full max-w-md p-6">
+      <div className="relative z-10 w-full max-w-md flex flex-col items-center">
+        <InfideepLogo glow className="h-12 tall:h-16 w-auto mb-6 tall:mb-8" />
         <Outlet />
       </div>
     </div>

@@ -13,16 +13,20 @@ import { SalesReturnFormDialog } from '@/components/returns/sales-return-form-di
 import { PurchaseReturnFormDialog } from '@/components/returns/purchase-return-form-dialog';
 import { CreditNoteFormDialog } from '@/components/returns/credit-note-form-dialog';
 import { DebitNoteFormDialog } from '@/components/returns/debit-note-form-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 const TABS = ['Sales Returns', 'Purchase Returns', 'Credit Notes', 'Debit Notes'];
 
 export default function ReturnsPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Sales Returns');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Sales Returns', 'subtab');
   const [salesReturnOpen, setSalesReturnOpen] = useState(false);
   const [purchaseReturnOpen, setPurchaseReturnOpen] = useState(false);
   const [creditNoteOpen, setCreditNoteOpen] = useState(false);
   const [debitNoteOpen, setDebitNoteOpen] = useState(false);
+  const [cancelPrompt, setCancelPrompt] = useState(null);
 
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
@@ -43,20 +47,14 @@ export default function ReturnsPage() {
     'Debit Notes': () => setDebitNoteOpen(true),
   };
 
-  const cancelWithReason = (mutation, id) => {
-    const reason = window.prompt('Cancellation reason:');
-    if (reason) mutation.mutate({ id, reason });
+  const cancelWithReason = (mutation, id, title) => {
+    setCancelPrompt({ mutation, id, title });
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Returns & Notes</h2>
-          <p className="text-muted-foreground">Sales/purchase returns and financial credit/debit notes (M22/M23)</p>
-        </div>
-        <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
-      </div>
+
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -76,19 +74,22 @@ export default function ReturnsPage() {
             columns={[
               { accessorKey: 'returnNumber', header: 'Return #' },
               { id: 'customer', header: 'Customer', cell: ({ row }) => row.original.customer?.name },
-              { accessorKey: 'returnDate', header: 'Date' },
+              { id: 'returnDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.returnDate} /> },
               { accessorKey: 'reason', header: 'Reason' },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.totalAmountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelSalesReturn, row.original.id)}>Cancel</button></div>
+                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelSalesReturn, row.original.id, `Cancel Sales Return — ${row.original.returnNumber}`)}>Cancel</button></div>
                 ),
               },
             ]}
             {...salesReturns.tableProps}
             searchPlaceholder="Search return no, reason…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+          }
           />
         )
       )}
@@ -99,19 +100,22 @@ export default function ReturnsPage() {
             columns={[
               { accessorKey: 'returnNumber', header: 'Return #' },
               { id: 'vendor', header: 'Vendor', cell: ({ row }) => row.original.vendor?.name },
-              { accessorKey: 'returnDate', header: 'Date' },
+              { id: 'returnDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.returnDate} /> },
               { accessorKey: 'reason', header: 'Reason' },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.totalAmountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelPurchaseReturn, row.original.id)}>Cancel</button></div>
+                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelPurchaseReturn, row.original.id, `Cancel Purchase Return — ${row.original.returnNumber}`)}>Cancel</button></div>
                 ),
               },
             ]}
             {...purchaseReturns.tableProps}
             searchPlaceholder="Search return no, reason…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+          }
           />
         )
       )}
@@ -122,19 +126,22 @@ export default function ReturnsPage() {
             columns={[
               { accessorKey: 'noteNumber', header: 'Note #' },
               { id: 'customer', header: 'Customer', cell: ({ row }) => row.original.customer?.name },
-              { accessorKey: 'noteDate', header: 'Date' },
+              { id: 'noteDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.noteDate} /> },
               { accessorKey: 'reason', header: 'Reason' },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.amountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelCreditNote, row.original.id)}>Cancel</button></div>
+                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelCreditNote, row.original.id, `Cancel Credit Note — ${row.original.noteNumber}`)}>Cancel</button></div>
                 ),
               },
             ]}
             {...creditNotes.tableProps}
             searchPlaceholder="Search note no, reason…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+          }
           />
         )
       )}
@@ -145,19 +152,22 @@ export default function ReturnsPage() {
             columns={[
               { accessorKey: 'noteNumber', header: 'Note #' },
               { id: 'vendor', header: 'Vendor', cell: ({ row }) => row.original.vendor?.name },
-              { accessorKey: 'noteDate', header: 'Date' },
+              { id: 'noteDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.noteDate} /> },
               { accessorKey: 'reason', header: 'Reason' },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.amountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelDebitNote, row.original.id)}>Cancel</button></div>
+                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelDebitNote, row.original.id, `Cancel Debit Note — ${row.original.noteNumber}`)}>Cancel</button></div>
                 ),
               },
             ]}
             {...debitNotes.tableProps}
             searchPlaceholder="Search note no, reason…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+          }
           />
         )
       )}
@@ -166,6 +176,27 @@ export default function ReturnsPage() {
       <PurchaseReturnFormDialog open={purchaseReturnOpen} onOpenChange={setPurchaseReturnOpen} />
       <CreditNoteFormDialog open={creditNoteOpen} onOpenChange={setCreditNoteOpen} />
       <DebitNoteFormDialog open={debitNoteOpen} onOpenChange={setDebitNoteOpen} />
+
+      <ReasonDialog
+        open={!!cancelPrompt}
+        onOpenChange={(open) => !open && setCancelPrompt(null)}
+        title={cancelPrompt?.title || 'Cancellation'}
+        description="Are you sure you want to cancel this record? This action will reverse stock/ledger entries and mark it as cancelled."
+        label="Cancellation Reason"
+        placeholder="e.g. Posted in error, customer return superseded..."
+        confirmText="Confirm Cancellation"
+        variant="destructive"
+        onConfirm={async (reason) => {
+          if (!cancelPrompt) return;
+          try {
+            await cancelPrompt.mutation.mutateAsync({ id: cancelPrompt.id, reason });
+            toast.success('Cancelled successfully');
+          } catch (err) {
+            toast.error(err.response?.data?.message || 'Could not cancel record.');
+            throw err;
+          }
+        }}
+      />
     </div>
   );
 }

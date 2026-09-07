@@ -13,15 +13,19 @@ import { usePaginated } from '@/hooks/use-paginated';
 import { useReceipts, useCancelReceipt, usePayments, useCancelPayment } from '@/hooks/use-payments';
 import { ReceiptFormDialog } from '@/components/payments/receipt-form-dialog';
 import { PaymentFormDialog } from '@/components/payments/payment-form-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 const TABS = ['Receipts', 'Payments', 'Cheques'];
 
 export default function PaymentsPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Receipts');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Receipts', 'subtab');
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [bouncingCheque, setBouncingCheque] = useState(null);
+  const [cancelPrompt, setCancelPrompt] = useState(null);
 
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
@@ -38,22 +42,13 @@ export default function PaymentsPage() {
   // Cheques tab has no "add" action.
   const addHandlers = { Receipts: () => setReceiptDialogOpen(true), Payments: () => setPaymentDialogOpen(true) };
 
-  const cancelWithReason = (mutation, id) => {
-    const reason = window.prompt('Cancellation reason:');
-    if (reason) mutation.mutate({ id, reason });
+  const cancelWithReason = (mutation, id, title) => {
+    setCancelPrompt({ mutation, id, title });
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Receipts & Payments</h2>
-          <p className="text-muted-foreground">Customer receipts and vendor/contractor/labour payments with invoice allocation (M24/M25)</p>
-        </div>
-        {addHandlers[activeTab] && (
-          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
-        )}
-      </div>
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -73,7 +68,7 @@ export default function PaymentsPage() {
             columns={[
               { accessorKey: 'receiptNumber', header: 'Receipt #' },
               { id: 'customer', header: 'Customer', cell: ({ row }) => row.original.customer?.name },
-              { accessorKey: 'receiptDate', header: 'Date' },
+              { id: 'receiptDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.receiptDate} /> },
               ...(showRates
                 ? [
                     { id: 'total', header: 'Total', cell: ({ row }) => formatINR(row.original.totalAmountPaise) },
@@ -84,12 +79,15 @@ export default function PaymentsPage() {
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelReceipt, row.original.id)}>Cancel</button></div>
+                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelReceipt, row.original.id, `Cancel Receipt — ${row.original.receiptNumber}`)}>Cancel</button></div>
                 ),
               },
             ]}
             {...receipts.tableProps}
             searchPlaceholder="Search receipt number…"
+          actionsNode={addHandlers[activeTab] && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
           />
         )
       )}
@@ -100,7 +98,7 @@ export default function PaymentsPage() {
             columns={[
               { accessorKey: 'paymentNumber', header: 'Payment #' },
               { id: 'party', header: 'Paid To', cell: ({ row }) => row.original.party?.name },
-              { accessorKey: 'paymentDate', header: 'Date' },
+              { id: 'paymentDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.paymentDate} /> },
               ...(showRates
                 ? [
                     { id: 'total', header: 'Total', cell: ({ row }) => formatINR(row.original.totalAmountPaise) },
@@ -111,12 +109,15 @@ export default function PaymentsPage() {
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelPayment, row.original.id)}>Cancel</button></div>
+                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelPayment, row.original.id, `Cancel Payment — ${row.original.paymentNumber}`)}>Cancel</button></div>
                 ),
               },
             ]}
             {...payments.tableProps}
             searchPlaceholder="Search payment number…"
+          actionsNode={addHandlers[activeTab] && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
           />
         )
       )}
@@ -129,7 +130,7 @@ export default function PaymentsPage() {
               { accessorKey: 'bankName', header: 'Bank' },
               { id: 'party', header: 'Party', cell: ({ row }) => row.original.party?.name },
               { accessorKey: 'direction', header: 'Direction' },
-              { accessorKey: 'chequeDate', header: 'Date' },
+              { id: 'chequeDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.chequeDate} /> },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.amountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
@@ -158,6 +159,9 @@ export default function PaymentsPage() {
             ]}
             {...cheques.tableProps}
             searchPlaceholder="Search cheque number or bank…"
+          actionsNode={addHandlers[activeTab] && (
+          <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
+        )}
             emptyMessage="No cheques yet — they appear here when a receipt or payment uses cheque mode."
           />
         )
@@ -166,6 +170,27 @@ export default function PaymentsPage() {
       <BounceChequeDialog open={!!bouncingCheque} onOpenChange={(v) => !v && setBouncingCheque(null)} cheque={bouncingCheque} />
       <ReceiptFormDialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen} />
       <PaymentFormDialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen} />
+
+      <ReasonDialog
+        open={!!cancelPrompt}
+        onOpenChange={(open) => !open && setCancelPrompt(null)}
+        title={cancelPrompt?.title || 'Cancellation'}
+        description="Are you sure you want to cancel this record? This action will reverse posted journal entries and cannot be undone."
+        label="Cancellation Reason"
+        placeholder="e.g. Duplicate entry, incorrect bank account selected, payment cancelled..."
+        confirmText="Confirm Cancellation"
+        variant="destructive"
+        onConfirm={async (reason) => {
+          if (!cancelPrompt) return;
+          try {
+            await cancelPrompt.mutation.mutateAsync({ id: cancelPrompt.id, reason });
+            toast.success('Cancelled successfully');
+          } catch (err) {
+            toast.error(err.response?.data?.message || 'Could not cancel record.');
+            throw err;
+          }
+        }}
+      />
     </div>
   );
 }

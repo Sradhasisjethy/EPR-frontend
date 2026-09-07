@@ -13,16 +13,20 @@ import { MaterialIssueFormDialog } from '@/components/workforce/material-issue-f
 import { ProductionEntryFormDialog } from '@/components/workforce/production-entry-form-dialog';
 import { AttendanceFormDialog } from '@/components/workforce/attendance-form-dialog';
 import { AdvanceFormDialog } from '@/components/workforce/advance-form-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { toast } from 'sonner';
+import { DateText } from '@/components/date-text';
 
 const TABS = ['Material Issues', 'Production Entries', 'Attendance', 'Advances'];
 
 export default function WorkforcePage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Material Issues');
+  const [activeTab, setActiveTab] = useTabParam(TABS, 'Material Issues', 'subtab');
   const [issueOpen, setIssueOpen] = useState(false);
   const [entryOpen, setEntryOpen] = useState(false);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
   const [advanceOpen, setAdvanceOpen] = useState(false);
+  const [cancellingAdvance, setCancellingAdvance] = useState(null);
 
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
@@ -42,13 +46,11 @@ export default function WorkforcePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Contractor & Labour</h2>
-          <p className="text-muted-foreground">Job-work material issues, piece-rate production, attendance and advances (M26/M27)</p>
-        </div>
-        <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
+      <div>
+        <p className="text-muted-foreground">Job-work material issues, piece-rate production, attendance and advances (M26/M27)</p>
       </div>
+
+      
 
       <div className="flex border-b border-border mb-6">
         {TABS.map((tab) => (
@@ -68,12 +70,15 @@ export default function WorkforcePage() {
             columns={[
               { accessorKey: 'issueNumber', header: 'Issue #' },
               { id: 'contractor', header: 'Contractor', cell: ({ row }) => row.original.contractor?.name },
-              { accessorKey: 'issueDate', header: 'Date' },
+              { id: 'issueDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.issueDate} /> },
               { id: 'lines', header: 'Lines', cell: ({ row }) => row.original.lines?.length || 0 },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
             ]}
             {...materialIssues.tableProps}
             searchPlaceholder="Search issue number…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
+          }
           />
         )
       )}
@@ -85,7 +90,7 @@ export default function WorkforcePage() {
               { accessorKey: 'entryNumber', header: 'Entry #' },
               { id: 'contractor', header: 'Contractor', cell: ({ row }) => row.original.contractor?.name },
               { id: 'product', header: 'Product', cell: ({ row }) => row.original.product?.name },
-              { accessorKey: 'productionDate', header: 'Date' },
+              { id: 'productionDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.productionDate} /> },
               { accessorKey: 'quantity', header: 'Qty' },
               ...(showRates
                 ? [
@@ -97,6 +102,9 @@ export default function WorkforcePage() {
             ]}
             {...contractorEntries.tableProps}
             searchPlaceholder="Search entry number…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
+          }
           />
         )
       )}
@@ -106,13 +114,16 @@ export default function WorkforcePage() {
           <DataTable
             columns={[
               { id: 'labour', header: 'Labourer', cell: ({ row }) => row.original.labour?.name },
-              { accessorKey: 'attendanceDate', header: 'Date' },
+              { id: 'attendanceDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.attendanceDate} /> },
               { accessorKey: 'status', header: 'Status' },
               { accessorKey: 'overtimeHours', header: 'OT Hours' },
               ...(showRates ? [{ id: 'wage', header: 'Wage Accrued', cell: ({ row }) => formatINR(row.original.wageAccruedPaise) }] : []),
             ]}
             {...attendance.tableProps}
             searchPlaceholder="Search by date…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
+          }
           />
         )
       )}
@@ -123,7 +134,7 @@ export default function WorkforcePage() {
             columns={[
               { accessorKey: 'advanceNumber', header: 'Advance #' },
               { id: 'party', header: 'Party', cell: ({ row }) => row.original.party?.name },
-              { accessorKey: 'advanceDate', header: 'Date' },
+              { id: 'advanceDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.advanceDate} /> },
               { accessorKey: 'mode', header: 'Mode' },
               ...(showRates ? [{ id: 'amount', header: 'Amount', cell: ({ row }) => formatINR(row.original.amountPaise) }] : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
@@ -133,10 +144,7 @@ export default function WorkforcePage() {
                   <div className="flex justify-end">
                     <button
                       className="text-xs text-destructive hover:underline"
-                      onClick={() => {
-                        const reason = window.prompt('Cancellation reason:');
-                        if (reason) cancelAdvance.mutate({ id: row.original.id, reason });
-                      }}
+                      onClick={() => setCancellingAdvance(row.original)}
                     >
                       Cancel
                     </button>
@@ -146,6 +154,9 @@ export default function WorkforcePage() {
             ]}
             {...advances.tableProps}
             searchPlaceholder="Search advance no, reason…"
+          actionsNode={
+            <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
+          }
           />
         )
       )}
@@ -154,6 +165,27 @@ export default function WorkforcePage() {
       <ProductionEntryFormDialog open={entryOpen} onOpenChange={setEntryOpen} />
       <AttendanceFormDialog open={attendanceOpen} onOpenChange={setAttendanceOpen} />
       <AdvanceFormDialog open={advanceOpen} onOpenChange={setAdvanceOpen} />
+
+      <ReasonDialog
+        open={!!cancellingAdvance}
+        onOpenChange={(open) => !open && setCancellingAdvance(null)}
+        title={`Cancel Advance — ${cancellingAdvance?.advanceNumber}`}
+        description="Are you sure you want to cancel this contractor advance? This action will reverse posted journal entries and cannot be undone."
+        label="Cancellation Reason"
+        placeholder="e.g. Advance paid in error, duplicate entry, recovered offline..."
+        confirmText="Cancel Advance"
+        variant="destructive"
+        onConfirm={async (reason) => {
+          if (!cancellingAdvance) return;
+          try {
+            await cancelAdvance.mutateAsync({ id: cancellingAdvance.id, reason });
+            toast.success('Advance cancelled successfully');
+          } catch (err) {
+            toast.error(err.response?.data?.message || 'Could not cancel advance.');
+            throw err;
+          }
+        }}
+      />
     </div>
   );
 }

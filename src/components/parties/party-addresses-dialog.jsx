@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Plus, Trash2, Star } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { usePincodeLookup } from '@/hooks/use-pincode';
 import {
   usePartyAddresses, useCreatePartyAddress, useUpdatePartyAddress, useDeletePartyAddress,
 } from '@/hooks/use-party-addresses';
@@ -22,8 +24,21 @@ const EMPTY = {
 export function PartyAddressesDialog({ open, onOpenChange, party }) {
   const partyId = party?.id;
   const [form, setForm] = useState(EMPTY);
+
+  // The state here decides GST place of supply, so getting it from the PIN code
+  // rather than by hand removes a class of mis-billing.
+  const pincodeStatus = usePincodeLookup(form.pincode, {
+    onResolved: (address) =>
+      setForm((previous) => ({
+        ...previous,
+        city: address.city || previous.city,
+        state: address.state || previous.state,
+      })),
+  });
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState(null);
 
   const { data: addresses, isLoading } = usePartyAddresses(open ? partyId : null);
   const createAddress = useCreatePartyAddress(partyId);
@@ -74,7 +89,20 @@ export function PartyAddressesDialog({ open, onOpenChange, party }) {
       .catch((err) => setError(err.response?.data?.message || 'Failed to set the default.'));
   };
 
+  const handleDeleteClick = (address) => {
+    setAddressToDelete(address);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (addressToDelete) {
+      deleteAddress.mutate(addressToDelete.id);
+      setAddressToDelete(null);
+    }
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader><DialogTitle>Addresses — {party?.name}</DialogTitle></DialogHeader>
@@ -117,9 +145,7 @@ export function PartyAddressesDialog({ open, onOpenChange, party }) {
                     )}
                     <button onClick={() => startEdit(address)} className="text-xs text-primary hover:underline px-1">Edit</button>
                     <button
-                      onClick={() => {
-                        if (window.confirm(`Delete the "${address.label}" address?`)) deleteAddress.mutate(address.id);
-                      }}
+                      onClick={() => handleDeleteClick(address)}
                       className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                       title="Delete"
                     >
@@ -147,16 +173,18 @@ export function PartyAddressesDialog({ open, onOpenChange, party }) {
 
             <div className="grid grid-cols-4 gap-3">
               <div className="space-y-1.5">
+                <Label>PIN</Label>
+                <Input value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
+                {pincodeStatus === 'loading' && <p className="text-xs text-muted-foreground">Looking up…</p>}
+                {pincodeStatus === 'resolved' && <p className="text-xs text-muted-foreground">Filled from PIN.</p>}
+              </div>
+              <div className="space-y-1.5">
                 <Label>City</Label>
                 <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
               </div>
               <div className="space-y-1.5">
                 <Label>State</Label>
                 <Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} placeholder="Odisha" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>PIN</Label>
-                <Input value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
               </div>
               <div className="space-y-1.5">
                 <Label>GSTIN</Label>
@@ -194,6 +222,16 @@ export function PartyAddressesDialog({ open, onOpenChange, party }) {
         </div>
       </DialogContent>
     </Dialog>
+    <ConfirmDialog
+      open={deleteConfirmOpen}
+      onOpenChange={setDeleteConfirmOpen}
+      title="Delete Address"
+      description={`Delete the "${addressToDelete?.label}" address? This cannot be undone.`}
+      onConfirm={handleConfirmDelete}
+      confirmText="Delete"
+      variant="destructive"
+    />
+    </>
   );
 }
 

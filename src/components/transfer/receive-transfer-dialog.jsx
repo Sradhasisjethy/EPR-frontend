@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useReceiveTransfer } from '@/hooks/use-transfer';
+import { toInput } from '@/lib/decimal';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 export function ReceiveTransferDialog({ open, onOpenChange, transfer }) {
   const [receivedDate, setReceivedDate] = useState('');
@@ -13,8 +16,8 @@ export function ReceiveTransferDialog({ open, onOpenChange, transfer }) {
 
   useEffect(() => {
     if (open && transfer) {
-      setReceivedDate(new Date().toISOString().slice(0, 10));
-      setQuantities(Object.fromEntries(transfer.lines.map((l) => [l.id, String(l.quantity)])));
+      setReceivedDate(today());
+      setQuantities(Object.fromEntries(transfer.lines.map((l) => [l.id, toInput(l.quantity)])));
       setError('');
     }
   }, [open, transfer]);
@@ -29,7 +32,7 @@ export function ReceiveTransferDialog({ open, onOpenChange, transfer }) {
       receivedDate,
       lines: transfer.lines.map((l) => ({ lineId: l.id, receivedQuantity: Number(quantities[l.id]) })),
     };
-    receiveMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to receive transfer.'));
+    receiveMutation.mutateAsync(payload).then(() => { toast.success('Transfer received'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to receive transfer.'));
   };
 
   return (

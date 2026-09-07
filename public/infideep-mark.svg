@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 97 72" role="img" aria-label="INFIDEEP">
+<!-- INFIDEEP mark: traced from the brand artwork (IoU 0.985 against the
+     source raster) and filled with the canonical brand gradient. -->
+  <defs>
+    <linearGradient id="idg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="97" y2="0">
+      <stop offset="0" stop-color="#ff0055"/>
+      <stop offset="1" stop-color="#ff8c00"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <rect x="0" y="0" width="28" height="13" rx="3.5" fill="url(#idg)"/>
+    <rect x="0" y="0" width="13" height="72" rx="3.5" fill="url(#idg)"/>
+    <rect x="0" y="59" width="67" height="13" rx="3.5" fill="url(#idg)"/>
+    <rect x="55" y="24" width="12" height="48" rx="3.5" fill="url(#idg)"/>
+    <rect x="34" y="0" width="12" height="50" rx="3.5" fill="url(#idg)"/>
+    <rect x="34" y="0" width="63" height="13" rx="3.5" fill="url(#idg)"/>
+    <rect x="84" y="0" width="13" height="72" rx="3.5" fill="url(#idg)"/>
+    <rect x="74" y="59" width="23" height="13" rx="3.5" fill="url(#idg)"/>
+  </g>
+</svg>

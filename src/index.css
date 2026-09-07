@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +6,11 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Surfaces lift by differing from the ground, not by outlining themselves.
+       These were identical — white card on white background — which left a
+       91.4%-lightness border doing all the separation, and it read as no edge
+       at all. The ground is now a soft grey and the card stays pure white. */
+    --background: 210 20% 96.5%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -22,10 +26,21 @@
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 214 20% 82%;
+    /* Inputs sit a shade darker than dividers — a field should read as a
+       field before it is focused. */
+    --input: 214 20% 80%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.75rem;
+
+    /* Navigation accent. The active rail row is a two-stop gradient, and
+       both stops follow the chosen palette rather than the brand ramp — an
+       emerald scheme with a pink active row looked like a bug. --nav-ink is
+       tuned per palette because a mid-lightness primary (amber especially)
+       does not hold up as text on a tinted ground. */
+    --nav-from: var(--primary);
+    --nav-to: 262 83% 58%;
+    --nav-ink: 221 83% 45%;
 
     /* Sapphire Palette Defaults */
     --sidebar-background: 0 0% 98%;
@@ -39,11 +54,14 @@
   }
 
   .dark {
+    /* Same elevation model inverted: the ground stays near-black and the card
+       lifts towards the light. Both were 4.9% before, so a card was invisible
+       until its border caught the eye — and at 17.5% lightness it rarely did. */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 222 40% 10.5%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 40% 12%;
     --popover-foreground: 210 40% 98%;
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
@@ -55,13 +73,16 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 215 20% 27%;
+    --input: 215 20% 30%;
     --ring: 224.3 76.3% 48%;
+    --nav-ink: 217 91% 68%;
   }
 
   /* Emerald Palette */
   [data-color-scheme="emerald"] {
+    --nav-to: 172 66% 40%;
+    --nav-ink: 142 72% 27%;
     --primary: 142.1 76.2% 36.3%;
     --primary-foreground: 355.7 100% 97.3%;
     --ring: 142.1 76.2% 36.3%;
@@ -69,6 +90,8 @@
 
   /* Amber Palette */
   [data-color-scheme="amber"] {
+    --nav-to: 24 95% 53%;
+    --nav-ink: 27 90% 38%;
     --primary: 47.9 95.8% 53.1%;
     --primary-foreground: 26 83.3% 14.1%;
     --ring: 47.9 95.8% 53.1%;
@@ -76,6 +99,8 @@
 
   /* Ruby Palette */
   [data-color-scheme="ruby"] {
+    --nav-to: 330 81% 55%;
+    --nav-ink: 347 77% 42%;
     --primary: 346.8 77.2% 49.8%;
     --primary-foreground: 355.7 100% 97.3%;
     --ring: 346.8 77.2% 49.8%;
@@ -83,17 +108,53 @@
 
   /* Violet Palette */
   [data-color-scheme="violet"] {
+    --nav-to: 292 84% 61%;
+    /* 50% lightness measured 3.98:1 on a white card — under the 4.5 threshold.
+       45% clears it at 4.76:1 without losing the hue. */
+    --nav-ink: 262 83% 45%;
     --primary: 262.1 83.3% 57.8%;
     --primary-foreground: 210 40% 98%;
     --ring: 262.1 83.3% 57.8%;
   }
 
+  /* Infideep Palette — the brand ramp, pink-red into orange. This is the
+     gradient the rail carried before the accent was made palette-driven; it is
+     a scheme you can pick rather than a default imposed on every other one. */
+  [data-color-scheme="infideep"] {
+    --primary: 343 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 343 100% 50%;
+    --nav-to: 33 100% 50%;
+    --nav-ink: 343 100% 38%;
+  }
+
   /* Slate Palette */
   [data-color-scheme="slate"] {
+    --nav-to: 215 25% 55%;
+    --nav-ink: 215 25% 33%;
     --primary: 215.4 16.3% 46.9%;
     --primary-foreground: 210 40% 98%;
     --ring: 215.4 16.3% 46.9%;
   }
+}
+
+html.dark[data-color-scheme="emerald"] {
+  --nav-ink: 152 69% 52%;
+}
+html.dark[data-color-scheme="amber"] {
+  --nav-ink: 43 96% 62%;
+}
+html.dark[data-color-scheme="ruby"] {
+  --nav-ink: 350 89% 68%;
+}
+html.dark[data-color-scheme="violet"] {
+  --nav-ink: 270 91% 72%;
+}
+html.dark[data-color-scheme="infideep"] {
+  --nav-ink: 350 100% 71%;
+}
+html.dark[data-color-scheme="slate"] {
+  --nav-ink: 213 27% 74%;
 }
 
 @layer base {
@@ -153,10 +214,10 @@ html:not(.dark) .glass-card .text-slate-400 {
 }
 
 html:not(.dark) .wallpaper-active aside {
-  background: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-  border-right: 1px solid rgba(203, 213, 225, 0.8) !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  backdrop-filter: blur(28px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
+  border: 1px solid hsl(var(--nav-from) / 0.30) !important;
   color: #0f172a !important;
 }
 
@@ -172,11 +233,12 @@ html:not(.dark) .wallpaper-active aside button:hover {
   background-color: rgba(241, 245, 249, 0.8) !important;
 }
 
+/* The header carries no surface of its own, in glass mode or out of it. It
+   used to be given a white panel with a hard bottom border here, which is the
+   band that survived every change made in the component — !important beat the
+   utility classes. Only the text colour is still needed, so titles stay legible
+   against a bright wallpaper. */
 html:not(.dark) .wallpaper-active header {
-  background: rgba(255, 255, 255, 0.82) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border-bottom: 1px solid rgba(203, 213, 225, 0.8) !important;
   color: #0f172a !important;
 }
 
@@ -189,13 +251,13 @@ html.dark body.wallpaper-active::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.78) 100%);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.80) 0%, rgba(15, 23, 42, 0.95) 100%);
   pointer-events: none;
   z-index: -1;
 }
 
 html.dark .glass-card {
-  background: rgba(15, 23, 42, 0.72) !important;
+  background: rgba(15, 23, 42, 0.85) !important;
   backdrop-filter: blur(24px) saturate(190%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
@@ -209,18 +271,14 @@ html.dark .glass-card span.text-muted-foreground {
 }
 
 html.dark .wallpaper-active aside {
-  background: rgba(15, 23, 42, 0.82) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(15, 23, 42, 0.55) !important;
+  backdrop-filter: blur(28px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
+  border: 1px solid hsl(var(--nav-from) / 0.28) !important;
   color: #ffffff !important;
 }
 
 html.dark .wallpaper-active header {
-  background: rgba(15, 23, 42, 0.72) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #ffffff !important;
 }
 
@@ -302,4 +360,392 @@ input:-webkit-autofill:active {
 }
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-muted-foreground/50;
+}
+
+/* ============================================================================
+   INFIDEEP Auth Experience  —  login / reset-password / forgot-password
+   ----------------------------------------------------------------------------
+   Dark-only by design. Every value here is a literal rather than a CSS var so
+   the auth screens render identically whether the app theme is light or dark;
+   they sit outside the themed shell and must not inherit its tokens.
+   ========================================================================== */
+
+.infideep-auth {
+  color-scheme: dark;
+}
+
+/* Brand gradient — pink-red to orange-yellow, the system's high-visibility
+   engine. Fills for CTAs, hairlines for card highlights. */
+.id-gradient {
+  background: linear-gradient(135deg, #ff0055 0%, #ff8c00 100%);
+}
+
+.id-text-gradient {
+  background: linear-gradient(135deg, #ff0055 0%, #ff8c00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Level-1 tonal surface with a diffused ambient shadow, per the elevation
+   model — surfaces lift by getting lighter, not by casting hard shadows. */
+.id-glass-card {
+  background: rgba(30, 32, 32, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(255, 0, 85, 0.05);
+}
+
+/* Inputs sit on a Level-2 charcoal; focus is a gradient-adjacent glow rather
+   than the default ring so the brand reads through on interaction. */
+.id-input {
+  background-color: #1e2020;
+  border: 1px solid rgba(93, 63, 68, 0.6);
+  color: #e2e2e2;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.id-input::placeholder {
+  color: rgba(230, 188, 194, 0.45);
+}
+
+.id-input:focus {
+  outline: none;
+  border-color: #ff0055;
+  box-shadow:
+    0 0 0 1px #ff0055,
+    0 0 10px rgba(255, 0, 85, 0.2);
+}
+
+.id-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Ambient brand glow behind the brand panel. */
+.id-bg-glow {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 0, 85, 0.15) 0%,
+    rgba(255, 140, 0, 0.05) 40%,
+    transparent 70%
+  );
+}
+
+/* Faint blueprint grid, masked to fade out toward the panel edges. */
+.id-grid-lines {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(circle at 50% 30%, black, transparent 60%);
+  mask-image: radial-gradient(circle at 50% 30%, black, transparent 60%);
+}
+
+/* Native checkbox tinted to the brand without pulling in a Radix control —
+   the login form is intentionally dependency-light. */
+.id-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(93, 63, 68, 0.9);
+  background-color: #1e2020;
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.id-checkbox::after {
+  content: '';
+  width: 0.55rem;
+  height: 0.3rem;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(-45deg) scale(0);
+  transition: transform 0.15s ease;
+}
+
+.id-checkbox:checked {
+  background: linear-gradient(135deg, #ff0055 0%, #ff8c00 100%);
+  border-color: transparent;
+}
+
+.id-checkbox:checked::after {
+  transform: rotate(-45deg) scale(1);
+}
+
+.id-checkbox:focus-visible {
+  outline: 2px solid #ff0055;
+  outline-offset: 2px;
+}
+
+/* Respect users who have asked the OS to tone motion down. */
+@media (prefers-reduced-motion: reduce) {
+  .infideep-auth *,
+  .infideep-auth *::before,
+  .infideep-auth *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Neon bloom for the brand lockup on dark grounds — two tinted drop-shadows
+   so the halo picks up both ends of the gradient rather than one flat colour. */
+.id-logo-glow {
+  filter:
+    drop-shadow(0 0 10px rgba(255, 0, 85, 0.45))
+    drop-shadow(0 0 26px rgba(255, 90, 40, 0.28))
+    drop-shadow(0 0 48px rgba(255, 140, 0, 0.16));
+}
+
+/* Active navigation row — the brand ramp at low opacity, with a matching
+   bloom. A flat tint reads as "hovered" next to the floating panel; the
+   gradient and glow are what make the current module obvious at a glance. */
+.id-nav-active {
+  background: linear-gradient(135deg, hsl(var(--nav-from) / 0.24) 0%, hsl(var(--nav-to) / 0.18) 100%);
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--nav-from) / 0.30),
+    0 4px 14px -4px hsl(var(--nav-from) / 0.35);
+  color: hsl(var(--nav-ink));
+}
+
+:root:not(.dark) .id-nav-active {
+  /* Lighter fill on a light ground; the ink carries the accent instead. */
+  background: linear-gradient(135deg, hsl(var(--nav-from) / 0.16) 0%, hsl(var(--nav-to) / 0.12) 100%);
+}
+
+/* Glass mode paints every rail link a flat slate, which would erase the active
+   row's accent. Restated here so the current module still stands out on a
+   wallpaper — and still follows the palette. */
+html:not(.dark) .wallpaper-active aside a.id-nav-active,
+html:not(.dark) .wallpaper-active aside a.id-nav-active span,
+html.dark .wallpaper-active aside a.id-nav-active,
+html.dark .wallpaper-active aside a.id-nav-active span {
+  color: hsl(var(--nav-ink)) !important;
+}
+
+/* Scrolls, but shows nothing. The rail is a narrow floating panel, so a
+   scrollbar gutter costs a visible slice of a 76px column and cuts across the
+   rounded corner. The list still scrolls by wheel, trackpad and keyboard. */
+.no-scrollbar {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* legacy Edge */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Card elevation.
+   Raising the tokens separates surface from ground; this gives the edge itself
+   some definition. Light gets a soft drop shadow — on white-on-grey a shadow
+   reads more honestly than a heavier outline. Dark gets a shadow plus a
+   one-pixel inner highlight along the top, which is the trick that makes a
+   panel look lit from above rather than like a flat patch of lighter paint. */
+/* Wrapped in :where() so the whole selector weighs nothing. Without it this
+   rule scores 0,3,0 and beats any `shadow-*` utility — which silently killed
+   the accent glow on the dashboard KPI tiles. Anything that sets its own
+   shadow now wins; everything else still gets the default elevation. */
+:where(:root:not(.dark)) :where(.bg-card) {
+  box-shadow:
+    0 1px 2px -1px hsl(222 40% 20% / 0.10),
+    0 4px 12px -6px hsl(222 40% 20% / 0.12);
+}
+
+:where(.dark) :where(.bg-card) {
+  box-shadow:
+    0 1px 2px -1px rgb(0 0 0 / 0.6),
+    0 6px 18px -8px rgb(0 0 0 / 0.55),
+    inset 0 1px 0 0 rgb(255 255 255 / 0.05);
+}
+
+/* Panel edge — the sidebar, and anything else that floats over the ground.
+   A neutral hairline at 82% lightness disappears against a white card, so the
+   edge is tinted with the active colour scheme and backed by a shadow in the
+   same hue. Light mode carries the stronger version: a white panel on a grey
+   ground has no tonal step to help, so the outline is doing all the work. */
+.id-panel-edge {
+  border-color: hsl(var(--nav-from) / 0.30);
+  box-shadow:
+    0 1px 2px hsl(222 40% 20% / 0.10),
+    0 2px 10px -4px hsl(222 40% 20% / 0.16),
+    0 10px 30px -12px hsl(var(--nav-from) / 0.35);
+}
+
+.dark .id-panel-edge {
+  /* Dark already separates by tone, so the edge only needs a hint of accent. */
+  border-color: hsl(var(--nav-from) / 0.22);
+  box-shadow:
+    0 1px 2px -1px rgb(0 0 0 / 0.6),
+    0 10px 30px -12px rgb(0 0 0 / 0.65),
+    inset 0 1px 0 0 rgb(255 255 255 / 0.06);
+}
+
+/* Glass mode: card surfaces let the wallpaper through.
+   The dashboard panels and tiles use `bg-card`, which is an opaque token, so
+   they stayed solid while the sidebar and the settings panels went
+   translucent. Scoped to .wallpaper-active, so nothing changes when glass is
+   off. Left alone deliberately: `aside`, which has its own stronger rule, and
+   `bg-popover` — a dropdown over a photograph has to stay readable. */
+.wallpaper-active .bg-card {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+html:not(.dark) .wallpaper-active .bg-card {
+  background-color: rgb(255 255 255 / 0.72);
+  border-color: hsl(var(--nav-from) / 0.22);
+}
+
+html.dark .wallpaper-active .bg-card {
+  background-color: rgb(15 23 42 / 0.66);
+  border-color: hsl(var(--nav-from) / 0.24);
+}
+
+/* Logo motion.
+   Animation is spent where it means something, not left looping in the chrome.
+   An ERP is a tool people sit in front of all day: a mark that never stops
+   moving in the sidebar becomes noise, and worse, it competes with the signals
+   that should actually pull the eye — an alert count, a status flipping to
+   failed. So there are exactly two behaviours here.
+
+   1. A one-off entrance on the auth screen, where a first impression is the
+      whole job of the page.
+   2. A response to the pointer in the rail, so the logo feels like the live
+      "home" control it is, and is still otherwise.
+
+   Both are switched off under prefers-reduced-motion: brand polish is never
+   worth triggering someone's vestibular disorder. */
+
+@keyframes id-logo-enter {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.96); }
+  60%  { opacity: 1; transform: translateY(0) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes id-logo-bloom {
+  0%, 100% { filter:
+    drop-shadow(0 0 10px rgba(255, 0, 85, 0.45))
+    drop-shadow(0 0 26px rgba(255, 90, 40, 0.28))
+    drop-shadow(0 0 48px rgba(255, 140, 0, 0.16)); }
+  50%      { filter:
+    drop-shadow(0 0 14px rgba(255, 0, 85, 0.60))
+    drop-shadow(0 0 34px rgba(255, 90, 40, 0.38))
+    drop-shadow(0 0 60px rgba(255, 140, 0, 0.24)); }
+}
+
+/* Auth screen: enters once, then breathes slowly. Six seconds is deliberate —
+   fast enough to notice, slow enough that it never reads as a spinner. */
+.id-logo-glow {
+  animation:
+    id-logo-enter 620ms cubic-bezier(0.16, 1, 0.3, 1) both,
+    id-logo-bloom 6s ease-in-out 620ms infinite;
+}
+
+/* Rail: still until pointed at. */
+.id-logo-interactive {
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1), filter 240ms ease;
+}
+
+.id-logo-interactive:hover {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 12px rgba(255, 0, 85, 0.35));
+}
+
+.id-logo-interactive:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .id-logo-glow,
+  .id-logo-interactive,
+  .id-logo-interactive:hover {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------- touch ----
+   Pointer-aware rules for iPad, Apple Pencil and touch generally.
+   Keyed on `pointer: coarse` / `hover: none` rather than screen width: an iPad
+   in landscape is as wide as a laptop, so width-based rules hand a tablet the
+   desktop's small hit areas and hover-only affordances. A Pencil reports as a
+   fine pointer but still cannot hover on most iPads, so the two queries are
+   used separately and deliberately. */
+
+/* The 300ms wait for a possible double-tap, gone. Applied to controls only —
+   on the page body it would disable pinch-zoom, which people rely on. */
+button,
+a,
+[role='button'],
+select,
+summary,
+input[type='checkbox'],
+input[type='radio'] {
+  touch-action: manipulation;
+}
+
+/* iOS paints a grey box over anything tapped. Removed, but only because there
+   is a real :active state below to replace it — without one the UI would feel
+   dead to the touch. */
+@media (pointer: coarse) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:active,
+  a:active,
+  [role='button']:active {
+    opacity: 0.72;
+    transition: opacity 60ms ease;
+  }
+
+  /* Safari zooms the page when a focused field is under 16px, which on an iPad
+     yanks the layout sideways mid-typing. The base Input is `text-base
+     md:text-sm`, and an iPad in landscape matches `md`, so it was landing on
+     14px exactly where the zoom bites. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Apple's 44pt minimum. Table row actions are 12px text links — a legible
+     target with a mouse, a coin-flip with a fingertip. Grown vertically only,
+     so adjacent actions cannot start overlapping each other horizontally. */
+  td button,
+  td a,
+  th button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Momentum scrolling inside panels, not just the page. */
+  .overflow-y-auto,
+  .overflow-auto,
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Anything whose only affordance was :hover needs to be visible without one.
+   The rail's active row already carries a gradient, so it is unaffected; this
+   is for the quieter cases. */
+@media (hover: none) {
+  .group:hover .group-hover\:opacity-100,
+  .group-hover\:opacity-100 {
+    opacity: 1;
+  }
 }

@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { useCreateInvoice } from '@/hooks/use-invoicing';
 import { useSalesOrders } from '@/hooks/use-sales';
 import { useDeliveryChallans } from '@/hooks/use-dispatch';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 export function CreateInvoiceDialog({ open, onOpenChange }) {
   const [salesOrderId, setSalesOrderId] = useState('');
@@ -22,7 +24,7 @@ export function CreateInvoiceDialog({ open, onOpenChange }) {
   useEffect(() => {
     if (open) {
       setSalesOrderId('');
-      setInvoiceDate(new Date().toISOString().slice(0, 10));
+      setInvoiceDate(today());
       setSelectedChallanIds([]);
       setError('');
     }
@@ -47,7 +49,7 @@ export function CreateInvoiceDialog({ open, onOpenChange }) {
 
     createMutation
       .mutateAsync({ challanIds: selectedChallanIds, invoiceDate })
-      .then(() => onOpenChange(false))
+      .then(() => { toast.success('Invoice created'); onOpenChange(false); })
       .catch((err) => setError(err.response?.data?.message || 'Failed to create invoice.'));
   };
 

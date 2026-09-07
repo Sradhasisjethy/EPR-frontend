@@ -15,6 +15,9 @@ import {
 } from '@/hooks/use-sales';
 import { SalesOrderFormDialog } from '@/components/sales/sales-order-form-dialog';
 import { SalesOrderDetailDialog } from '@/components/sales/sales-order-detail-dialog';
+import { ReasonDialog } from '@/components/ui/reason-dialog';
+import { DateText } from '@/components/date-text';
+import { toast } from 'sonner';
 
 const STATUS_MAP = {
   DRAFT: 'pending', CONFIRMED: 'active', IN_PRODUCTION: 'onboarding', PARTIALLY_DISPATCHED: 'onboarding',
@@ -41,6 +44,7 @@ export default function SalesOrdersPage() {
   const [detailId, setDetailId] = useState(null);
   const [status, setStatus] = useState('');
   const [actionError, setActionError] = useState('');
+  const [reasonPrompt, setReasonPrompt] = useState(null);
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
 
@@ -64,10 +68,32 @@ export default function SalesOrdersPage() {
   // Every transition can legitimately be refused by the API (stock shortfall,
   // an invalid status move, a location the user may not touch). Without this
   // the mutation failed and the row simply did not change, with no explanation.
-  const run = (mutation, arg) => {
+  const run = (mutation, arg, done) => {
     setActionError('');
     mutation.mutate(arg, {
+      onSuccess: () => done && toast.success(done),
       onError: (err) => setActionError(err.response?.data?.message || 'That action could not be completed.'),
+    });
+  };
+
+  const promptAndRun = ({ title, description, label, placeholder, confirmText = 'Submit', variant = 'destructive', mutation, id, done }) => {
+    setReasonPrompt({
+      title,
+      description,
+      label,
+      placeholder,
+      confirmText,
+      variant,
+      onConfirm: async (reason) => {
+        setActionError('');
+        try {
+          await mutation.mutateAsync({ id, reason });
+          if (done) toast.success(done);
+        } catch (err) {
+          setActionError(err.response?.data?.message || 'That action could not be completed.');
+          throw err;
+        }
+      },
     });
   };
 
@@ -75,17 +101,8 @@ export default function SalesOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Sales Orders</h2>
-          <p className="text-muted-foreground">Order entry with soft stock reservation and credit control (M06/M07)</p>
-        </div>
-        {canCreate && (
-          <Button onClick={() => { setEditingOrder(null); setDialogOpen(true); }}>
-            <Plus size={16} /> New Sales Order <KeyHint>N</KeyHint>
-          </Button>
-        )}
-      </div>
+
+      
 
       <div className="flex flex-wrap border-b border-border">
         {STATUS_TABS.map((tab) => (
@@ -115,7 +132,7 @@ export default function SalesOrdersPage() {
           columns={[
             { accessorKey: 'orderNumber', header: 'Order #' },
             { id: 'customer', header: 'Customer', cell: ({ row }) => row.original.customer?.name },
-            { accessorKey: 'orderDate', header: 'Order Date' },
+            { id: 'orderDate', header: 'Order Date', cell: ({ row }) => <DateText value={row.original.orderDate} /> },
             { id: 'expected', header: 'Expected', cell: ({ row }) => row.original.expectedDeliveryDate || '—' },
             ...(showRates ? [{ accessorKey: 'totalAmountPaise', header: 'Total', cell: ({ row }) => formatINR(row.original.totalAmountPaise) }] : []),
             { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={STATUS_MAP[row.original.status] || 'pending'} /> },
@@ -145,14 +162,14 @@ export default function SalesOrdersPage() {
                     )}
 
                     {o.status === 'DRAFT' && canModify && (
-                      <button className="text-xs text-primary hover:underline" onClick={() => run(confirmOrder, o.id)}>Confirm</button>
+                      <button className="text-xs text-primary hover:underline" onClick={() => run(confirmOrder, o.id, 'Order confirmed')}>Confirm</button>
                     )}
 
                     {o.status === 'CONFIRMED' && canModify && (
                       <button
                         className="text-xs text-muted-foreground hover:text-foreground hover:underline inline-flex items-center gap-1"
                         title="Flag this order as waiting on manufacture"
-                        onClick={() => run(markInProduction, o.id)}
+                        onClick={() => run(markInProduction, o.id, 'Order moved into production')}
                       >
                         <FactoryIcon size={13} /> In production
                       </button>
@@ -161,10 +178,19 @@ export default function SalesOrdersPage() {
                     {['DRAFT', 'CONFIRMED', 'IN_PRODUCTION'].includes(o.status) && canModify && (
                       <button
                         className="text-xs text-destructive hover:underline"
-                        onClick={() => {
-                          const reason = window.prompt('Cancellation reason:');
-                          if (reason) run(cancelOrder, { id: o.id, reason });
-                        }}
+                        onClick={() =>
+                          promptAndRun({
+                            title: `Cancel Sales Order — ${o.orderNumber}`,
+                            description: 'Are you sure you want to cancel this sales order? This will release reserved stock balance and mark the order as cancelled.',
+                            label: 'Cancellation Reason',
+                            placeholder: 'e.g. Customer cancelled order, duplicate entry...',
+                            confirmText: 'Cancel Order',
+                            variant: 'destructive',
+                            mutation: cancelOrder,
+                            done: 'Order cancelled',
+                            id: o.id,
+                          })
+                        }
                       >
                         Cancel
                       </button>
@@ -174,10 +200,19 @@ export default function SalesOrdersPage() {
                       <button
                         className="text-xs text-amber-600 hover:underline"
                         title="Close the undelivered balance and release its stock hold"
-                        onClick={() => {
-                          const reason = window.prompt('Short-close reason:');
-                          if (reason) run(shortCloseOrder, { id: o.id, reason });
-                        }}
+                        onClick={() =>
+                          promptAndRun({
+                            title: `Short-close Sales Order — ${o.orderNumber}`,
+                            description: 'Close the undelivered balance and release its stock hold.',
+                            label: 'Short-close Reason',
+                            placeholder: 'e.g. Customer requested partial delivery only, balance order cancelled...',
+                            confirmText: 'Short-close Order',
+                            variant: 'default',
+                            mutation: shortCloseOrder,
+                            done: 'Order short-closed',
+                            id: o.id,
+                          })
+                        }
                       >
                         Short-close
                       </button>
@@ -189,12 +224,29 @@ export default function SalesOrdersPage() {
           ]}
           {...tableProps}
           emptyMessage="No sales orders here yet. Raise one to reserve stock against a customer."
+          actionsNode={canCreate && (
+          <Button onClick={() => { setEditingOrder(null); setDialogOpen(true); }}>
+            <Plus size={16} /> New Sales Order <KeyHint>N</KeyHint>
+          </Button>
+        )}
           searchPlaceholder="Search order number, customer or PO reference…"
         />
       )}
 
       <SalesOrderFormDialog open={dialogOpen} onOpenChange={setDialogOpen} order={editingOrder} />
       <SalesOrderDetailDialog open={!!detailId} onOpenChange={(v) => !v && setDetailId(null)} orderId={detailId} />
+
+      <ReasonDialog
+        open={!!reasonPrompt}
+        onOpenChange={(open) => !open && setReasonPrompt(null)}
+        title={reasonPrompt?.title}
+        description={reasonPrompt?.description}
+        label={reasonPrompt?.label}
+        placeholder={reasonPrompt?.placeholder}
+        confirmText={reasonPrompt?.confirmText}
+        variant={reasonPrompt?.variant}
+        onConfirm={reasonPrompt?.onConfirm}
+      />
     </div>
   );
 }

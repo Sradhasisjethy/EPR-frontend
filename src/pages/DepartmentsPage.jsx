@@ -22,6 +22,8 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { toast } from 'sonner';
 
 export default function DepartmentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -33,6 +35,8 @@ export default function DepartmentsPage() {
   const [editingDept, setEditingDept] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [viewingData, setViewingData] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [departmentToDelete, setDepartmentToDelete] = useState(null);
 
   const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
   const { data: offData } = useOffices({ page: 1, limit: 100, organizationId: selectedOrgId || undefined });
@@ -44,9 +48,18 @@ export default function DepartmentsPage() {
   });
   const deleteMutation = useDeleteDepartment();
 
-  const handleDelete = (dept) => {
-    if (window.confirm(`Delete department "${dept.name}"? This cannot be undone.`)) {
-      deleteMutation.mutate(dept.id);
+  const handleDeleteClick = (dept) => {
+    setDepartmentToDelete(dept);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (departmentToDelete) {
+      deleteMutation.mutate(departmentToDelete.id, {
+        onSuccess: () => toast.success('Department deleted'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Could not delete the department.'),
+      });
+      setDepartmentToDelete(null);
     }
   };
 
@@ -72,17 +85,7 @@ export default function DepartmentsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Departments</h2>
-          <p className="text-muted-foreground">Manage department hierarchies and team structures</p>
-        </div>
-        <Button onClick={() => { setEditingDept(null); setDialogOpen(true); }}>
-          <Plus size={16} className="mr-1.5" />
-          Add Department
-        </Button>
-      </div>
+
 
       {/* Filter Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
@@ -209,17 +212,28 @@ export default function DepartmentsPage() {
             },
             { 
               id: 'officeLocation',
-              header: 'Location / Office',
+              header: 'Assigned Offices',
               cell: ({ row }) => {
-                const office = row.original.Office || row.original.office;
+                const offices = (row.original.offices && row.original.offices.length > 0)
+                  ? row.original.offices
+                  : row.original.Office ? [row.original.Office] : [];
                 return (
-                  <button
-                    onClick={() => navigate(`/offices?organizationId=${row.original.organizationId || ''}`)}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-all text-left"
-                    title="Click to view office"
-                  >
-                    📍 {office ? `${office.name} (${office.city || 'HQ'})` : 'Global / All Offices'}
-                  </button>
+                  <div className="flex flex-wrap gap-1">
+                    {offices.length > 0 ? (
+                      offices.map((off) => (
+                        <button
+                          key={off.id}
+                          onClick={() => navigate(`/offices?organizationId=${row.original.organizationId || ''}`)}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-all text-left"
+                          title="Click to view offices"
+                        >
+                          📍 {off.name}
+                        </button>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">All / Flexible Locations</span>
+                    )}
+                  </div>
                 );
               }
             },
@@ -251,18 +265,33 @@ export default function DepartmentsPage() {
                   }}
                   onViewOffices={() => navigate(`/offices?organizationId=${row.original.organizationId || ''}`)}
                   onEdit={() => { setEditingDept(row.original); setDialogOpen(true); }}
-                  onDelete={() => handleDelete(row.original)}
+                  onDelete={() => handleDeleteClick(row.original)}
                 />
               ),
             },
           ]}
           data={deptData?.rows || []}
           searchKey="name"
+          actionsNode={
+            <Button onClick={() => { setEditingDept(null); setDialogOpen(true); }}>
+              <Plus size={16} className="mr-1.5" />
+              Add Department
+            </Button>
+          }
         />
       )}
 
       <DepartmentFormDialog open={dialogOpen} onOpenChange={setDialogOpen} department={editingDept} defaultOrganizationId={selectedOrgId} />
       <OrganizationDetailDialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen} data={viewingData} type="department" />
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Department"
+        description={`Delete department "${departmentToDelete?.name}"? This cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

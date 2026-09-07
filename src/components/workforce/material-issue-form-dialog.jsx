@@ -9,6 +9,8 @@ import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { useProducts } from '@/hooks/use-products';
 import { PartyType, ProductType } from '@/constants/enums';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 const emptyLine = { productId: '', quantity: '' };
 
@@ -24,7 +26,7 @@ export function MaterialIssueFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', contractorPartyId: '', issueDate: new Date().toISOString().slice(0, 10) });
+      setForm({ factoryId: '', contractorPartyId: '', issueDate: today() });
       setLines([{ ...emptyLine }]);
       setError('');
     }
@@ -43,7 +45,7 @@ export function MaterialIssueFormDialog({ open, onOpenChange }) {
     }
 
     const payload = { ...form, lines: lines.map((l) => ({ productId: l.productId, quantity: Number(l.quantity) })) };
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to issue material.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Material issued'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to issue material.'));
   };
 
   return (

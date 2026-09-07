@@ -21,6 +21,8 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { toast } from 'sonner';
 
 export default function OfficesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,15 +33,26 @@ export default function OfficesPage() {
   const [editingOffice, setEditingOffice] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [viewingData, setViewingData] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [officeToDelete, setOfficeToDelete] = useState(null);
 
   const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
   const { data: offData, isLoading: offLoading, isError: offError } = useOffices({ page: 1, limit: 100, organizationId: selectedOrgId || undefined });
   const { data: deptData } = useDepartments({ page: 1, limit: 100, organizationId: selectedOrgId || undefined });
   const deleteMutation = useDeleteOffice();
 
-  const handleDelete = (office) => {
-    if (window.confirm(`Delete office "${office.name}"? This cannot be undone.`)) {
-      deleteMutation.mutate(office.id);
+  const handleDeleteClick = (office) => {
+    setOfficeToDelete(office);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (officeToDelete) {
+      deleteMutation.mutate(officeToDelete.id, {
+        onSuccess: () => toast.success('Office deleted'),
+        onError: (err) => toast.error(err.response?.data?.message || 'Could not delete the office.'),
+      });
+      setOfficeToDelete(null);
     }
   };
 
@@ -54,17 +67,7 @@ export default function OfficesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Offices</h2>
-          <p className="text-muted-foreground">Manage physical office locations across organizations</p>
-        </div>
-        <Button onClick={() => { setEditingOffice(null); setDialogOpen(true); }}>
-          <Plus size={16} className="mr-1.5" />
-          Add Office
-        </Button>
-      </div>
+
 
       {/* Filter Toolbar */}
       <div className="flex items-center justify-between pt-2">
@@ -134,7 +137,9 @@ export default function OfficesPage() {
               header: 'Departments Operating',
               cell: ({ row }) => {
                 const officeId = row.original.id;
-                const depts = (deptData?.rows || []).filter(d => d.officeId === officeId || d.Office?.id === officeId);
+                const depts = (row.original.departments && row.original.departments.length > 0)
+                  ? row.original.departments
+                  : (deptData?.rows || []).filter(d => d.officeId === officeId || d.offices?.some(o => o.id === officeId));
                 return (
                   <div className="flex flex-wrap gap-1">
                     {depts.length > 0 ? (
@@ -162,24 +167,41 @@ export default function OfficesPage() {
               cell: ({ row }) => (
                 <RowActions
                   onView={() => {
-                    const officeDepts = (deptData?.rows || []).filter(d => d.officeId === row.original.id || d.Office?.id === row.original.id);
-                    setViewingData({ ...row.original, allDepartments: officeDepts });
+                    const depts = (row.original.departments && row.original.departments.length > 0)
+                      ? row.original.departments
+                      : (deptData?.rows || []).filter(d => d.officeId === row.original.id || d.offices?.some(o => o.id === row.original.id));
+                    setViewingData({ ...row.original, departments: depts, allDepartments: depts });
                     setDetailDialogOpen(true);
                   }}
                   onViewDepartments={() => navigate(`/departments?officeId=${row.original.id}&organizationId=${row.original.organizationId || ''}`)}
                   onEdit={() => { setEditingOffice(row.original); setDialogOpen(true); }}
-                  onDelete={() => handleDelete(row.original)}
+                  onDelete={() => handleDeleteClick(row.original)}
                 />
               ),
             },
           ]}
           data={offData?.rows || []}
           searchKey="name"
+          actionsNode={
+            <Button onClick={() => { setEditingOffice(null); setDialogOpen(true); }}>
+              <Plus size={16} className="mr-1.5" />
+              Add Office
+            </Button>
+          }
         />
       )}
 
       <OfficeFormDialog open={dialogOpen} onOpenChange={setDialogOpen} office={editingOffice} defaultOrganizationId={selectedOrgId} />
       <OrganizationDetailDialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen} data={viewingData} type="office" />
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Office"
+        description={`Delete office "${officeToDelete?.name}"? This cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

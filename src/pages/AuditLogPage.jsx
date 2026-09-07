@@ -1,6 +1,7 @@
 import { DataTable } from '@/components/data-table/data-table';
 import { usePaginated } from '@/hooks/use-paginated';
 import { useAuditLogs } from '@/hooks/use-audit-log';
+import { DateText } from '@/components/date-text';
 
 const ACTION_COLORS = {
   CREATE: 'text-emerald-600',
@@ -14,7 +15,6 @@ export default function AuditLogPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Audit Log</h2>
         <p className="text-muted-foreground">Every create/update, who did it, and when (BR-30, M17)</p>
       </div>
 
@@ -25,7 +25,7 @@ export default function AuditLogPage() {
       ) : (
         <DataTable
           columns={[
-            { id: 'when', header: 'When', cell: ({ row }) => new Date(row.original.createdAt).toLocaleString() },
+            { id: 'when', header: 'When', cell: ({ row }) => <DateText value={row.original.createdAt} withTime /> },
             { accessorKey: 'entityType', header: 'Entity' },
             { id: 'entityId', header: 'Record', cell: ({ row }) => row.original.entityId?.slice(0, 8) },
             {

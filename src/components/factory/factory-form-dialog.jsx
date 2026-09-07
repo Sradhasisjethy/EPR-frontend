@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreateFactory, useUpdateFactory } from '@/hooks/use-factory';
 import { useOrganizations } from '@/hooks/use-organization';
+import { toast } from 'sonner';
 
 const emptyForm = {
   organizationId: '',
@@ -15,6 +16,7 @@ const emptyForm = {
   state: '',
   allowNegativeStock: false,
   allowNegativeCash: false,
+  qcHoldEnabled: false,
   status: 'active',
 };
 
@@ -40,6 +42,7 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
               state: factory.state || '',
               allowNegativeStock: !!factory.allowNegativeStock,
               allowNegativeCash: !!factory.allowNegativeCash,
+              qcHoldEnabled: !!factory.qcHoldEnabled,
               status: factory.status || 'active',
             }
           : { ...emptyForm, organizationId: orgData?.rows?.[0]?.id || '' }
@@ -60,13 +63,14 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
       state: form.state || undefined,
       allowNegativeStock: form.allowNegativeStock,
       allowNegativeCash: form.allowNegativeCash,
+      qcHoldEnabled: form.qcHoldEnabled,
     };
 
     const mutation = isEditing
       ? updateMutation.mutateAsync({ id: factory.id, ...payload, status: form.status })
       : createMutation.mutateAsync(payload);
 
-    mutation.then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to save factory.'));
+    mutation.then(() => { toast.success(isEditing ? 'Factory updated' : 'Factory created'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to save factory.'));
   };
 
   return (
@@ -140,6 +144,21 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
                 onChange={(e) => setForm({ ...form, allowNegativeCash: e.target.checked })}
               />
               Allow negative cash balance (BR-21 override)
+            </label>
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={form.qcHoldEnabled}
+                onChange={(e) => setForm({ ...form, qcHoldEnabled: e.target.checked })}
+              />
+              <span>
+                Hold finished lots for quality testing
+                <span className="block text-xs text-muted-foreground">
+                  Lots of products marked as needing a test wait in QC Hold until a final inspection
+                  passes. Nothing releases them on a timer. Only affects products with that setting.
+                </span>
+              </span>
             </label>
           </div>
 

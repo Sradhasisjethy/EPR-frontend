@@ -9,6 +9,8 @@ import { useParties } from '@/hooks/use-parties';
 import { useProducts } from '@/hooks/use-products';
 import { PartyType, ProductType } from '@/constants/enums';
 import { toPaise } from '@/lib/money';
+import { today } from '@/lib/date-format';
+import { toast } from 'sonner';
 
 export function ProductionEntryFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', contractorPartyId: '', productId: '', productionDate: '', quantity: '', pieceRateRupees: '' });
@@ -21,7 +23,7 @@ export function ProductionEntryFormDialog({ open, onOpenChange }) {
 
   useEffect(() => {
     if (open) {
-      setForm({ factoryId: '', contractorPartyId: '', productId: '', productionDate: new Date().toISOString().slice(0, 10), quantity: '', pieceRateRupees: '' });
+      setForm({ factoryId: '', contractorPartyId: '', productId: '', productionDate: today(), quantity: '', pieceRateRupees: '' });
       setError('');
     }
   }, [open]);
@@ -39,7 +41,7 @@ export function ProductionEntryFormDialog({ open, onOpenChange }) {
       ...(form.pieceRateRupees ? { pieceRatePaiseOverride: toPaise(form.pieceRateRupees) } : {}),
     };
 
-    createMutation.mutateAsync(payload).then(() => onOpenChange(false)).catch((err) => setError(err.response?.data?.message || 'Failed to post contractor production entry.'));
+    createMutation.mutateAsync(payload).then(() => { toast.success('Contractor production recorded'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to post contractor production entry.'));
   };
 
   return (

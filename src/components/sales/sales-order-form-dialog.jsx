@@ -7,12 +7,16 @@ import { Label } from '@/components/ui/label';
 import { useCreateSalesOrder, useUpdateSalesOrder } from '@/hooks/use-sales';
 import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
-import { useProducts } from '@/hooks/use-products';
 import { PartyType, ProductType } from '@/constants/enums';
 import { toPaise } from '@/lib/money';
 import { LineAvailability } from '@/components/sales/line-availability';
+import { ProductPicker } from '@/components/products/product-picker';
+import { BundlePreviewNote } from '@/components/sales/bundle-preview-note';
+import { toast } from 'sonner';
+import { toInput } from '@/lib/decimal';
+import { today } from '@/lib/date-format';
 
-const emptyLine = { productId: '', orderedQty: '', rateRupees: '' };
+const emptyLine = { productId: '', orderedQty: '', rateRupees: '', accessoryOverrides: [] };
 
 /**
  * Create and edit in one dialog. Editing is DRAFT-only, matching the API:
@@ -29,7 +33,6 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
   const { data: customerData } = useParties({ page: 1, limit: 100, partyType: PartyType.CUSTOMER });
-  const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.FINISHED_GOOD });
   const createMutation = useCreateSalesOrder();
   const updateMutation = useUpdateSalesOrder();
   const isEditing = !!order;
@@ -45,21 +48,55 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
         expectedDeliveryDate: order.expectedDeliveryDate || '',
         poReferenceNumber: order.poReferenceNumber || '',
       });
+      // Only the lines a person put here. Accessories are added by the server
+      // from the bundle rule, so listing them as editable rows would resubmit
+      // them and have expansion add them a second time.
       setLines(
-        (order.lines || []).map((l) => ({
-          productId: l.productId,
-          orderedQty: String(l.orderedQty ?? ''),
-          rateRupees: l.ratePaise === null || l.ratePaise === undefined ? '' : String(Number(l.ratePaise) / 100),
-        }))
+        (order.lines || [])
+          .filter((l) => l.lineRole !== 'COMPONENT')
+          .map((l) => ({
+            productId: l.productId,
+            orderedQty: toInput(l.orderedQty),
+            accessoryOverrides: [],
+            rateRupees: l.ratePaise === null || l.ratePaise === undefined ? '' : String(Number(l.ratePaise) / 100),
+          }))
       );
     } else {
-      setForm({ factoryId: '', customerPartyId: '', orderDate: new Date().toISOString().slice(0, 10), expectedDeliveryDate: '', poReferenceNumber: '' });
+      setForm({ factoryId: '', customerPartyId: '', orderDate: today(), expectedDeliveryDate: '', poReferenceNumber: '' });
       setLines([{ ...emptyLine }]);
     }
     setError(''); setWarning(''); setAllowOverride(false);
   }, [open, order]);
 
-  const updateLine = (i, field, value) => setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, [field]: value } : l)));
+  const updateLine = (i, field, value) =>
+    setLines((prev) =>
+      prev.map((l, idx) => {
+        if (idx !== i) return l;
+        // Exclusions are against a particular product's accessories, so
+        // switching the product has to clear them rather than carry them over
+        // to a bundle they mean nothing in.
+        const cleared = field === 'productId' && value !== l.productId ? { accessoryOverrides: [] } : {};
+        return { ...l, [field]: value, ...cleared };
+      })
+    );
+
+  /** One override per accessory: replaced, or dropped when `next` is null. */
+  const setOverride = (i, componentProductId, next) =>
+    setLines((prev) =>
+      prev.map((l, idx) => {
+        if (idx !== i) return l;
+        const rest = (l.accessoryOverrides || []).filter((o) => o.componentProductId !== componentProductId);
+        return { ...l, accessoryOverrides: next ? [...rest, next] : rest };
+      })
+    );
+
+  const excludeAccessory = (i, exclusion) => setOverride(i, exclusion.componentProductId, exclusion);
+  const restoreAccessory = (i, componentProductId) => setOverride(i, componentProductId, null);
+
+  // `undefined` means "back to what the bundle says", so the override goes away
+  // rather than being pinned to the suggested number.
+  const setAccessoryQty = (i, componentProductId, qty) =>
+    setOverride(i, componentProductId, qty === undefined ? null : { componentProductId, qty });
   const addLine = () => setLines((prev) => [...prev, { ...emptyLine }]);
   const removeLine = (i) => setLines((prev) => prev.filter((_, idx) => idx !== i));
 
@@ -69,15 +106,11 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
       setError('Every line needs a product, quantity, and rate.');
       return;
     }
-    // The API rejects a duplicate product outright; catching it here says which
-    // product, before the round trip.
-    const ids = lines.map((l) => l.productId);
-    const dupe = ids.find((id, i) => ids.indexOf(id) !== i);
-    if (dupe) {
-      const name = (productData?.rows || []).find((p) => p.id === dupe)?.name || 'That product';
-      setError(`${name} is on more than one line — combine them into a single quantity.`);
-      return;
-    }
+    // Duplicates are left to the server. It still refuses a repeated ordinary
+    // product, naming it in the message — but a product carrying a bundle is
+    // now allowed to appear twice, because two printers can be configured with
+    // different accessories, and this check could not tell the two cases apart.
+
     if (form.expectedDeliveryDate && form.expectedDeliveryDate < form.orderDate) {
       setError('Expected delivery date cannot be earlier than the order date.');
       return;
@@ -90,14 +123,31 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
       expectedDeliveryDate: form.expectedDeliveryDate || undefined,
       poReferenceNumber: form.poReferenceNumber || undefined,
       allowCreditOverride: withOverride,
-      lines: lines.map((l) => ({ productId: l.productId, orderedQty: Number(l.orderedQty), ratePaise: toPaise(l.rateRupees) })),
+      lines: lines.map((l) => ({
+        productId: l.productId,
+        orderedQty: Number(l.orderedQty),
+        ratePaise: toPaise(l.rateRupees),
+        ...(l.accessoryOverrides?.length ? { accessoryOverrides: l.accessoryOverrides } : {}),
+      })),
     };
 
     (isEditing ? updateMutation.mutateAsync({ id: order.id, ...payload }) : createMutation.mutateAsync(payload))
-      .then((order) => {
-        if (order.creditWarning) {
-          setWarning(order.creditWarning);
+      .then((saved) => {
+        if (saved.creditWarning) {
+          setWarning(saved.creditWarning);
         }
+
+        // Accessories the rule added are announced, never asked about: a modal
+        // on every line would be unusable at the pace an order is typed. The
+        // detail view is where they can be adjusted or removed.
+        const added = (saved.lines || []).filter((l) => l.lineRole === 'COMPONENT');
+        if (added.length) {
+          toast.success(
+            `${added.length} accessor${added.length === 1 ? 'y' : 'ies'} added with this product`,
+            { description: added.map((l) => l.product?.name).filter(Boolean).join(', ') || undefined }
+          );
+        }
+
         onOpenChange(false);
       })
       .catch((err) => {
@@ -172,10 +222,12 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
             {lines.map((line, i) => (
               <div key={i} className="space-y-1">
                 <div className="grid grid-cols-[1fr_100px_120px_32px] gap-2 items-center">
-                  <select value={line.productId} onChange={(e) => updateLine(i, 'productId', e.target.value)} className="h-9 px-2 rounded-md border border-input bg-background text-sm" required>
-                    <option value="" disabled>Product</option>
-                    {(productData?.rows || []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
+                  <ProductPicker
+                    value={line.productId}
+                    onChange={(id) => updateLine(i, 'productId', id)}
+                    filters={{ productType: ProductType.FINISHED_GOOD, status: 'active' }}
+                    placeholder="Search products…"
+                  />
                   <Input type="number" step="0.01" min="0" placeholder="Qty" value={line.orderedQty} onChange={(e) => updateLine(i, 'orderedQty', e.target.value)} required />
                   <Input type="number" step="0.01" min="0" placeholder="Rate (₹)" value={line.rateRupees} onChange={(e) => updateLine(i, 'rateRupees', e.target.value)} required />
                   <button type="button" onClick={() => removeLine(i)} disabled={lines.length === 1} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive disabled:opacity-30">
@@ -183,6 +235,17 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
                   </button>
                 </div>
                 <LineAvailability factoryId={form.factoryId} productId={line.productId} orderedQty={line.orderedQty} />
+                <BundlePreviewNote
+                  productId={line.productId}
+                  qty={line.orderedQty}
+                  partyId={form.customerPartyId}
+                  factoryId={form.factoryId}
+                  orderDate={form.orderDate}
+                  overrides={line.accessoryOverrides}
+                  onExclude={(exclusion) => excludeAccessory(i, exclusion)}
+                  onRestore={(productId) => restoreAccessory(i, productId)}
+                  onQuantity={(productId, qty) => setAccessoryQty(i, productId, qty)}
+                />
               </div>
             ))}
           </div>

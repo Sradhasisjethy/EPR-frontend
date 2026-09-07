@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
 export function useExpenses(params = {}) {
-  return useQuery({ queryKey: ['expenses', params], queryFn: async () => (await apiClient.get('/expenses', { params })).data.data, keepPreviousData: true });
+  return useQuery({ queryKey: ['expenses', params], queryFn: async () => (await apiClient.get('/expenses', { params })).data.data, placeholderData: (prev) => prev });
 }
 
 export function useCreateExpense() {

@@ -1,11 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
+/**
+ * Stock rolled up per material, rather than per lot. The lot list answers
+ * "which batches"; this answers "how much cement do we have".
+ */
+export function useStockByMaterial(params = {}) {
+  return useQuery({
+    queryKey: ['stock-by-material', params],
+    queryFn: async () => (await apiClient.get('/inventory/stock', { params })).data.data,
+    placeholderData: (prev) => prev,
+  });
+}
+
 export function useStockLots(params = {}) {
   return useQuery({
     queryKey: ['stock-lots', params],
     queryFn: async () => (await apiClient.get('/inventory/lots', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -13,7 +25,7 @@ export function useStockLedger(params = {}) {
   return useQuery({
     queryKey: ['stock-ledger', params],
     queryFn: async () => (await apiClient.get('/inventory/ledger', { params })).data.data,
-    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -59,5 +71,21 @@ export function useCreateStockAdjustment() {
       queryClient.invalidateQueries({ queryKey: ['stock-ledger'] });
       queryClient.invalidateQueries({ queryKey: ['stock-balance'] });
     },
+  });
+}
+
+/**
+ * Stock holds. Defaults to live (ACTIVE) holds server-side — a released hold is
+ * history, and listing it beside live ones makes far more stock look tied up
+ * than actually is.
+ */
+export function useStockReservations(params = {}) {
+  return useQuery({
+    queryKey: ['inventory', 'reservations', params],
+    queryFn: async () => {
+      const res = await apiClient.get('/inventory/reservations', { params });
+      return res.data.data;
+    },
+    placeholderData: (prev) => prev,
   });
 }
