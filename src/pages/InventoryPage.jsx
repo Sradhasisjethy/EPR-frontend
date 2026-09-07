@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { usePaginated } from '@/hooks/use-paginated';
 import { DataTable } from '@/components/data-table/data-table';
 import { cn } from '@/lib/utils';
-import { useStockLots, useStockLedger, useReleaseLotEarly, useStockAdjustments } from '@/hooks/use-inventory';
+import { useStockByMaterial, useStockLots, useStockLedger, useReleaseLotEarly, useStockAdjustments } from '@/hooks/use-inventory';
 import { useFactories } from '@/hooks/use-factory';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { useCurrentUser } from '@/hooks/use-auth';
@@ -56,8 +56,11 @@ function AgeingBadge({ ageingClass, ageDays }) {
 }
 
 export default function InventoryPage() {
-  const [activeTab, setActiveTab] = useTabParam(['lots', 'ledger', 'adjustments'], 'lots', 'subtab');
+  // Materials leads: "how much cement do we have" is asked far more often
+  // than "which batches are these". Lots stays a click away.
+  const [activeTab, setActiveTab] = useTabParam(['materials', 'lots', 'ledger', 'adjustments'], 'materials', 'subtab');
   const [factoryFilter, setFactoryFilter] = useState('');
+  const [category, setCategory] = useState('');
   const [adjustingLot, setAdjustingLot] = useState(null);
   const [releasingLot, setReleasingLot] = useState(null);
   const [actionError, setActionError] = useState('');
@@ -68,6 +71,10 @@ export default function InventoryPage() {
   const canAdjust = hasPermission(user, 'INVENTORY_CREATE');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const materialsQuery = usePaginated(useStockByMaterial, {
+    factoryId: factoryFilter || undefined,
+    category: category || undefined,
+  });
   const lotsQuery = usePaginated(useStockLots, { factoryId: factoryFilter || undefined }, { sortableColumns: SORTABLE.lots });
   const ledgerQuery = usePaginated(useStockLedger, { factoryId: factoryFilter || undefined }, { sortableColumns: SORTABLE.ledger });
   const adjustmentQuery = usePaginated(useStockAdjustments, { factoryId: factoryFilter || undefined }, { sortableColumns: SORTABLE.adjustments });
@@ -78,7 +85,7 @@ export default function InventoryPage() {
       
 
       <div className="flex border-b border-border mb-6">
-        {['Lots', 'Ledger', 'Adjustments'].map((tab) => {
+        {['Materials', 'Lots', 'Ledger', 'Adjustments'].map((tab) => {
           const key = tab.toLowerCase();
           return (
             <button
@@ -97,6 +104,93 @@ export default function InventoryPage() {
 
       {actionError && (
         <div className="p-3 mb-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">{actionError}</div>
+      )}
+
+      {activeTab === 'materials' && (
+        materialsQuery.query.isLoading ? (
+          <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
+        ) : (
+          <DataTable
+            columns={[
+              { accessorKey: 'productName', header: 'Material' },
+              { accessorKey: 'productCode', header: 'Code' },
+              {
+                id: 'category', header: 'Type',
+                cell: ({ row }) => (
+                  <span className="text-xs text-muted-foreground">
+                    {row.original.isAccessory
+                      ? 'Accessory'
+                      : row.original.productType === 'RAW_MATERIAL'
+                        ? 'Raw material'
+                        : 'Finished good'}
+                  </span>
+                ),
+              },
+              { accessorKey: 'uom', header: 'Unit' },
+              {
+                id: 'onHand', header: 'On hand',
+                cell: ({ row }) => (
+                  <span className={cn('tabular-nums', row.original.belowReorder && 'text-destructive font-semibold')}>
+                    {trimDecimals(row.original.onHand)}
+                  </span>
+                ),
+              },
+              {
+                // The figure a salesperson may actually promise: sellable stock
+                // less what is already reserved against an order.
+                id: 'available', header: 'Available to promise',
+                cell: ({ row }) => <span className="tabular-nums font-medium">{trimDecimals(row.original.available)}</span>,
+              },
+              {
+                // Held stock is broken out rather than folded into on-hand, so
+                // "we have 200 but I can only sell 40" has a visible reason.
+                id: 'held', header: 'Curing / QC / reserved',
+                cell: ({ row }) => {
+                  const parts = [
+                    row.original.curing > 0 && `${trimDecimals(row.original.curing)} curing`,
+                    row.original.awaitingQc > 0 && `${trimDecimals(row.original.awaitingQc)} in QC`,
+                    row.original.qcFailed > 0 && `${trimDecimals(row.original.qcFailed)} failed`,
+                    row.original.reserved > 0 && `${trimDecimals(row.original.reserved)} reserved`,
+                    row.original.inTransit > 0 && `${trimDecimals(row.original.inTransit)} in transit`,
+                    row.original.withContractor > 0 && `${trimDecimals(row.original.withContractor)} with contractor`,
+                  ].filter(Boolean);
+                  return parts.length ? (
+                    <span className="text-xs text-muted-foreground">{parts.join(' · ')}</span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  );
+                },
+              },
+              {
+                id: 'reorder', header: 'Reorder at',
+                cell: ({ row }) =>
+                  row.original.reorderLevel === null || row.original.reorderLevel === 0 ? (
+                    <span className="text-xs text-muted-foreground">not set</span>
+                  ) : (
+                    <span className="tabular-nums text-xs">{trimDecimals(row.original.reorderLevel)}</span>
+                  ),
+              },
+            ]}
+            {...materialsQuery.tableProps}
+            searchPlaceholder="Search material name or code…"
+            emptyMessage="No materials match."
+            /* A select on the search row rather than a row of buttons: four
+               buttons plus the search box pushed the table halfway down the
+               screen, and the filter is not worth that much vertical space. */
+            filtersNode={
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="h-9 w-44 px-3 rounded-lg border border-input bg-background text-sm shrink-0"
+              >
+                <option value="">All types</option>
+                <option value="RAW_MATERIAL">Raw material</option>
+                <option value="FINISHED_GOOD">Finished goods</option>
+                <option value="ACCESSORY">Accessories</option>
+              </select>
+            }
+          />
+        )
       )}
 
       {activeTab === 'lots' && (

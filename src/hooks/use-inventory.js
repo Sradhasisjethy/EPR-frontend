@@ -1,6 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
+/**
+ * Stock rolled up per material, rather than per lot. The lot list answers
+ * "which batches"; this answers "how much cement do we have".
+ */
+export function useStockByMaterial(params = {}) {
+  return useQuery({
+    queryKey: ['stock-by-material', params],
+    queryFn: async () => (await apiClient.get('/inventory/stock', { params })).data.data,
+    placeholderData: (prev) => prev,
+  });
+}
+
 export function useStockLots(params = {}) {
   return useQuery({
     queryKey: ['stock-lots', params],
