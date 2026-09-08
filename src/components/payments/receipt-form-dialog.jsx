@@ -9,7 +9,7 @@ import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { useSalesInvoices } from '@/hooks/use-invoicing';
 import { PartyType } from '@/constants/enums';
-import { toPaise } from '@/lib/money';
+import { toPaise, formatINR, fromPaise } from '@/lib/money';
 import { today } from '@/lib/date-format';
 import { toast } from 'sonner';
 
@@ -111,17 +111,45 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
 
           {form.customerPartyId && (invoicesData?.rows || []).length > 0 && (
             <div className="space-y-2">
-              <Label>Allocate against invoices (optional, BR-19/BR-20)</Label>
-              {invoicesData.rows.map((inv) => (
-                <div key={inv.id} className="grid grid-cols-[1fr_140px] gap-2 items-center text-sm">
-                  <span>{inv.invoiceNumber} — {inv.invoiceDate}</span>
-                  <Input
-                    type="number" step="0.01" min="0" placeholder="Allocate (₹)"
-                    value={allocations[inv.id] ?? ''}
-                    onChange={(e) => setAllocations({ ...allocations, [inv.id]: e.target.value })}
-                  />
-                </div>
-              ))}
+              <div className="flex items-center justify-between">
+                <Label>Allocate against invoices (optional, BR-19/BR-20)</Label>
+                <span className="text-xs text-muted-foreground">Select amount to apply to each invoice</span>
+              </div>
+              <div className="space-y-2 border border-border/60 rounded-lg p-3 bg-muted/20">
+                {invoicesData.rows.map((inv) => (
+                  <div key={inv.id} className="flex items-center justify-between gap-3 text-sm py-1.5 border-b border-border/40 last:border-0">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-foreground">{inv.invoiceNumber} — {inv.invoiceDate}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Invoice Total: <span className="font-semibold text-primary">{formatINR(inv.totalPaise)}</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Input
+                        type="number" step="0.01" min="0" placeholder="Allocate (₹)"
+                        className="w-32 h-8 text-sm"
+                        value={allocations[inv.id] ?? ''}
+                        onChange={(e) => setAllocations({ ...allocations, [inv.id]: e.target.value })}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-2.5 text-xs font-medium"
+                        onClick={() => {
+                          const amt = fromPaise(inv.totalPaise);
+                          setAllocations((prev) => ({ ...prev, [inv.id]: amt }));
+                          if (!modes[0]?.amountRupees) {
+                            updateMode(0, 'amountRupees', amt);
+                          }
+                        }}
+                      >
+                        Full
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
