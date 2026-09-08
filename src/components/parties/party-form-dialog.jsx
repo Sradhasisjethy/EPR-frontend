@@ -582,10 +582,10 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[96vw] max-w-6xl max-h-[calc(100vh-60px)] flex flex-col p-0 overflow-hidden shadow-2xl">
+      <DialogContent className="w-[96vw] max-w-6xl h-[calc(100dvh-24px)] max-h-[calc(100dvh-24px)] flex flex-col p-0 overflow-hidden shadow-2xl">
         {/* FIXED HEADER */}
-        <DialogHeader className="p-6 pb-4 border-b border-border/60 shrink-0 bg-background">
-          <DialogTitle className="text-xl font-bold">
+        <DialogHeader className="px-6 py-3 border-b border-border/60 shrink-0 bg-background">
+          <DialogTitle className="text-lg font-bold">
             {isEditing ? `Edit ${PARTY_TYPE_LABELS[form.partyType] || 'Party'}` : `New ${PARTY_TYPE_LABELS[form.partyType] || 'Party'}`}
           </DialogTitle>
         </DialogHeader>
@@ -597,7 +597,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
         )}
 
         {/* SCROLLABLE FORM BODY */}
-        <form id="party-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        <form id="party-form" onSubmit={handleSubmit} className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
           {/* Top Row: Party Type & Name */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="space-y-1.5 sm:col-span-1">
@@ -2308,7 +2308,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
         </form>
 
         {/* LOCKED STICKY FOOTER - ALWAYS IN VIEW */}
-        <DialogFooter className="p-4 px-6 border-t border-border/60 bg-background/95 backdrop-blur shrink-0 flex items-center justify-end gap-3">
+        <DialogFooter className="px-6 py-3 border-t border-border/60 bg-background/95 backdrop-blur shrink-0 flex items-center justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button type="submit" form="party-form" disabled={isSaving}>
             {isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Party'}

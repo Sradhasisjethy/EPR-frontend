@@ -836,3 +836,46 @@ html:not(.dark) .wallpaper-active .infideep-auth span {
   }
 }
 
+
+/* --------------------------------------------------- brand ramp on primary
+   A solid primary fill is half the brand. The logo, the active nav row and the
+   scheme swatches are all two-stop; the buttons and badges were the one place
+   still landing on a flat colour, which is what made them read as "pink" rather
+   than as the INFIDEEP ramp.
+
+   Applied as background-image over Tailwind's background-color, so the two
+   never fight — the colour stays as the fallback and every `bg-primary/NN`
+   tint keeps working untouched. Driven by --nav-from/--nav-to, so it follows
+   whichever colour scheme is selected rather than hardcoding the house colours
+   onto an emerald theme. */
+.bg-primary {
+  background-image: linear-gradient(135deg, hsl(var(--nav-from)) 0%, hsl(var(--nav-to)) 100%);
+}
+
+/* Tinted pills — the "Default" badge, the active tab, selected rows. Same ramp
+   at low opacity so they belong to the same family as the solid fills. */
+.bg-primary\/5 {
+  background-image: linear-gradient(135deg, hsl(var(--nav-from) / 0.07) 0%, hsl(var(--nav-to) / 0.05) 100%);
+}
+.bg-primary\/10 {
+  background-image: linear-gradient(135deg, hsl(var(--nav-from) / 0.13) 0%, hsl(var(--nav-to) / 0.09) 100%);
+}
+.bg-primary\/15 {
+  background-image: linear-gradient(135deg, hsl(var(--nav-from) / 0.18) 0%, hsl(var(--nav-to) / 0.13) 100%);
+}
+.bg-primary\/20 {
+  background-image: linear-gradient(135deg, hsl(var(--nav-from) / 0.24) 0%, hsl(var(--nav-to) / 0.17) 100%);
+}
+
+/* hover:bg-primary/90 only changes background-color, which the gradient now
+   covers — so the hover would look dead. Brightness gives the same "something
+   happened" without unpicking the ramp. */
+@media (hover: hover) and (pointer: fine) {
+  .bg-primary:hover {
+    filter: brightness(1.07);
+  }
+}
+
+.bg-primary:active {
+  filter: brightness(0.95);
+}

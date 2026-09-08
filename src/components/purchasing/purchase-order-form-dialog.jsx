@@ -140,8 +140,8 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-4xl max-h-[calc(100vh-60px)] flex flex-col p-0 overflow-hidden shadow-2xl">
-        <DialogHeader className="p-6 pb-4 border-b border-border/60 shrink-0 bg-background">
+      <DialogContent className="w-[95vw] max-w-4xl h-[calc(100dvh-24px)] max-h-[calc(100dvh-24px)] flex flex-col p-0 overflow-hidden shadow-2xl">
+        <DialogHeader className="px-6 py-3 border-b border-border/60 shrink-0 bg-background">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-primary/10 text-primary">
               <ShoppingCart size={20} />
@@ -166,7 +166,7 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
           </div>
         )}
 
-        <form id="po-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
+        <form id="po-form" onSubmit={handleSubmit} className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-5">
           {/* HEADER PARAMETERS CARD */}
           <div className="p-4 rounded-xl border border-border bg-card/40 space-y-3.5 shadow-sm">
             <h4 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5 border-b border-border/60 pb-2">
@@ -409,7 +409,7 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
           </div>
         </form>
 
-        <DialogFooter className="p-4 px-6 border-t border-border/60 bg-background/95 backdrop-blur shrink-0 flex items-center justify-between">
+        <DialogFooter className="px-6 py-3 border-t border-border/60 bg-background/95 backdrop-blur shrink-0 flex items-center justify-between">
           <div className="text-xs text-muted-foreground hidden sm:block">
             <span>Orders can be edited while in DRAFT status.</span>
           </div>
