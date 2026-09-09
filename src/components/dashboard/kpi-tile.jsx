@@ -66,7 +66,7 @@ export function KpiTile({ icon: Icon, label, value, hint, hintTone, accent = 'sk
   return (
     <div
       className={cn(
-        'relative overflow-hidden p-4 rounded-2xl border bg-card transition-shadow',
+        'relative overflow-hidden p-4 rounded-2xl border bg-card id-pointer-zoom',
         palette.ring,
         palette.glow
       )}
@@ -106,6 +106,9 @@ export function KpiTile({ icon: Icon, label, value, hint, hintTone, accent = 'sk
 
 /** A titled panel, so every card on the dashboard is framed the same way. */
 export function Panel({ title, action, className, children }) {
+  // No pointer zoom here: a panel holds a chart or a table, and scaling it while
+  // someone is reading a row inside it is a nuisance rather than an affordance.
+  // The KPI tiles are the "boxes" worth reacting.
   return (
     <div className={cn('p-4 rounded-2xl border border-border bg-card space-y-3', className)}>
       <div className="flex items-center justify-between gap-3">

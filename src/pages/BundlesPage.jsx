@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { BundleRuleFormDialog } from '@/components/bundles/bundle-rule-form-dialog';
+import { useUIStore } from '@/store/ui-store';
+import { cn } from '@/lib/utils';
 import {
   useBundleRules, usePublishBundleRule, useNewBundleRuleVersion, useArchiveBundleRule,
   useOverrideReasonCodes, useCreateReasonCode, useDeactivateReasonCode,
@@ -33,6 +35,7 @@ const StatusPill = ({ status }) => (
 );
 
 export default function BundlesPage() {
+  const { glassMode } = useUIStore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [archiving, setArchiving] = useState(null);
@@ -85,7 +88,11 @@ export default function BundlesPage() {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
+        // Same surface DataTable uses. This table is hand-rolled and carried no
+        // background class at all, so it was the one table in the app that
+        // ignored glass mode — the wallpaper ran straight under the rows while
+        // every other list sat on a frosted panel.
+        <div className={cn('rounded-xl border border-border overflow-hidden', glassMode ? 'glass-card' : 'bg-card')}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead className="bg-muted/50 text-muted-foreground">

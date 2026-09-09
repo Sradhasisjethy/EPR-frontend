@@ -184,7 +184,7 @@ html:not(.dark) body.wallpaper-active::before {
 }
 
 html:not(.dark) .glass-card {
-  background: rgba(255, 255, 255, 0.82) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
   backdrop-filter: blur(24px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
   border: 1px solid rgba(255, 255, 255, 0.9) !important;
@@ -259,7 +259,7 @@ html.dark body.wallpaper-active::before {
 }
 
 html.dark .glass-card {
-  background: rgba(15, 23, 42, 0.85) !important;
+  background: rgba(15, 23, 42, 0.66) !important;
   backdrop-filter: blur(24px) saturate(190%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
@@ -878,4 +878,70 @@ html:not(.dark) .wallpaper-active .infideep-auth span {
 
 .bg-primary:active {
   filter: brightness(0.95);
+}
+
+/* ------------------------------------------------- Apple Pencil hover ------
+   Hover feedback for a pen, and only for a pen.
+   The `hover:` utilities are gated behind (hover: hover) and (pointer: fine),
+   which is what stops iPadOS spending the first tap activating hover. iPadOS
+   reports the primary pointer as coarse whatever is in your hand, so a
+   hover-capable Pencil lost its feedback along with the fingers.
+   usePenHover sets [data-pen-hover] on <html> only while a pen is actually
+   near the glass — a finger never sets it, so a tap can never be spent here.
+
+   Deliberately one shared treatment rather than re-stating each component's
+   own hover style: this is a "you are pointing at this" cue, not a second
+   design language. */
+[data-pen-hover] :is(button, a, [role='button'], summary, select):hover {
+  outline: 2px solid hsl(var(--nav-from) / 0.35);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Rows are the other thing worth pointing at — on a long table the pen wants
+   to show which line it is over. */
+[data-pen-hover] tbody tr:hover {
+  background-color: hsl(var(--muted) / 0.6);
+}
+
+/* ------------------------------------------------------- pointer zoom -----
+   Dashboard tiles lift and grow under the pointer.
+
+   Two triggers, one effect: a real mouse via the same media query every other
+   hover style uses, and an Apple Pencil via [data-pen-hover], which is set only
+   while a pen is near the glass. A finger sets neither, so this can never
+   consume a tap the way an ungated :hover transform would.
+
+   transform only, and nothing else in the transition. box-shadow is a paint
+   property — animating it repaints the card and its blurred backdrop every
+   frame, which is what made the first version feel like it was stepping rather
+   than gliding. transform runs on the compositor, so the motion stays smooth
+   even in glass mode.
+
+   scale() rather than width/height for the same reason as before: a transform
+   does not reflow, so a growing tile never nudges its neighbours. */
+.id-pointer-zoom {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .id-pointer-zoom:hover {
+    transform: scale(1.045) translateY(-5px);
+    z-index: 1;
+  }
+}
+
+[data-pen-hover] .id-pointer-zoom:hover {
+  transform: scale(1.045) translateY(-5px);
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .id-pointer-zoom,
+  .id-pointer-zoom:hover {
+    transition: none;
+    transform: none;
+  }
 }

@@ -88,7 +88,10 @@ describe('DashboardPage', () => {
 
   it('switches to sales figures on the Sales tab', async () => {
     respond({ financial: true });
-    const user = userEvent.setup();
+    // No inter-event delay: the default one is what pushes this past the 5s
+    // ceiling when the suite runs under load. This test asserts what the tab
+    // shows, not typing cadence.
+    const user = userEvent.setup({ delay: null });
     render();
 
     await user.click(await screen.findByRole('button', { name: 'Sales' }));
@@ -98,5 +101,5 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Odisha Rural Works')).toBeInTheDocument();
     // The production tiles belong to the other tab.
     expect(screen.queryByText('Produced today')).not.toBeInTheDocument();
-  });
+  }, 15000);
 });

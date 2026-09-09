@@ -23,7 +23,7 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
   const { data: customerData } = useParties({ page: 1, limit: 100, partyType: PartyType.CUSTOMER });
-  const { data: invoicesData } = useSalesInvoices({ page: 1, limit: 50, customerPartyId: form.customerPartyId || undefined, status: 'POSTED' });
+  const { data: invoicesData } = useSalesInvoices({ page: 1, limit: 50, customerPartyId: form.customerPartyId || undefined, status: 'POSTED', openOnly: true });
   const createMutation = useCreateReceipt();
 
   useEffect(() => {
@@ -121,7 +121,12 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
                     <div className="flex flex-col">
                       <span className="font-medium text-foreground">{inv.invoiceNumber} — {inv.invoiceDate}</span>
                       <span className="text-xs text-muted-foreground">
-                        Invoice Total: <span className="font-semibold text-primary">{formatINR(inv.totalPaise)}</span>
+                        Outstanding: <span className="font-semibold text-primary">{formatINR(inv.outstandingPaise ?? inv.totalPaise)}</span>
+                        {inv.allocatedPaise > 0 && (
+                          <span className="ml-2 text-muted-foreground">
+                            ({formatINR(inv.allocatedPaise)} of {formatINR(inv.totalPaise)} already received)
+                          </span>
+                        )}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -137,7 +142,7 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
                         size="sm"
                         className="h-8 px-2.5 text-xs font-medium"
                         onClick={() => {
-                          const amt = fromPaise(inv.totalPaise);
+                          const amt = fromPaise(inv.outstandingPaise ?? inv.totalPaise);
                           setAllocations((prev) => ({ ...prev, [inv.id]: amt }));
                           if (!modes[0]?.amountRupees) {
                             updateMode(0, 'amountRupees', amt);
