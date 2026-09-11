@@ -6,12 +6,17 @@ import { hasPermission } from '@/lib/permissions';
 import { ShieldAlert } from 'lucide-react';
 
 import SalesOrdersPage from './SalesOrdersPage';
+import CounterSalesPage from './CounterSalesPage';
 import DispatchPage from './DispatchPage';
 import InvoicingPage from './InvoicingPage';
 import ReturnsPage from './ReturnsPage';
 
 const ALL_TABS = [
   { key: 'sales-orders', label: 'Sales Orders', permission: WebPermissions.SALES_READ },
+  // Sits beside the order-driven flow rather than in a module of its own: a
+  // counter sale produces the same tax invoice, just without the order and
+  // challan in front of it.
+  { key: 'counter-sales', label: 'Counter Sales', permission: WebPermissions.INVOICE_READ },
   { key: 'dispatch', label: 'Delivery Challans', permission: WebPermissions.DISPATCH_READ },
   { key: 'invoices', label: 'Sales Invoices', permission: WebPermissions.INVOICE_READ },
   { key: 'returns', label: 'Returns', permission: WebPermissions.RETURN_READ },
@@ -65,6 +70,7 @@ export default function SalesPage() {
 
           <div className="pt-2">
             {activeTab === 'sales-orders' && <SalesOrdersPage />}
+            {activeTab === 'counter-sales' && <CounterSalesPage />}
             {activeTab === 'dispatch' && <DispatchPage />}
             {activeTab === 'invoices' && <InvoicingPage />}
             {activeTab === 'returns' && <ReturnsPage />}
