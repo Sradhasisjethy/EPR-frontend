@@ -445,4 +445,44 @@ describe('CounterSaleDialog', () => {
       ]);
     });
   });
+  it('shows line amounts ex-GST, so the column adds up to the Taxable row', async () => {
+    // The real shape from the server: a pipe and the gasket its rule attached.
+    // Taxable 45,000 + 9,000 = 54,000, which is what the summary reports; the
+    // tax-inclusive line totals (53,100 + 10,620) add up to the grand total
+    // instead, and showing those here made nothing on screen reconcile.
+    apiClient.post.mockImplementation((url) => {
+      if (url.includes('/quote')) {
+        return Promise.resolve({
+          data: {
+            data: {
+              subtotalPaise: 5400000, cgstPaise: 486000, sgstPaise: 486000,
+              igstPaise: 0, roundOffPaise: 0, discountPaise: 0, totalPaise: 6372000,
+              lines: [
+                { productId: 'prod-1', productName: 'RCP 600mm', quantity: 10, ratePaise: 450000,
+                  taxableAmountPaise: 4500000, lineTotalPaise: 5310000, bundleParentProductId: null },
+                { productId: 'acc-1', productName: 'EPDM Gasket', quantity: 20, ratePaise: 45000,
+                  taxableAmountPaise: 900000, lineTotalPaise: 1062000, bundleParentProductId: 'prod-1' },
+              ],
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { data: { invoice: {}, customer: {} } } });
+    });
+
+    const user = userEvent.setup();
+    open();
+    await fillBasket(user);
+
+    await waitFor(() => expect(screen.getByText('₹45,000.00')).toBeInTheDocument());
+    // The accessory too, on the same basis — otherwise the column stops summing.
+    expect(screen.getByText('₹9,000.00')).toBeInTheDocument();
+    // 45,000 + 9,000 is the Taxable row directly beneath.
+    expect(screen.getByText('₹54,000.00')).toBeInTheDocument();
+    // And the tax-inclusive figures are NOT in the item rows.
+    expect(screen.queryByText('₹53,100.00')).not.toBeInTheDocument();
+    expect(screen.queryByText('₹10,620.00')).not.toBeInTheDocument();
+    // The grand total still reads as the amount to collect.
+    expect(screen.getByText('₹63,720.00')).toBeInTheDocument();
+  });
 });

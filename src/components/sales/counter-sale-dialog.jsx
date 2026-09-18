@@ -327,7 +327,7 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                 <span className="text-right">Qty</span>
                 <span className="text-right">Rate</span>
                 <span className="text-right">Disc %</span>
-                <span className="text-right">Amount</span>
+                <span className="text-right">Taxable</span>
                 <span />
               </div>
 
@@ -362,8 +362,14 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                           value={line.discountPercent}
                           onChange={(e) => updateLine(i, 'discountPercent', e.target.value)}
                         />
+                        {/* Ex-GST, so this column sums to the "Taxable" row in
+                            the summary and the tax is added once, below —
+                            the convention every GST invoice follows. Showing the
+                            tax-inclusive line total here made the column add up
+                            to the grand total instead, so nothing on screen
+                            reconciled and the accessory looked excluded. */}
                         <span className="text-right text-sm tabular-nums">
-                          {group ? formatINR(group.lineTotalPaise) : <span className="text-muted-foreground">—</span>}
+                          {group ? formatINR(group.taxableAmountPaise) : <span className="text-muted-foreground">—</span>}
                         </span>
                         <button
                           type="button" onClick={() => removeLine(i)} disabled={lines.length === 1}
@@ -417,7 +423,7 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                                 value={ov?.discountPercent ?? ''}
                                 onChange={(e) => setAccessoryOverride(i, a.productId, { discountPercent: e.target.value })}
                               />
-                              <span className="text-right tabular-nums">{formatINR(a.lineTotalPaise)}</span>
+                              <span className="text-right tabular-nums">{formatINR(a.taxableAmountPaise)}</span>
                               <button
                                 type="button"
                                 aria-label={`Remove ${a.productName}`}

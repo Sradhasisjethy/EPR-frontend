@@ -88,18 +88,21 @@ describe('DashboardPage', () => {
 
   it('switches to sales figures on the Sales tab', async () => {
     respond({ financial: true });
-    // No inter-event delay: the default one is what pushes this past the 5s
-    // ceiling when the suite runs under load. This test asserts what the tab
-    // shows, not typing cadence.
     const user = userEvent.setup({ delay: null });
     render();
 
     await user.click(await screen.findByRole('button', { name: 'Sales' }));
 
-    expect(screen.getByText('Net sales today')).toBeInTheDocument();
+    // Awaited, not asserted synchronously. The Sales tab pulls in the lazily
+    // imported chart bundle, so React suspends the subtree; the dynamic import
+    // resolves after the click's act() flush, and under suite load it can still
+    // be showing the Suspense fallback at this point. A synchronous getByText
+    // here failed on roughly half of full runs while passing every time the
+    // file ran alone — which read as a flake rather than as the race it is.
+    expect(await screen.findByText('Net sales today')).toBeInTheDocument();
     expect(screen.getByText('Top customers this month')).toBeInTheDocument();
     expect(screen.getByText('Odisha Rural Works')).toBeInTheDocument();
     // The production tiles belong to the other tab.
     expect(screen.queryByText('Produced today')).not.toBeInTheDocument();
-  }, 15000);
+  });
 });
