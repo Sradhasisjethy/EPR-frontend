@@ -9,6 +9,7 @@ import { useParties } from '@/hooks/use-parties';
 import { toPaise } from '@/lib/money';
 import { today } from '@/lib/date-format';
 import { toast } from 'sonner';
+import { MoneyAccountSelect } from '@/components/ledger/money-account-select';
 
 export function ExpenseFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', expenseDate: '', category: '', mode: 'CASH', amountRupees: '', paidToPartyId: '', description: '' });
@@ -35,6 +36,7 @@ export function ExpenseFormDialog({ open, onOpenChange }) {
       mode: form.mode,
       amountPaise: toPaise(form.amountRupees),
       paidToPartyId: form.paidToPartyId || undefined,
+      accountId: form.accountId || undefined,
       description: form.description || undefined,
     };
     createMutation.mutateAsync(payload).then(() => { toast.success('Expense recorded'); onOpenChange(false); }).catch((err) => setError(err.response?.data?.message || 'Failed to record expense.'));
@@ -67,10 +69,11 @@ export function ExpenseFormDialog({ open, onOpenChange }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Mode</Label>
-              <select value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+              <select value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value, accountId: undefined })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
                 <option value="CASH">Cash</option>
                 <option value="BANK">Bank</option>
               </select>
+              <MoneyAccountSelect mode={form.mode} value={form.accountId} onChange={(v) => setForm({ ...form, accountId: v })} aria-label="Paid from" className="w-full mt-2" />
             </div>
             <div className="space-y-1.5">
               <Label>Amount (₹)</Label>

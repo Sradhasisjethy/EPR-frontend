@@ -7,6 +7,8 @@ import { hasPermission } from '@/lib/permissions';
 // Import child pages to render as tabs
 import EmployeesPage from './EmployeesPage';
 import RolesPage from './RolesPage';
+import StaffLeavePage from './StaffLeavePage';
+import StaffAttendancePage from './StaffAttendancePage';
 import OrganizationPage from './OrganizationPage';
 import OfficesPage from './OfficesPage';
 import DepartmentsPage from './DepartmentsPage';
@@ -17,6 +19,8 @@ import NavigationPage from './NavigationPage';
 const ALL_TABS = [
   { key: 'users', label: 'Users' },
   { key: 'roles', label: 'Roles & Permissions' },
+  { key: 'staff-leave', label: 'Staff Leave', permission: WebPermissions.LEAVE_READ },
+  { key: 'staff-attendance', label: 'Staff Attendance', permission: WebPermissions.STAFF_ATTENDANCE_READ },
   { key: 'organization', label: 'Organization' },
   { key: 'offices', label: 'Offices' },
   { key: 'departments', label: 'Departments' },
@@ -63,6 +67,8 @@ export default function AdministrationPage() {
       <div className="pt-2">
         {activeTab === 'users' && <EmployeesPage />}
         {activeTab === 'roles' && <RolesPage />}
+        {activeTab === 'staff-leave' && <StaffLeavePage />}
+        {activeTab === 'staff-attendance' && <StaffAttendancePage />}
         {activeTab === 'organization' && <OrganizationPage />}
         {activeTab === 'offices' && <OfficesPage />}
         {activeTab === 'departments' && <DepartmentsPage />}

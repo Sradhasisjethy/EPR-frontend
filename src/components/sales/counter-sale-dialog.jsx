@@ -322,7 +322,7 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                 invisible below the fold. The header's corners are rounded
                 directly instead, which is all overflow-hidden was buying. */}
             <div className="rounded-lg border border-border">
-              <div className="grid grid-cols-[1fr_80px_104px_76px_116px_36px] gap-2 px-3 py-2 rounded-t-lg bg-muted/50 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              <div className="grid grid-cols-[minmax(0,1fr)_80px_104px_76px_116px_36px] gap-2 px-3 py-2 rounded-t-lg bg-muted/50 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 <span>Product</span>
                 <span className="text-right">Qty</span>
                 <span className="text-right">Rate</span>
@@ -336,7 +336,7 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                   const group = pricedFor(line.productId);
                   return (
                     <div key={i} className="px-3 py-2.5 space-y-1.5">
-                      <div className="grid grid-cols-[1fr_80px_104px_76px_116px_36px] gap-2 items-center">
+                      <div className="grid grid-cols-[minmax(0,1fr)_80px_104px_76px_116px_36px] gap-2 items-center">
                         <ProductPicker
                           value={line.productId}
                           onChange={(id) => updateLine(i, 'productId', id)}
@@ -390,7 +390,7 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                         const ov = overrideFor(i, a.productId);
                         return (
                           <div key={a.productId} className="space-y-1">
-                            <div className="grid grid-cols-[1fr_80px_104px_76px_116px_36px] gap-2 items-center text-xs text-muted-foreground">
+                            <div className="grid grid-cols-[minmax(0,1fr)_80px_104px_76px_116px_36px] gap-2 items-center text-xs text-muted-foreground">
                               <span className="flex items-center gap-1.5 pl-1">
                                 <CornerDownRight size={12} className="shrink-0 opacity-60" />
                                 {a.productName}
@@ -478,7 +478,7 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                       {removedFor(i).map((ov) => (
                         <div
                           key={ov.componentProductId}
-                          className="grid grid-cols-[1fr_80px_104px_76px_116px_36px] gap-2 items-center text-xs text-muted-foreground/70"
+                          className="grid grid-cols-[minmax(0,1fr)_80px_104px_76px_116px_36px] gap-2 items-center text-xs text-muted-foreground/70"
                         >
                           <span className="flex items-center gap-1.5 pl-1">
                             <CornerDownRight size={12} className="shrink-0 opacity-40" />

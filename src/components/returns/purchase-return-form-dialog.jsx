@@ -55,12 +55,12 @@ export function PurchaseReturnFormDialog({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader><DialogTitle>New Purchase Return</DialogTitle></DialogHeader>
         {error && <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 [&>div]:min-w-0">
             <div className="space-y-1.5">
               <Label>Factory</Label>
               <select value={form.factoryId} onChange={(e) => setForm({ ...form, factoryId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
@@ -92,8 +92,8 @@ export function PurchaseReturnFormDialog({ open, onOpenChange }) {
               <Button type="button" variant="outline" size="sm" onClick={addLine}><Plus size={14} /> Add Line</Button>
             </div>
             {lines.map((line, i) => (
-              <div key={i} className="grid grid-cols-[1fr_100px_120px_32px] gap-2 items-center">
-                <select value={line.productId} onChange={(e) => updateLine(i, 'productId', e.target.value)} className="h-9 px-2 rounded-md border border-input bg-background text-sm" required>
+              <div key={i} className="grid grid-cols-[minmax(0,1fr)_90px_120px_32px] gap-2 items-center">
+                <select value={line.productId} onChange={(e) => updateLine(i, 'productId', e.target.value)} className="h-9 w-full min-w-0 px-2 rounded-md border border-input bg-background text-sm truncate" required>
                   <option value="" disabled>Product</option>
                   {(productData?.rows || []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>

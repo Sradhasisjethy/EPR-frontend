@@ -11,6 +11,7 @@ import { usePurchaseInvoices } from '@/hooks/use-purchasing';
 import { toPaise } from '@/lib/money';
 import { today } from '@/lib/date-format';
 import { toast } from 'sonner';
+import { MoneyAccountSelect } from '@/components/ledger/money-account-select';
 
 const emptyMode = { mode: 'CASH', amountRupees: '' };
 
@@ -52,7 +53,7 @@ export function PaymentFormDialog({ open, onOpenChange }) {
 
     const payload = {
       ...form,
-      modes: modes.map((m) => ({ mode: m.mode, amountPaise: toPaise(m.amountRupees) })),
+      modes: modes.map((m) => ({ mode: m.mode, amountPaise: toPaise(m.amountRupees), ...(m.accountId ? { accountId: m.accountId } : {}) })),
       allocations: Object.entries(allocations)
         .filter(([, amountRupees]) => amountRupees)
         .map(([invoiceId, amountRupees]) => ({ invoiceId, allocatedAmountPaise: toPaise(amountRupees) })),
@@ -95,14 +96,15 @@ export function PaymentFormDialog({ open, onOpenChange }) {
               <Button type="button" variant="outline" size="sm" onClick={addMode}><Plus size={14} /> Add Mode</Button>
             </div>
             {modes.map((m, i) => (
-              <div key={i} className="grid grid-cols-[140px_1fr_32px] gap-2 items-center">
-                <select value={m.mode} onChange={(e) => updateMode(i, 'mode', e.target.value)} className="h-9 px-2 rounded-md border border-input bg-background text-sm">
+              <div key={i} className="flex gap-2 items-center [&>input]:flex-1 [&>select:first-child]:w-[140px]">
+                <select value={m.mode} onChange={(e) => setModes((prev) => prev.map((x, idx) => (idx === i ? { ...x, mode: e.target.value, accountId: undefined } : x)))} className="h-9 px-2 rounded-md border border-input bg-background text-sm">
                   <option value="CASH">Cash</option>
                   <option value="UPI">UPI</option>
                   <option value="BANK">Bank Transfer</option>
                   <option value="CHEQUE">Cheque</option>
                 </select>
                 <Input type="number" step="0.01" min="0" placeholder="Amount (₹)" value={m.amountRupees} onChange={(e) => updateMode(i, 'amountRupees', e.target.value)} required />
+                <MoneyAccountSelect mode={m.mode} value={m.accountId} onChange={(v) => updateMode(i, 'accountId', v)} aria-label={`Paid from (mode ${i + 1})`} />
                 <button type="button" onClick={() => removeMode(i)} disabled={modes.length === 1} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive disabled:opacity-30">
                   <Trash2 size={16} />
                 </button>

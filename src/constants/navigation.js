@@ -59,6 +59,8 @@ export const NAVIGATION = [
       WebPermissions.ROLE_READ,
       WebPermissions.FACTORY_READ,
       WebPermissions.SETTINGS_MODIFY,
+      WebPermissions.LEAVE_READ,
+      WebPermissions.STAFF_ATTENDANCE_READ,
     ],
   },
   {
@@ -78,6 +80,9 @@ export const NAVIGATION = [
     href: '/sales',
     anyPermissions: [
       WebPermissions.SALES_READ,
+      WebPermissions.LEAD_READ,
+      WebPermissions.QUOTATION_READ,
+      WebPermissions.CASH_REGISTER_READ,
       WebPermissions.DISPATCH_READ,
       WebPermissions.INVOICE_READ,
       WebPermissions.RETURN_READ,
@@ -131,6 +136,8 @@ export const NAVIGATION = [
       WebPermissions.LEDGER_READ,
       WebPermissions.EXPENSE_READ,
       WebPermissions.GSTR_READ,
+      WebPermissions.JOURNAL_READ,
+      WebPermissions.FIXED_ASSET_READ,
     ],
   },
   {

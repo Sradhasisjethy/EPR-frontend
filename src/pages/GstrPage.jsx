@@ -10,8 +10,9 @@ import { useFactories } from '@/hooks/use-factory';
 import { useGstr1, useGstr3b } from '@/hooks/use-gstr';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { DateText } from '@/components/date-text';
+import { TaxRateSummary, Gstr9 } from '@/components/gst/gst-extra-returns';
 
-const TABS = ['GSTR-1', 'GSTR-3B'];
+const TABS = ['GSTR-1', 'GSTR-3B', 'Rate Summary', 'GSTR-9'];
 
 const StatCard = ({ label, value }) => (
   <div className="p-4 rounded-xl border border-border bg-card">
@@ -190,6 +191,11 @@ export default function GstrPage() {
             </div>
           </div>
         )
+      )}
+      {activeTab === 'Rate Summary' && params && showRates && <TaxRateSummary params={params} />}
+      {activeTab === 'GSTR-9' && params && showRates && <Gstr9 params={params} />}
+      {['Rate Summary', 'GSTR-9'].includes(activeTab) && params && !showRates && (
+        <p className="text-sm text-muted-foreground">You don't have permission to view rate/amount figures.</p>
       )}
       {activeTab === 'GSTR-3B' && params && !showRates && (
         <p className="text-sm text-muted-foreground">You don't have permission to view rate/amount figures.</p>

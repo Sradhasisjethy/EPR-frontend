@@ -8,8 +8,9 @@ import { useCreateSalesOrder, useUpdateSalesOrder } from '@/hooks/use-sales';
 import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { PartyType, ProductType } from '@/constants/enums';
-import { toPaise } from '@/lib/money';
+import { toPaise, formatINR } from '@/lib/money';
 import { LineAvailability } from '@/components/sales/line-availability';
+import { RateSanityHint } from '@/components/sales/rate-sanity-hint';
 import { ProductPicker } from '@/components/products/product-picker';
 import { BundlePreviewNote } from '@/components/sales/bundle-preview-note';
 import { toast } from 'sonner';
@@ -221,7 +222,7 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
             </div>
             {lines.map((line, i) => (
               <div key={i} className="space-y-1">
-                <div className="grid grid-cols-[1fr_100px_120px_32px] gap-2 items-center">
+                <div className="grid grid-cols-[minmax(0,1fr)_100px_140px_120px_32px] gap-2 items-center">
                   <ProductPicker
                     value={line.productId}
                     onChange={(id) => updateLine(i, 'productId', id)}
@@ -229,11 +230,15 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
                     placeholder="Search products…"
                   />
                   <Input type="number" step="0.01" min="0" placeholder="Qty" value={line.orderedQty} onChange={(e) => updateLine(i, 'orderedQty', e.target.value)} required />
-                  <Input type="number" step="0.01" min="0" placeholder="Rate (₹)" value={line.rateRupees} onChange={(e) => updateLine(i, 'rateRupees', e.target.value)} required />
+                  <Input type="number" step="0.01" min="0" placeholder="Rate/unit (₹)" value={line.rateRupees} onChange={(e) => updateLine(i, 'rateRupees', e.target.value)} required />
+                  <span className="text-sm text-right tabular-nums text-muted-foreground truncate" aria-label={`Line ${i + 1} amount`}>
+                    {line.orderedQty && line.rateRupees !== '' ? formatINR(Math.round(Number(line.orderedQty) * toPaise(line.rateRupees))) : ''}
+                  </span>
                   <button type="button" onClick={() => removeLine(i)} disabled={lines.length === 1} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive disabled:opacity-30">
                     <Trash2 size={16} />
                   </button>
                 </div>
+                <RateSanityHint productId={line.productId} rateRupees={line.rateRupees} />
                 <LineAvailability factoryId={form.factoryId} productId={line.productId} orderedQty={line.orderedQty} />
                 <BundlePreviewNote
                   productId={line.productId}
@@ -249,6 +254,16 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
               </div>
             ))}
           </div>
+
+          {lines.some((l) => l.orderedQty && l.rateRupees !== '') && (
+            <p className="text-sm text-right">
+              Order value{' '}
+              <span className="font-semibold tabular-nums">
+                {formatINR(lines.reduce((sum, l) => sum + (l.orderedQty && l.rateRupees !== '' ? Math.round(Number(l.orderedQty) * toPaise(l.rateRupees)) : 0), 0))}
+              </span>
+              <span className="text-muted-foreground"> before GST</span>
+            </p>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
