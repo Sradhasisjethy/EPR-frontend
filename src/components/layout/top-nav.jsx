@@ -1,5 +1,5 @@
 import { useLocation, Link } from 'react-router-dom';
-import { Check, Moon, Sun, User, LogOut, Sparkles } from 'lucide-react';
+import { Check, Menu, Moon, Sun, User, LogOut, Sparkles } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useState, useEffect, useRef } from 'react';
 import { useLogout, useCurrentUser } from '@/hooks/use-auth';
@@ -19,7 +19,7 @@ export function TopNav() {
   const dropdownRef = useRef(null);
   const logoutMutation = useLogout();
   const { data: user } = useCurrentUser();
-  const { colorScheme, setColorScheme, glassMode, toggleGlassMode } = useUIStore();
+  const { colorScheme, setColorScheme, glassMode, toggleGlassMode, setSidebarOpen } = useUIStore();
 
   useEffect(() => {
     setMounted(true);
@@ -56,8 +56,17 @@ export function TopNav() {
     // scrolls underneath it, never through it. Every wash I tried here was
     // solving a collision that cannot happen, and over a wallpaper the blur
     // was itself the white band it was meant to avoid.
-    <header className="h-16 flex items-center justify-between px-6 shrink-0">
-      <div className="flex flex-col justify-center min-w-0">
+    <header className="h-16 flex items-center justify-between gap-2 px-4 sm:px-6 shrink-0">
+      {/* Below lg the rail is off-screen, so this is the only way into it. */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="lg:hidden -ml-2 mr-1 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors shrink-0"
+        aria-label="Open navigation"
+      >
+        <Menu size={20} />
+      </button>
+
+      <div className="flex flex-col justify-center min-w-0 flex-1">
         <h1 className="text-xl font-bold tracking-tight truncate leading-none">{title}</h1>
         {trail.length > 1 && (
           <p className="text-xs text-muted-foreground truncate mt-1">
@@ -66,8 +75,8 @@ export function TopNav() {
         )}
       </div>
 
-      <div className="flex items-center space-x-4">
-        <GlobalSearch />
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        <div className="hidden sm:block"><GlobalSearch /></div>
         <NotificationBell />
 
         <div className="relative" ref={dropdownRef}>
@@ -79,7 +88,7 @@ export function TopNav() {
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 rounded-xl shadow-lg bg-popover border border-border py-1 z-50 animate-in fade-in slide-in-from-top-2">
+            <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-1.5rem)] rounded-xl shadow-lg bg-popover border border-border py-1 z-50 animate-in fade-in slide-in-from-top-2">
               {user && (
                 <div className="px-4 py-2 border-b border-border">
                   <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
@@ -94,7 +103,7 @@ export function TopNav() {
               <div className="px-4 py-3 border-b border-border space-y-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Appearance</p>
 
-                <div className="grid grid-cols-2 gap-1.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                   {[['light', 'Light', Sun], ['dark', 'Dark', Moon]].map(([value, label, Icon]) => (
                     <button
                       key={value}
@@ -111,7 +120,10 @@ export function TopNav() {
                   ))}
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                {/* Wraps rather than overflows: on a coarse pointer each swatch
+                    is forced to 44px by the hit-target rule, and seven of those
+                    do not fit one row of a dropdown. */}
+                <div className="flex flex-wrap items-center gap-1.5">
                   {PALETTES.map((p) => (
                     <button
                       key={p.id}
@@ -155,6 +167,16 @@ export function TopNav() {
                 </button>
               </div>
 
+              {/* Hidden for PLATFORM_ADMIN, which in practice is the firm's owner
+                  rather than staff. The page behind this link is an HR record —
+                  joining date, issued assets, employment documents — and none of
+                  it applies to someone who is not an employee.
+
+                  A role check on purpose, not an isSystem check: the owner is a
+                  real person with a real employee row, so isSystem is false for
+                  them. Revisit once the owner-vs-employee modelling is settled
+                  with the client. The page also has no change-password or edit,
+                  which is what an account page should actually offer. */}
               {user && user.role !== 'PLATFORM_ADMIN' && (
                 <Link
                   to="/profile"

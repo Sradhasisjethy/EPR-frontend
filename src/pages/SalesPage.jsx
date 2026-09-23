@@ -5,13 +5,26 @@ import { useCurrentUser } from '@/hooks/use-auth';
 import { hasPermission } from '@/lib/permissions';
 import { ShieldAlert } from 'lucide-react';
 
+import LeadsPage from './LeadsPage';
+import QuotationsPage from './QuotationsPage';
 import SalesOrdersPage from './SalesOrdersPage';
+import CounterSalesPage from './CounterSalesPage';
+import CashRegisterPage from './CashRegisterPage';
 import DispatchPage from './DispatchPage';
 import InvoicingPage from './InvoicingPage';
 import ReturnsPage from './ReturnsPage';
 
 const ALL_TABS = [
+  // In the order a sale actually happens: an enquiry becomes a quotation, and
+  // a quotation the customer accepts becomes the order on the next tab.
+  { key: 'leads', label: 'Leads', permission: WebPermissions.LEAD_READ },
+  { key: 'quotations', label: 'Quotations', permission: WebPermissions.QUOTATION_READ },
   { key: 'sales-orders', label: 'Sales Orders', permission: WebPermissions.SALES_READ },
+  // Sits beside the order-driven flow rather than in a module of its own: a
+  // counter sale produces the same tax invoice, just without the order and
+  // challan in front of it.
+  { key: 'counter-sales', label: 'Counter Sales', permission: WebPermissions.INVOICE_READ },
+  { key: 'cash-register', label: 'Cash Register', permission: WebPermissions.CASH_REGISTER_READ },
   { key: 'dispatch', label: 'Delivery Challans', permission: WebPermissions.DISPATCH_READ },
   { key: 'invoices', label: 'Sales Invoices', permission: WebPermissions.INVOICE_READ },
   { key: 'returns', label: 'Returns', permission: WebPermissions.RETURN_READ },
@@ -26,7 +39,9 @@ export default function SalesPage() {
   });
 
   const tabKeys = tabs.map((tab) => tab.key);
-  const [activeTab, setActiveTab] = useTabParam(tabKeys, tabKeys[0] || 'sales-orders');
+  // Sales Orders stays the landing tab even though Quotations is listed first:
+  // the tab order follows the flow, the default follows what people open.
+  const [activeTab, setActiveTab] = useTabParam(tabKeys, tabKeys.includes('sales-orders') ? 'sales-orders' : tabKeys[0] || 'sales-orders');
 
   return (
     <div className="space-y-6">
@@ -64,7 +79,11 @@ export default function SalesPage() {
           </div>
 
           <div className="pt-2">
+            {activeTab === 'leads' && <LeadsPage />}
+            {activeTab === 'quotations' && <QuotationsPage />}
             {activeTab === 'sales-orders' && <SalesOrdersPage />}
+            {activeTab === 'counter-sales' && <CounterSalesPage />}
+            {activeTab === 'cash-register' && <CashRegisterPage />}
             {activeTab === 'dispatch' && <DispatchPage />}
             {activeTab === 'invoices' && <InvoicingPage />}
             {activeTab === 'returns' && <ReturnsPage />}

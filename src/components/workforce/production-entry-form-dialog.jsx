@@ -48,7 +48,27 @@ export function ProductionEntryFormDialog({ open, onOpenChange }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader><DialogTitle>New Contractor Production Entry</DialogTitle></DialogHeader>
-        {error && <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">{error}</div>}
+        {error && (
+          <div className="p-3.5 bg-destructive/10 border border-destructive/25 text-destructive rounded-lg text-sm space-y-1.5 leading-relaxed">
+            {error.split('\n').map((line, idx) => {
+              const trimmed = line.trim();
+              if (!trimmed) return null;
+              if (trimmed.startsWith('• ') || trimmed.startsWith('- ')) {
+                return (
+                  <div key={idx} className="flex items-start gap-2 pl-2">
+                    <span className="font-bold select-none">•</span>
+                    <span>{trimmed.replace(/^[•-]\s*/, '')}</span>
+                  </div>
+                );
+              }
+              return (
+                <p key={idx} className={idx > 0 && error.split('\n')[idx - 1]?.trim().startsWith('•') ? "pt-1 text-xs opacity-90" : "font-medium"}>
+                  {trimmed}
+                </p>
+              );
+            })}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
@@ -72,7 +92,7 @@ export function ProductionEntryFormDialog({ open, onOpenChange }) {
               {(productData?.rows || []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label>Date</Label>
               <Input type="date" value={form.productionDate} onChange={(e) => setForm({ ...form, productionDate: e.target.value })} required />

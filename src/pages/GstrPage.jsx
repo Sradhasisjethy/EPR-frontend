@@ -10,8 +10,9 @@ import { useFactories } from '@/hooks/use-factory';
 import { useGstr1, useGstr3b } from '@/hooks/use-gstr';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { DateText } from '@/components/date-text';
+import { TaxRateSummary, Gstr9 } from '@/components/gst/gst-extra-returns';
 
-const TABS = ['GSTR-1', 'GSTR-3B'];
+const TABS = ['GSTR-1', 'GSTR-3B', 'Rate Summary', 'GSTR-9'];
 
 const StatCard = ({ label, value }) => (
   <div className="p-4 rounded-xl border border-border bg-card">
@@ -37,7 +38,7 @@ export default function GstrPage() {
     <div className="space-y-6">
       
 
-      <div className="grid grid-cols-3 gap-4 max-w-2xl">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
         <div className="space-y-1.5">
           <Label>Factory</Label>
           <select value={factoryId} onChange={(e) => setFactoryId(e.target.value)} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
@@ -73,7 +74,7 @@ export default function GstrPage() {
         gstr1.isLoading ? <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" /> : gstr1.data && (
           <div className="space-y-8">
             {showRates && (
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <StatCard label="Taxable Value" value={formatINR(gstr1.data.summary.taxableValuePaise)} />
                 <StatCard label="CGST" value={formatINR(gstr1.data.summary.cgstPaise)} />
                 <StatCard label="SGST" value={formatINR(gstr1.data.summary.sgstPaise)} />
@@ -164,7 +165,7 @@ export default function GstrPage() {
           <div className="space-y-8">
             <div className="space-y-2">
               <h3 className="text-sm font-semibold">3.1(a) Outward Taxable Supplies</h3>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <StatCard label="Taxable Value" value={formatINR(gstr3b.data.outwardSupplies.taxableValuePaise)} />
                 <StatCard label="CGST" value={formatINR(gstr3b.data.outwardSupplies.cgstPaise)} />
                 <StatCard label="SGST" value={formatINR(gstr3b.data.outwardSupplies.sgstPaise)} />
@@ -173,7 +174,7 @@ export default function GstrPage() {
             </div>
             <div className="space-y-2">
               <h3 className="text-sm font-semibold">4. ITC Available (derived from goods receipts billed in the period)</h3>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <StatCard label="Taxable Value" value={formatINR(gstr3b.data.itcAvailable.taxableValuePaise)} />
                 <StatCard label="CGST" value={formatINR(gstr3b.data.itcAvailable.cgstPaise)} />
                 <StatCard label="SGST" value={formatINR(gstr3b.data.itcAvailable.sgstPaise)} />
@@ -182,7 +183,7 @@ export default function GstrPage() {
             </div>
             <div className="space-y-2">
               <h3 className="text-sm font-semibold">Net Tax Payable (informational — final utilization rules apply on the portal)</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <StatCard label="CGST" value={formatINR(gstr3b.data.netTaxPayable.cgstPaise)} />
                 <StatCard label="SGST" value={formatINR(gstr3b.data.netTaxPayable.sgstPaise)} />
                 <StatCard label="IGST" value={formatINR(gstr3b.data.netTaxPayable.igstPaise)} />
@@ -190,6 +191,11 @@ export default function GstrPage() {
             </div>
           </div>
         )
+      )}
+      {activeTab === 'Rate Summary' && params && showRates && <TaxRateSummary params={params} />}
+      {activeTab === 'GSTR-9' && params && showRates && <Gstr9 params={params} />}
+      {['Rate Summary', 'GSTR-9'].includes(activeTab) && params && !showRates && (
+        <p className="text-sm text-muted-foreground">You don't have permission to view rate/amount figures.</p>
       )}
       {activeTab === 'GSTR-3B' && params && !showRates && (
         <p className="text-sm text-muted-foreground">You don't have permission to view rate/amount figures.</p>

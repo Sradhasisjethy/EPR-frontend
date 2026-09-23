@@ -8,6 +8,8 @@ import { useCurrentUser } from '@/hooks/use-auth';
 import { hasPermission } from '@/lib/permissions';
 import { WebPermissions } from '@/constants/enums';
 import { today } from '@/lib/date-format';
+import { useUIStore } from '@/store/ui-store';
+import { cn } from '@/lib/utils';
 
 /**
  * Attach rate: how often an accessory actually goes out with the product it
@@ -36,6 +38,7 @@ const rateTone = (percent) => {
 };
 
 export default function AttachRatePage() {
+  const { glassMode } = useUIStore();
   const { data: user } = useCurrentUser();
   const [groupBy, setGroupBy] = useState('product');
   const [fromDate, setFromDate] = useState(firstOfYear());
@@ -151,7 +154,9 @@ export default function AttachRatePage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-border overflow-hidden">
+          {/* Same surface as every other table — hand-rolled like the Bundles
+              one, and it had the same gap. */}
+          <div className={cn('rounded-xl border border-border overflow-hidden', glassMode ? 'glass-card' : 'bg-card')}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="bg-muted/50 text-muted-foreground">

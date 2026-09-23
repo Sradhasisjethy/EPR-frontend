@@ -160,7 +160,7 @@ export function PartyAddressesDialog({ open, onOpenChange, party }) {
           <form onSubmit={handleSubmit} className="space-y-3 pt-3 border-t border-border">
             <p className="text-sm font-medium">{editingId ? 'Edit address' : 'Add an address'}</p>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label>Label</Label>
                 <Input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} placeholder="Head Office / Site" />

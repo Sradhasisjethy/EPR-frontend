@@ -14,6 +14,7 @@ import { ProductionEntryFormDialog } from '@/components/workforce/production-ent
 import { AttendanceFormDialog } from '@/components/workforce/attendance-form-dialog';
 import { AdvanceFormDialog } from '@/components/workforce/advance-form-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
+import { WorkforceDetailDialog } from '@/components/workforce/workforce-detail-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { toast } from 'sonner';
 import { DateText } from '@/components/date-text';
@@ -30,6 +31,7 @@ export default function WorkforcePage() {
 
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
+  const [viewing, setViewing] = useState(null); // { kind, record }
 
   const materialIssues = usePaginated(useMaterialIssues);
   const contractorEntries = usePaginated(useContractorEntries);
@@ -73,6 +75,20 @@ export default function WorkforcePage() {
               { id: 'issueDate', header: 'Date', cell: ({ row }) => <DateText value={row.original.issueDate} /> },
               { id: 'lines', header: 'Lines', cell: ({ row }) => row.original.lines?.length || 0 },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
+              {
+                id: 'view', header: '',
+                cell: ({ row }) => (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      className="text-xs text-primary hover:underline"
+                      onClick={() => setViewing({ kind: 'Material Issues', record: row.original })}
+                    >
+                      View
+                    </button>
+                  </div>
+                ),
+              },
             ]}
             {...materialIssues.tableProps}
             searchPlaceholder="Search issue number…"
@@ -99,6 +115,20 @@ export default function WorkforcePage() {
                   ]
                 : []),
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
+              {
+                id: 'view', header: '',
+                cell: ({ row }) => (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      className="text-xs text-primary hover:underline"
+                      onClick={() => setViewing({ kind: 'Production Entries', record: row.original })}
+                    >
+                      View
+                    </button>
+                  </div>
+                ),
+              },
             ]}
             {...contractorEntries.tableProps}
             searchPlaceholder="Search entry number…"
@@ -118,6 +148,20 @@ export default function WorkforcePage() {
               { accessorKey: 'status', header: 'Status' },
               { accessorKey: 'overtimeHours', header: 'OT Hours' },
               ...(showRates ? [{ id: 'wage', header: 'Wage Accrued', cell: ({ row }) => formatINR(row.original.wageAccruedPaise) }] : []),
+              {
+                id: 'view', header: '',
+                cell: ({ row }) => (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      className="text-xs text-primary hover:underline"
+                      onClick={() => setViewing({ kind: 'Attendance', record: row.original })}
+                    >
+                      View
+                    </button>
+                  </div>
+                ),
+              },
             ]}
             {...attendance.tableProps}
             searchPlaceholder="Search by date…"
@@ -140,14 +184,23 @@ export default function WorkforcePage() {
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
-                cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end">
+                cell: ({ row }) => (
+                  <div className="flex justify-end gap-3">
                     <button
-                      className="text-xs text-destructive hover:underline"
-                      onClick={() => setCancellingAdvance(row.original)}
+                      type="button"
+                      className="text-xs text-primary hover:underline"
+                      onClick={() => setViewing({ kind: 'Advances', record: row.original })}
                     >
-                      Cancel
+                      View
                     </button>
+                    {row.original.status === 'POSTED' && (
+                      <button
+                        className="text-xs text-destructive hover:underline"
+                        onClick={() => setCancellingAdvance(row.original)}
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </div>
                 ),
               },
@@ -161,6 +214,13 @@ export default function WorkforcePage() {
         )
       )}
 
+      <WorkforceDetailDialog
+        open={!!viewing}
+        onOpenChange={(next) => !next && setViewing(null)}
+        kind={viewing?.kind}
+        record={viewing?.record}
+        showRates={showRates}
+      />
       <MaterialIssueFormDialog open={issueOpen} onOpenChange={setIssueOpen} />
       <ProductionEntryFormDialog open={entryOpen} onOpenChange={setEntryOpen} />
       <AttendanceFormDialog open={attendanceOpen} onOpenChange={setAttendanceOpen} />

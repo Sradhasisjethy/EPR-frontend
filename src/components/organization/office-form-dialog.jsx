@@ -198,7 +198,7 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="office-name">
                 Office Name <span className="text-destructive font-bold">*</span>
@@ -241,7 +241,7 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
 
           {/* PIN first: it fills city, state and country, so only the street
               address has to be typed by hand. */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="office-pincode">
                 Pincode / Postal Code <span className="text-destructive font-bold">*</span>
@@ -281,7 +281,7 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="office-state">
                 State <span className="text-destructive font-bold">*</span>

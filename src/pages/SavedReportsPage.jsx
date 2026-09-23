@@ -195,7 +195,7 @@ export default function SavedReportsPage() {
             </div>
 
             {fields.length > 0 && (
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 {fields.map((field) => (
                   <div key={field} className="space-y-1.5">
                     <Label>{LABELS[field] || field}</Label>

@@ -125,8 +125,8 @@ export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProd
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-4xl max-h-[calc(100vh-60px)] flex flex-col p-0 overflow-hidden shadow-2xl">
-        <DialogHeader className="p-6 pb-4 border-b border-border/60 shrink-0 bg-background">
+      <DialogContent className="w-[95vw] max-w-4xl h-[calc(100dvh-24px)] max-h-[calc(100dvh-24px)] flex flex-col p-0 overflow-hidden shadow-2xl">
+        <DialogHeader className="px-6 py-3 border-b border-border/60 shrink-0 bg-background">
           <DialogTitle className="text-xl font-bold">
             {isEditing ? 'Edit Mix Design (BOM)' : 'New Mix Design (Bill of Materials)'}
           </DialogTitle>
@@ -143,7 +143,7 @@ export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProd
           </div>
         )}
 
-        <form id="mix-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
+        <form id="mix-form" onSubmit={handleSubmit} className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-5">
           {/* HEADER PARAMETERS: PRODUCT, NAME, BATCH YIELD & EFFECTIVE DATE */}
           <div className="p-4 rounded-xl border border-border bg-card/40 space-y-4 shadow-sm">
             <h4 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5 border-b border-border/60 pb-2">
@@ -373,7 +373,7 @@ export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProd
           </div>
         </form>
 
-        <DialogFooter className="p-4 px-6 border-t border-border/60 bg-background/95 backdrop-blur shrink-0 flex items-center justify-between">
+        <DialogFooter className="px-6 py-3 border-t border-border/60 bg-background/95 backdrop-blur shrink-0 flex items-center justify-between">
           <div>
             {isEditing && mixDesign?.status === 'DRAFT' && onDelete && (
               <Button

@@ -56,7 +56,7 @@ export function WastageFormDialog({ open, onOpenChange }) {
         <p className="text-xs text-muted-foreground -mt-2">Recorded, not silently absorbed — reduces the selected lot's stock immediately.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Factory</Label>
               <select value={form.factoryId} onChange={(e) => setForm({ ...form, factoryId: e.target.value, lotId: '' })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
@@ -85,7 +85,7 @@ export function WastageFormDialog({ open, onOpenChange }) {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Quantity</Label>
               <Input type="number" step="0.01" min="0" max={selectedLot?.qtyAvailable} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} required />

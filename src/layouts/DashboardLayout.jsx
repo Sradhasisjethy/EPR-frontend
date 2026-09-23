@@ -2,6 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { AppShell } from '@/components/layout/app-shell';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
+import { usePenHover } from '@/hooks/use-pen-hover';
 import { InfideepLogo } from '@/components/auth/infideep-logo';
 
 /**
@@ -15,6 +16,8 @@ export function DashboardLayout() {
 
   // Initialize inactivity tracking
   useInactivityTimeout();
+  // Pen hover only — see use-pen-hover.js for why this cannot be a media query.
+  usePenHover();
 
   if (isLoading) {
     return (

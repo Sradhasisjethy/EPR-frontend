@@ -13,6 +13,19 @@ const invalidate = (qc) => {
 export function useReceipts(params = {}) {
   return useQuery({ queryKey: ['receipts', params], queryFn: async () => (await apiClient.get('/receipts', { params })).data.data, placeholderData: (prev) => prev });
 }
+/**
+ * The detail read, not the list row: only this resolves an allocation's
+ * `invoiceId` into an invoice number, which is what makes the "applied to" list
+ * legible instead of a column of UUIDs.
+ */
+export function useReceipt(id) {
+  return useQuery({
+    queryKey: ['receipts', 'detail', id],
+    queryFn: async () => (await apiClient.get(`/receipts/${id}`)).data.data,
+    enabled: !!id,
+  });
+}
+
 export function useCreateReceipt() {
   const qc = useQueryClient();
   return useMutation({
@@ -32,6 +45,14 @@ export function useCancelReceipt() {
 export function usePayments(params = {}) {
   return useQuery({ queryKey: ['payments', params], queryFn: async () => (await apiClient.get('/payments', { params })).data.data, placeholderData: (prev) => prev });
 }
+export function usePayment(id) {
+  return useQuery({
+    queryKey: ['payments', 'detail', id],
+    queryFn: async () => (await apiClient.get(`/payments/${id}`)).data.data,
+    enabled: !!id,
+  });
+}
+
 export function useCreatePayment() {
   const qc = useQueryClient();
   return useMutation({

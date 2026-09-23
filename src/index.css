@@ -184,7 +184,7 @@ html:not(.dark) body.wallpaper-active::before {
 }
 
 html:not(.dark) .glass-card {
-  background: rgba(255, 255, 255, 0.82) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
   backdrop-filter: blur(24px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
   border: 1px solid rgba(255, 255, 255, 0.9) !important;
@@ -227,10 +227,12 @@ html:not(.dark) .wallpaper-active aside span {
   color: #334155 !important;
 }
 
-html:not(.dark) .wallpaper-active aside a:hover,
-html:not(.dark) .wallpaper-active aside button:hover {
-  color: #0f172a !important;
-  background-color: rgba(241, 245, 249, 0.8) !important;
+@media (hover: hover) and (pointer: fine) {
+  html:not(.dark) .wallpaper-active aside a:hover,
+  html:not(.dark) .wallpaper-active aside button:hover {
+    color: #0f172a !important;
+    background-color: rgba(241, 245, 249, 0.8) !important;
+  }
 }
 
 /* The header carries no surface of its own, in glass mode or out of it. It
@@ -257,7 +259,7 @@ html.dark body.wallpaper-active::before {
 }
 
 html.dark .glass-card {
-  background: rgba(15, 23, 42, 0.85) !important;
+  background: rgba(15, 23, 42, 0.66) !important;
   backdrop-filter: blur(24px) saturate(190%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
@@ -657,9 +659,14 @@ html.dark .wallpaper-active .bg-card {
   transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1), filter 240ms ease;
 }
 
-.id-logo-interactive:hover {
-  transform: scale(1.06);
-  filter: drop-shadow(0 0 12px rgba(255, 0, 85, 0.35));
+/* Gated like Tailwind's own hover utilities (hoverOnlyWhenSupported). A
+   transform behind :hover is exactly what iPadOS spends a first tap activating
+   before it will deliver a click. */
+@media (hover: hover) and (pointer: fine) {
+  .id-logo-interactive:hover {
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 12px rgba(255, 0, 85, 0.35));
+  }
 }
 
 .id-logo-interactive:active {
@@ -686,15 +693,15 @@ html.dark .wallpaper-active .bg-card {
 
 /* The 300ms wait for a possible double-tap, gone. Applied to controls only —
    on the page body it would disable pinch-zoom, which people rely on. */
-button,
-a,
-[role='button'],
-select,
-summary,
-input[type='checkbox'],
-input[type='radio'] {
-  touch-action: manipulation;
-}
+/* No touch-action rules here, deliberately.
+   They were added to remove the 300ms double-tap wait — but index.html already
+   carries `viewport width=device-width`, which is what actually disables that
+   delay in Safari, so the rules bought nothing.
+   They were not free, though: Radix's dialog scroll lock (react-remove-scroll)
+   manages touch-action itself, and overriding it on the dialog — which gained
+   overflow-y-auto in the mobile pass — put the two in conflict. Pen input is
+   the case that broke; touch kept working, which is what made it look like a
+   Pencil problem rather than a scroll-lock one. */
 
 /* iOS paints a grey box over anything tapped. Removed, but only because there
    is a real :active state below to replace it — without one the UI would feel
@@ -732,12 +739,13 @@ input[type='radio'] {
     align-items: center;
   }
 
-  /* Momentum scrolling inside panels, not just the page. */
-  .overflow-y-auto,
-  .overflow-auto,
-  .overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
-  }
+  /* Deliberately NOT setting -webkit-overflow-scrolling: touch.
+     It is a legacy iOS property — momentum scrolling has been native since iOS
+     13 — and it turns the element into a separate compositing layer with its
+     own hit-testing, which drops taps inside the container for pen input.
+     Adding overflow-y-auto to the dialog in the mobile pass meant every form
+     became one of those containers, which is why Cancel answered a finger but
+     not an Apple Pencil. */
 }
 
 /* Anything whose only affordance was :hover needs to be visible without one.
@@ -747,5 +755,193 @@ input[type='radio'] {
   .group:hover .group-hover\:opacity-100,
   .group-hover\:opacity-100 {
     opacity: 1;
+  }
+}
+
+/* The auth screen is exempt from the light-theme glass overrides.
+   `wallpaper-active` is set on <html> and <body> by the UI provider, so it
+   applies on the login page too — and the rule above forces every h1-h4 to
+   #0f172a so headings stay readable on a light wallpaper. The auth screen is
+   always dark-grounded (.infideep-auth, #121414), so that turned "Powering
+   Smarter" and "Welcome back" into near-black text on near-black. It was only
+   visible in light theme, which is why it surfaced the moment the theme toggle
+   moved into the avatar menu.
+
+   Restated with the auth container in the selector so it out-specifies the
+   override rather than fighting it with another blanket !important. */
+html:not(.dark) .wallpaper-active .infideep-auth h1,
+html:not(.dark) .wallpaper-active .infideep-auth h2,
+html:not(.dark) .wallpaper-active .infideep-auth h3,
+html:not(.dark) .wallpaper-active .infideep-auth h4,
+html:not(.dark) .wallpaper-active .infideep-auth .text-white {
+  color: #e2e2e2 !important;   /* infideep.on-surface */
+}
+
+/* The card and body copy on that screen come from the same override family. */
+html:not(.dark) .wallpaper-active .infideep-auth p,
+html:not(.dark) .wallpaper-active .infideep-auth label,
+html:not(.dark) .wallpaper-active .infideep-auth span {
+  color: inherit;
+}
+
+/* ------------------------------------------------ controls on a coarse pointer
+   Every interactive primitive ships under Apple's 44pt minimum: buttons are
+   32-40px, selects 36px, checkboxes 16px, the quantity stepper's +/- 24px.
+   Fine with a mouse or a Pencil tip; a coin-flip with a fingertip.
+
+   Raised here rather than in each component so the desktop sizing is untouched
+   and nothing has to be remembered when a new form is written. Everything grows
+   vertically or in place — never in a way that makes neighbouring controls
+   overlap and steal each other's taps.
+
+   Wrapped in :where() so the whole selector weighs nothing: any component that
+   sets its own height still wins, which is what stopped the card elevation rule
+   from silently overriding the dashboard tiles' accent glow. */
+@media (pointer: coarse) {
+  :where(button, [role='button'], a.btn, select, .btn) {
+    min-height: 44px;
+  }
+
+  /* Icon-only buttons are square, so they need the width too. */
+  :where(button:not(:has(> :not(svg))):not(:has(> *:not(svg)))) {
+    min-width: 44px;
+  }
+
+  :where(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+    min-height: 44px;
+  }
+
+  /* A checkbox cannot simply grow to 44px without looking wrong, and padding it
+     out with a pseudo-element would overlap the next row in a `space-y-2` list
+     and toggle the wrong box. So the control gets a modest bump and its label
+     carries the rest of the target — which is why labels are made clickable
+     below rather than left as decoration. */
+  :where(input[type='checkbox'], input[type='radio'], [role='checkbox'], [role='switch']) {
+    min-height: 22px;
+    min-width: 22px;
+  }
+
+  :where(label:has(input[type='checkbox']), label:has([role='checkbox'])) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  /* Table rows are the densest tap surface in the app. */
+  :where(td) {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+}
+
+
+/* --------------------------------------------------- brand ramp on primary
+   A solid primary fill is half the brand. The logo, the active nav row and the
+   scheme swatches are all two-stop; the buttons and badges were the one place
+   still landing on a flat colour, which is what made them read as "pink" rather
+   than as the INFIDEEP ramp.
+
+   Applied as background-image over Tailwind's background-color, so the two
+   never fight — the colour stays as the fallback and every `bg-primary/NN`
+   tint keeps working untouched. Driven by --nav-from/--nav-to, so it follows
+   whichever colour scheme is selected rather than hardcoding the house colours
+   onto an emerald theme. */
+.bg-primary {
+  background-image: linear-gradient(135deg, hsl(var(--nav-from)) 0%, hsl(var(--nav-to)) 100%);
+}
+
+/* Tinted pills — the "Default" badge, the active tab, selected rows. Same ramp
+   at low opacity so they belong to the same family as the solid fills. */
+.bg-primary\/5 {
+  background-image: linear-gradient(135deg, hsl(var(--nav-from) / 0.07) 0%, hsl(var(--nav-to) / 0.05) 100%);
+}
+.bg-primary\/10 {
+  background-image: linear-gradient(135deg, hsl(var(--nav-from) / 0.13) 0%, hsl(var(--nav-to) / 0.09) 100%);
+}
+.bg-primary\/15 {
+  background-image: linear-gradient(135deg, hsl(var(--nav-from) / 0.18) 0%, hsl(var(--nav-to) / 0.13) 100%);
+}
+.bg-primary\/20 {
+  background-image: linear-gradient(135deg, hsl(var(--nav-from) / 0.24) 0%, hsl(var(--nav-to) / 0.17) 100%);
+}
+
+/* hover:bg-primary/90 only changes background-color, which the gradient now
+   covers — so the hover would look dead. Brightness gives the same "something
+   happened" without unpicking the ramp. */
+@media (hover: hover) and (pointer: fine) {
+  .bg-primary:hover {
+    filter: brightness(1.07);
+  }
+}
+
+.bg-primary:active {
+  filter: brightness(0.95);
+}
+
+/* ------------------------------------------------- Apple Pencil hover ------
+   Hover feedback for a pen, and only for a pen.
+   The `hover:` utilities are gated behind (hover: hover) and (pointer: fine),
+   which is what stops iPadOS spending the first tap activating hover. iPadOS
+   reports the primary pointer as coarse whatever is in your hand, so a
+   hover-capable Pencil lost its feedback along with the fingers.
+   usePenHover sets [data-pen-hover] on <html> only while a pen is actually
+   near the glass — a finger never sets it, so a tap can never be spent here.
+
+   Deliberately one shared treatment rather than re-stating each component's
+   own hover style: this is a "you are pointing at this" cue, not a second
+   design language. */
+[data-pen-hover] :is(button, a, [role='button'], summary, select):hover {
+  outline: 2px solid hsl(var(--nav-from) / 0.35);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Rows are the other thing worth pointing at — on a long table the pen wants
+   to show which line it is over. */
+[data-pen-hover] tbody tr:hover {
+  background-color: hsl(var(--muted) / 0.6);
+}
+
+/* ------------------------------------------------------- pointer zoom -----
+   Dashboard tiles lift and grow under the pointer.
+
+   Two triggers, one effect: a real mouse via the same media query every other
+   hover style uses, and an Apple Pencil via [data-pen-hover], which is set only
+   while a pen is near the glass. A finger sets neither, so this can never
+   consume a tap the way an ungated :hover transform would.
+
+   transform only, and nothing else in the transition. box-shadow is a paint
+   property — animating it repaints the card and its blurred backdrop every
+   frame, which is what made the first version feel like it was stepping rather
+   than gliding. transform runs on the compositor, so the motion stays smooth
+   even in glass mode.
+
+   scale() rather than width/height for the same reason as before: a transform
+   does not reflow, so a growing tile never nudges its neighbours. */
+.id-pointer-zoom {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .id-pointer-zoom:hover {
+    transform: scale(1.045) translateY(-5px);
+    z-index: 1;
+  }
+}
+
+[data-pen-hover] .id-pointer-zoom:hover {
+  transform: scale(1.045) translateY(-5px);
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .id-pointer-zoom,
+  .id-pointer-zoom:hover {
+    transition: none;
+    transform: none;
   }
 }

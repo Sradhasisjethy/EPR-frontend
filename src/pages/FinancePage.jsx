@@ -9,11 +9,13 @@ import PaymentsPage from './PaymentsPage';
 import LedgerPage from './LedgerPage';
 import ExpensesPage from './ExpensesPage';
 import GstrPage from './GstrPage';
+import FixedAssetsPage from './FixedAssetsPage';
 
 const ALL_TABS = [
   { key: 'payments', label: 'Receipts & Payments', permission: WebPermissions.PAYMENT_READ },
   { key: 'ledger', label: 'Ledger', permission: WebPermissions.LEDGER_READ },
   { key: 'expenses', label: 'Expenses', permission: WebPermissions.EXPENSE_READ },
+  { key: 'fixed-assets', label: 'Fixed Assets', permission: WebPermissions.FIXED_ASSET_READ },
   { key: 'gstr', label: 'GST Returns', permission: WebPermissions.GSTR_READ },
 ];
 
@@ -67,6 +69,7 @@ export default function FinancePage() {
             {activeTab === 'payments' && <PaymentsPage />}
             {activeTab === 'ledger' && <LedgerPage />}
             {activeTab === 'expenses' && <ExpensesPage />}
+            {activeTab === 'fixed-assets' && <FixedAssetsPage />}
             {activeTab === 'gstr' && <GstrPage />}
           </div>
         </>

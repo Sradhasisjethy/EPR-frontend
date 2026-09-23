@@ -88,7 +88,7 @@ export default function SettingsPage() {
           <div className="space-y-8 animate-in">
             <div className="glass-card p-6 rounded-xl">
               <h3 className="text-lg font-medium mb-4">Color Scheme</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {PALETTES.map(p => (
                   <button
                     key={p.id}

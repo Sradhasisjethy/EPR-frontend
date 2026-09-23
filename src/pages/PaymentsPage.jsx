@@ -3,6 +3,7 @@ import { useCheques, usePresentCheque, useClearCheque } from '@/hooks/use-cheque
 import { BounceChequeDialog } from '@/components/payments/bounce-cheque-dialog';
 import { Plus } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
+import { PaymentDetailDialog } from '@/components/payments/payment-detail-dialog';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -26,6 +27,7 @@ export default function PaymentsPage() {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [bouncingCheque, setBouncingCheque] = useState(null);
   const [cancelPrompt, setCancelPrompt] = useState(null);
+  const [viewing, setViewing] = useState(null); // { kind, record }
 
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
@@ -78,8 +80,19 @@ export default function PaymentsPage() {
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
-                cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelReceipt, row.original.id, `Cancel Receipt — ${row.original.receiptNumber}`)}>Cancel</button></div>
+                cell: ({ row }) => (
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      className="text-xs text-primary hover:underline"
+                      onClick={() => setViewing({ kind: 'Receipts', record: row.original })}
+                    >
+                      View
+                    </button>
+                    {row.original.status === 'POSTED' && (
+                      <button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelReceipt, row.original.id, `Cancel Receipt — ${row.original.receiptNumber}`)}>Cancel</button>
+                    )}
+                  </div>
                 ),
               },
             ]}
@@ -108,8 +121,19 @@ export default function PaymentsPage() {
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
-                cell: ({ row }) => row.original.status === 'POSTED' && (
-                  <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelPayment, row.original.id, `Cancel Payment — ${row.original.paymentNumber}`)}>Cancel</button></div>
+                cell: ({ row }) => (
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      className="text-xs text-primary hover:underline"
+                      onClick={() => setViewing({ kind: 'Payments', record: row.original })}
+                    >
+                      View
+                    </button>
+                    {row.original.status === 'POSTED' && (
+                      <button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelPayment, row.original.id, `Cancel Payment — ${row.original.paymentNumber}`)}>Cancel</button>
+                    )}
+                  </div>
                 ),
               },
             ]}
@@ -137,6 +161,13 @@ export default function PaymentsPage() {
                 id: 'actions', header: '',
                 cell: ({ row }) => (
                   <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      className="text-xs text-primary hover:underline"
+                      onClick={() => setViewing({ kind: 'Cheques', record: row.original })}
+                    >
+                      View
+                    </button>
                     {/* A cheque only moves forward: ISSUED -> PRESENTED -> CLEARED|BOUNCED */}
                     {row.original.status === 'ISSUED' && (
                       <button className="text-xs text-primary hover:underline" onClick={() => presentCheque.mutate({ id: row.original.id })}>
@@ -171,6 +202,12 @@ export default function PaymentsPage() {
       <ReceiptFormDialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen} />
       <PaymentFormDialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen} />
 
+      <PaymentDetailDialog
+        open={!!viewing}
+        onOpenChange={(next) => !next && setViewing(null)}
+        kind={viewing?.kind}
+        record={viewing?.record}
+      />
       <ReasonDialog
         open={!!cancelPrompt}
         onOpenChange={(open) => !open && setCancelPrompt(null)}

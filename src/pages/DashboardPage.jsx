@@ -96,7 +96,7 @@ function Dashboard({ factoryId, setFactoryId }) {
 function ProductionTab({ ops, trends }) {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiTile
           accent="rose" icon={FactoryIcon} label="Produced today"
           value={ops.productionToday ?? 0} hint={`${ops.productionMTD ?? 0} this month`}
@@ -131,7 +131,7 @@ function ProductionTab({ ops, trends }) {
         </Panel>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiTile
           accent="rose" icon={Package} label="Dead stock lots" value={ops.deadStockLots ?? 0}
           tone={ops.deadStockLots > 0 ? 'danger' : 'good'} hint={`${ops.slowMovingLots ?? 0} slow-moving`}
@@ -179,7 +179,7 @@ function SalesTab({ fin, sales, trends }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiTile
           accent="sky" icon={TrendingUp} label="Net sales today"
           value={formatINR(fin.salesTodayPaise)} hint={`${formatINR(fin.salesMTDPaise)} this month`}
@@ -246,7 +246,7 @@ function SalesTab({ fin, sales, trends }) {
         </Panel>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiTile accent="violet" icon={Truck} label="Purchases (MTD)" value={formatINR(fin.purchaseMTDPaise)} />
         <KpiTile accent="teal" icon={Wallet} label="Cash" value={formatINR(fin.cashBalancePaise)} tone={fin.cashBalancePaise < 0 ? 'danger' : undefined} />
         <KpiTile accent="sky" icon={PiggyBank} label="Bank" value={formatINR(fin.bankBalancePaise)} />

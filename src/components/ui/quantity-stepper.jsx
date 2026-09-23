@@ -46,7 +46,7 @@ export function QuantityStepper({ value, onCommit, disabled = false, step = 1, m
         disabled={disabled || Number(value || 0) - step <= min}
         onClick={() => nudge(-step)}
         aria-label={`Decrease ${label || 'quantity'}`}
-        className="h-6 w-6 rounded border border-input flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30"
+        className="h-6 w-6 coarse:h-11 coarse:w-11 rounded border border-input flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30"
       >
         <Minus size={11} />
       </button>
@@ -61,7 +61,7 @@ export function QuantityStepper({ value, onCommit, disabled = false, step = 1, m
           if (e.key === 'Enter') { e.preventDefault(); commit(draft); }
           if (e.key === 'Escape') setDraft(String(value ?? ''));
         }}
-        className="h-6 w-14 rounded border border-input bg-background px-1.5 text-xs text-right tabular-nums disabled:opacity-50"
+        className="h-6 w-14 coarse:h-11 coarse:w-20 coarse:text-base rounded border border-input bg-background px-1.5 text-xs text-right tabular-nums disabled:opacity-50"
       />
 
       <button
@@ -69,7 +69,7 @@ export function QuantityStepper({ value, onCommit, disabled = false, step = 1, m
         disabled={disabled}
         onClick={() => nudge(step)}
         aria-label={`Increase ${label || 'quantity'}`}
-        className="h-6 w-6 rounded border border-input flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30"
+        className="h-6 w-6 coarse:h-11 coarse:w-11 rounded border border-input flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30"
       >
         <Plus size={11} />
       </button>
