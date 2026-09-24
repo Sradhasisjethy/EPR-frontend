@@ -10,12 +10,24 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { TableSkeleton } from '@/components/ui/skeleton';
 import { RoleMembersDialog } from '@/components/roles/role-members-dialog';
 import { toast } from 'sonner';
+import { usePermissions } from '@/hooks/use-permissions';
+import { WebPermissions } from '@/constants/enums';
 
 export default function RolesPage() {
   const navigate = useNavigate();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState(null);
   const [membersRole, setMembersRole] = useState(null);
+
+  // Role administration is the most privileged screen in the app, and until now
+  // every control on it rendered for anyone who could reach the page. The API
+  // refuses these calls, but the buttons should not be offered in the first
+  // place. Managing membership is a grant in its own right: adding someone to a
+  // role hands them that role's permissions.
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission(WebPermissions.ROLE_CREATE);
+  const canModify = hasPermission(WebPermissions.ROLE_MODIFY);
+  const canDelete = hasPermission(WebPermissions.ROLE_DELETE);
 
   const { query, tableProps } = usePaginated(useRoles);
   const { isLoading, isError } = query;
@@ -63,20 +75,24 @@ export default function RolesPage() {
                   >
                     <Users size={16} />
                   </button>
-                  <button
-                    onClick={() => navigate(`/roles/${row.original.id}`)}
-                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                    title="Edit"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(row.original)}
-                    className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  {canModify && (
+                    <button
+                      onClick={() => navigate(`/roles/${row.original.id}`)}
+                      className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                      title="Edit"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      onClick={() => handleDeleteClick(row.original)}
+                      className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
               ),
             },
@@ -84,10 +100,12 @@ export default function RolesPage() {
           {...tableProps}
           searchPlaceholder="Search role…"
           actionsNode={
-            <Button onClick={() => navigate('/roles/new')}>
-              <Plus size={16} />
-              Add Role
-            </Button>
+            canCreate && (
+              <Button onClick={() => navigate('/roles/new')}>
+                <Plus size={16} />
+                Add Role
+              </Button>
+            )
           }
         />
       )}

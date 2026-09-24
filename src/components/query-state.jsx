@@ -11,11 +11,29 @@
  * being taken one screen at a time rather than in a single sweep across
  * modules that are otherwise untouched.
  */
+import { AccessDenied } from '@/components/auth/access-denied';
+
 export function QueryState({ query, label, children, skeletonClassName = 'w-full h-96' }) {
   if (query?.isLoading) {
     return <div className={`${skeletonClassName} rounded-xl border border-border bg-card animate-pulse`} />;
   }
   if (query?.isError) {
+    /**
+     * A refused request is not an outage, and saying so sends the user to check
+     * their network — or to raise a ticket — for something working exactly as
+     * configured. Name the real cause, and drop the Try Again button, because
+     * retrying an authorization failure cannot succeed.
+     */
+    if (query.error?.response?.status === 403) {
+      return (
+        <AccessDenied
+          title="Access Denied"
+          message={`You do not have permission to view ${label || 'this data'}. Please contact your system administrator if you need access.`}
+          showHomeLink={false}
+        />
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl border border-destructive/20 bg-destructive/5 glass-card shadow-sm animate-in fade-in duration-300">
         <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">

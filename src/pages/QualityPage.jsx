@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useCurrentUser } from '@/hooks/use-auth';
+import { hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
 import { Plus, FlaskConical } from 'lucide-react';
 import { usePaginated } from '@/hooks/use-paginated';
 import { DataTable } from '@/components/data-table/data-table';
@@ -21,6 +24,8 @@ const TYPE_LABEL = {
 };
 
 export default function QualityPage() {
+  const { data: user } = useCurrentUser();
+  const canRaiseInspection = hasPermission(user, WebPermissions.QUALITY_CREATE);
   const [activeTab, setActiveTab] = useTabParam(TABS, 'Awaiting Clearance', 'subtab');
   const [inspectingLot, setInspectingLot] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -91,6 +96,7 @@ export default function QualityPage() {
             searchPlaceholder="Search lot number…"
             emptyMessage="No lots are waiting on quality clearance."
             actionsNode={
+              canRaiseInspection && (
               <Button
                 onClick={() => {
                   setInspectingLot(null);
@@ -99,6 +105,7 @@ export default function QualityPage() {
               >
                 <Plus size={16} className="mr-1.5" /> Raise Inspection
               </Button>
+              )
             }
           />
         </QueryState>
@@ -157,6 +164,7 @@ export default function QualityPage() {
             searchPlaceholder="Search inspection or sample…"
             emptyMessage="No inspections recorded yet."
             actionsNode={
+              canRaiseInspection && (
               <Button
                 onClick={() => {
                   setInspectingLot(null);
@@ -165,6 +173,7 @@ export default function QualityPage() {
               >
                 <Plus size={16} className="mr-1.5" /> Raise Inspection
               </Button>
+              )
             }
           />
         </QueryState>

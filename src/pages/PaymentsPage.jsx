@@ -8,7 +8,8 @@ import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCurrentUser } from '@/hooks/use-auth';
-import { canViewRates } from '@/lib/permissions';
+import { canViewRates, hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
 import { formatINR } from '@/lib/money';
 import { usePaginated } from '@/hooks/use-paginated';
 import { useReceipts, useCancelReceipt, usePayments, useCancelPayment } from '@/hooks/use-payments';
@@ -30,6 +31,8 @@ export default function PaymentsPage() {
   const [viewing, setViewing] = useState(null); // { kind, record }
 
   const { data: user } = useCurrentUser();
+  const canCreateReceipt = hasPermission(user, WebPermissions.RECEIPT_CREATE);
+  const canCreatePayment = hasPermission(user, WebPermissions.PAYMENT_CREATE);
   const showRates = canViewRates(user);
 
   const receipts = usePaginated(useReceipts);
@@ -42,7 +45,11 @@ export default function PaymentsPage() {
 
   // Cheques are created by receipts/payments, never on their own — so the
   // Cheques tab has no "add" action.
-  const addHandlers = { Receipts: () => setReceiptDialogOpen(true), Payments: () => setPaymentDialogOpen(true) };
+  // Money in and money out are separate grants, so the two tabs gate apart.
+  const addHandlers = {
+    ...(canCreateReceipt ? { Receipts: () => setReceiptDialogOpen(true) } : {}),
+    ...(canCreatePayment ? { Payments: () => setPaymentDialogOpen(true) } : {}),
+  };
 
   const cancelWithReason = (mutation, id, title) => {
     setCancelPrompt({ mutation, id, title });

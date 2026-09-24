@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useCurrentUser } from '@/hooks/use-auth';
+import { hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
 import { usePaginated } from '@/hooks/use-paginated';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
@@ -10,6 +13,10 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from 'sonner';
 
 export default function PriceListsPage() {
+  const { data: user } = useCurrentUser();
+  const canCreate = hasPermission(user, WebPermissions.PRICING_CREATE);
+  const canModify = hasPermission(user, WebPermissions.PRICING_MODIFY);
+  const canDelete = hasPermission(user, WebPermissions.PRICING_DELETE);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -109,20 +116,24 @@ export default function PriceListsPage() {
               id: 'actions', header: '',
               cell: ({ row }) => (
                 <div className="flex items-center justify-end gap-1">
-                  <button
-                    onClick={() => { setEditingId(row.original.id); setDialogOpen(true); }}
-                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                    title="Edit"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(row.original)}
-                    className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  {canModify && (
+                    <button
+                      onClick={() => { setEditingId(row.original.id); setDialogOpen(true); }}
+                      className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                      title="Edit"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      onClick={() => handleDeleteClick(row.original)}
+                      className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
               ),
             },
@@ -130,9 +141,11 @@ export default function PriceListsPage() {
           {...tableProps}
           searchPlaceholder="Search price list…"
           actionsNode={
+            canCreate && (
             <Button onClick={() => { setEditingId(null); setDialogOpen(true); }}>
           <Plus size={16} /> Add Price List
         </Button>
+            )
           }
         />
       )}

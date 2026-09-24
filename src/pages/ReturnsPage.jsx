@@ -6,7 +6,8 @@ import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCurrentUser } from '@/hooks/use-auth';
-import { canViewRates } from '@/lib/permissions';
+import { canViewRates, hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
 import { formatINR } from '@/lib/money';
 import { useSalesReturns, useCancelSalesReturn, usePurchaseReturns, useCancelPurchaseReturn, useCreditNotes, useCancelCreditNote, useDebitNotes, useCancelDebitNote } from '@/hooks/use-returns';
 import { SalesReturnFormDialog } from '@/components/returns/sales-return-form-dialog';
@@ -29,6 +30,7 @@ export default function ReturnsPage() {
   const [cancelPrompt, setCancelPrompt] = useState(null);
 
   const { data: user } = useCurrentUser();
+  const canCreate = hasPermission(user, WebPermissions.RETURN_CREATE);
   const showRates = canViewRates(user);
 
   const salesReturns = usePaginated(useSalesReturns);
@@ -40,12 +42,14 @@ export default function ReturnsPage() {
   const debitNotes = usePaginated(useDebitNotes);
   const cancelDebitNote = useCancelDebitNote();
 
-  const addHandlers = {
+  // Gated as a map rather than per button: all four documents are creates on
+  // the same resource, and the "New …" buttons all read from this.
+  const addHandlers = canCreate ? {
     'Sales Returns': () => setSalesReturnOpen(true),
     'Purchase Returns': () => setPurchaseReturnOpen(true),
     'Credit Notes': () => setCreditNoteOpen(true),
     'Debit Notes': () => setDebitNoteOpen(true),
-  };
+  } : {};
 
   const cancelWithReason = (mutation, id, title) => {
     setCancelPrompt({ mutation, id, title });
@@ -87,9 +91,9 @@ export default function ReturnsPage() {
             ]}
             {...salesReturns.tableProps}
             searchPlaceholder="Search return no, reason…"
-          actionsNode={
+          actionsNode={addHandlers[activeTab] && (
             <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
-          }
+          )}
           />
         )
       )}
@@ -113,9 +117,9 @@ export default function ReturnsPage() {
             ]}
             {...purchaseReturns.tableProps}
             searchPlaceholder="Search return no, reason…"
-          actionsNode={
+          actionsNode={addHandlers[activeTab] && (
             <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
-          }
+          )}
           />
         )
       )}
@@ -139,9 +143,9 @@ export default function ReturnsPage() {
             ]}
             {...creditNotes.tableProps}
             searchPlaceholder="Search note no, reason…"
-          actionsNode={
+          actionsNode={addHandlers[activeTab] && (
             <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
-          }
+          )}
           />
         )
       )}
@@ -165,9 +169,9 @@ export default function ReturnsPage() {
             ]}
             {...debitNotes.tableProps}
             searchPlaceholder="Search note no, reason…"
-          actionsNode={
+          actionsNode={addHandlers[activeTab] && (
             <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
-          }
+          )}
           />
         )
       )}

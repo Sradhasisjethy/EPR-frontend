@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { KeyHint } from '@/components/key-hint';
 import { useHotkey } from '@/hooks/use-hotkey';
 import { useCurrentUser } from '@/hooks/use-auth';
-import { canViewRates } from '@/lib/permissions';
+import { canViewRates, hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
 import { formatINR } from '@/lib/money';
 import { useSalesInvoices, useCancelInvoice, openInvoicePrint } from '@/hooks/use-invoicing';
 import { CreateInvoiceDialog } from '@/components/invoicing/create-invoice-dialog';
@@ -19,6 +20,8 @@ export default function InvoicingPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cancellingInvoice, setCancellingInvoice] = useState(null);
   const { data: user } = useCurrentUser();
+  const canCreate = hasPermission(user, WebPermissions.INVOICE_CREATE);
+  const canCancel = hasPermission(user, WebPermissions.INVOICE_MODIFY);
   const showRates = canViewRates(user);
 
   const { query, tableProps } = usePaginated(useSalesInvoices);
@@ -69,7 +72,7 @@ export default function InvoicingPage() {
                   >
                     <Printer size={12} /> Print
                   </button>
-                  {row.original.status === 'POSTED' && (
+                  {canCancel && row.original.status === 'POSTED' && (
                     <button className="text-xs text-destructive hover:underline" onClick={() => handleCancel(row.original)}>Cancel</button>
                   )}
                 </div>
@@ -79,9 +82,11 @@ export default function InvoicingPage() {
           {...tableProps}
           searchPlaceholder="Search invoice number…"
           actionsNode={
+            canCreate && (
             <Button onClick={() => setDialogOpen(true)}>
           <Plus size={16} /> New Invoice <KeyHint>N</KeyHint>
         </Button>
+            )
           }
         />
       )}

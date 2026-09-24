@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useCurrentUser } from '@/hooks/use-auth';
+import { hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
 import { Plus, Pencil, Ban, TriangleAlert } from 'lucide-react';
 import { usePaginated } from '@/hooks/use-paginated';
 import { DataTable } from '@/components/data-table/data-table';
@@ -41,6 +44,8 @@ const soonestExpiry = (vehicle) => {
 };
 
 export default function VehiclesPage() {
+  const { data: user } = useCurrentUser();
+  const canCreate = hasPermission(user, WebPermissions.VEHICLE_CREATE);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deactivating, setDeactivating] = useState(null);
@@ -79,9 +84,11 @@ export default function VehiclesPage() {
             The fleet behind the vehicle number on a challan, so the same lorry is spelt one way everywhere.
           </p>
         </div>
-        <Button onClick={openNew}>
-          <Plus size={16} className="mr-2" /> Add Vehicle
-        </Button>
+        {canCreate && (
+          <Button onClick={openNew}>
+            <Plus size={16} className="mr-2" /> Add Vehicle
+          </Button>
+        )}
       </div>
 
       <ActionError message={error} onDismiss={() => setError('')} />
