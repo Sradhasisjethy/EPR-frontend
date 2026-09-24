@@ -1,4 +1,12 @@
 import { useEffect, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
+
+/** Party types as a person would say them, for the mixed picker below. */
+const PARTY_TYPE_LABEL = {
+  VENDOR: 'Vendor',
+  CONTRACTOR: 'Contractor',
+  LABOUR: 'Labour',
+};
 import { Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -23,7 +31,6 @@ export function PaymentFormDialog({ open, onOpenChange }) {
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
   // Vendors, contractors, and labour can all be paid — no partyType filter here.
-  const { data: partyData } = useParties({ page: 1, limit: 100 });
   const { data: invoicesData } = usePurchaseInvoices({ page: 1, limit: 50, vendorPartyId: form.partyId || undefined });
   const unpaidInvoices = (invoicesData?.rows || []).filter((inv) => inv.paymentStatus !== 'PAID');
   const createMutation = useCreatePayment();
@@ -78,11 +85,24 @@ export function PaymentFormDialog({ open, onOpenChange }) {
               </select>
             </div>
             <div className="space-y-1.5">
-              <Label>Vendor / Contractor / Labour</Label>
-              <select value={form.partyId} onChange={(e) => setForm({ ...form, partyId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
-                <option value="" disabled>Select party</option>
-                {(partyData?.rows || []).map((p) => <option key={p.id} value={p.id}>{p.name} ({p.partyType})</option>)}
-              </select>
+              <Label htmlFor="pay-party">Vendor / Contractor / Labour</Label>
+              {/* Money out goes to a vendor, a contractor or a labourer. The
+                  list used to be every party in the tenant, so a customer could
+                  be paid from a screen that does not mean that. */}
+              <SearchableSelect
+                id="pay-party"
+                value={form.partyId}
+                onChange={(id) => setForm({ ...form, partyId: id })}
+                useOptions={useParties}
+                filters={{ partyTypes: 'VENDOR,CONTRACTOR,LABOUR', status: 'active' }}
+                getOptionLabel={(option) => option.name}
+                // On a mixed list the kind of party is what tells them apart,
+                // not the code the name usually already carries.
+                getOptionHint={(option) => PARTY_TYPE_LABEL[option.partyType] || option.partyType}
+                placeholder="Select vendor, contractor or labourer"
+                searchPlaceholder="Type a name or code…"
+                emptyMessage="No vendor, contractor or labourer matches that."
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Payment Date</Label>

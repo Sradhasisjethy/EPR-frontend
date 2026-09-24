@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,6 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
   const [allowOverride, setAllowOverride] = useState(false);
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: customerData } = useParties({ page: 1, limit: 100, partyType: PartyType.CUSTOMER });
   const createMutation = useCreateSalesOrder();
   const updateMutation = useUpdateSalesOrder();
   const isEditing = !!order;
@@ -194,10 +194,16 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
             </div>
             <div className="space-y-1.5">
               <Label>Customer</Label>
-              <select value={form.customerPartyId} onChange={(e) => setForm({ ...form, customerPartyId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
-                <option value="" disabled>Select customer</option>
-                {(customerData?.rows || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <SearchableSelect
+                value={form.customerPartyId}
+                onChange={(id) => setForm({ ...form, customerPartyId: id })}
+                useOptions={useParties}
+                filters={{ partyType: PartyType.CUSTOMER, status: 'active' }}
+                getOptionLabel={(option) => option.name}
+                getOptionHint={(option) => option.code}
+                placeholder="Select customer"
+                searchPlaceholder="Type a name or code…"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Order Date</Label>

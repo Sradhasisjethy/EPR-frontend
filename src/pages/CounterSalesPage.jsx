@@ -11,8 +11,8 @@ import { canViewRates, hasPermission } from '@/lib/permissions';
 import { WebPermissions } from '@/constants/enums';
 import { formatINR } from '@/lib/money';
 import { DateText } from '@/components/date-text';
-import { useCounterSales } from '@/hooks/use-counter-sales';
-import { openInvoicePrint, useCancelInvoice } from '@/hooks/use-invoicing';
+import { useCounterSales, useCancelCounterSale } from '@/hooks/use-counter-sales';
+import { openInvoicePrint } from '@/hooks/use-invoicing';
 import { CounterSaleDialog } from '@/components/sales/counter-sale-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { toast } from 'sonner';
@@ -33,7 +33,7 @@ export default function CounterSalesPage() {
 
   const { query, tableProps } = usePaginated(useCounterSales);
   const { isLoading, isError } = query;
-  const cancelInvoice = useCancelInvoice();
+  const cancelSale = useCancelCounterSale();
 
   useHotkey('n', useCallback(() => setDialogOpen(true), []));
 
@@ -121,7 +121,7 @@ export default function CounterSalesPage() {
         open={!!cancelling}
         onOpenChange={(open) => !open && setCancelling(null)}
         title={`Cancel Sale — ${cancelling?.invoiceNumber}`}
-        description="This reverses the ledger entries and returns the goods to stock. If money was taken, cancel the receipt first."
+        description="This returns the goods to stock, reverses the ledger entries, and refunds the payment taken at the counter — all together."
         label="Cancellation Reason"
         placeholder="e.g. Customer changed their mind, wrong item issued…"
         confirmText="Cancel Sale"
@@ -129,8 +129,12 @@ export default function CounterSalesPage() {
         onConfirm={async (reason) => {
           if (!cancelling) return;
           try {
-            await cancelInvoice.mutateAsync({ id: cancelling.id, reason });
-            toast.success('Counter sale cancelled — stock returned');
+            const result = await cancelSale.mutateAsync({ id: cancelling.id, reason });
+            toast.success(
+              result.cancelledReceipts?.length
+                ? `Counter sale cancelled — stock returned and ${result.cancelledReceipts.join(', ')} reversed`
+                : 'Counter sale cancelled — stock returned'
+            );
           } catch (err) {
             toast.error(err.response?.data?.message || 'Could not cancel the sale.');
             throw err;

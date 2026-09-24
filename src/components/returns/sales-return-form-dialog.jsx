@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Plus, Trash2, Undo2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -48,7 +49,6 @@ export function SalesReturnFormDialog({ open, onOpenChange }) {
   const [error, setError] = useState('');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: customerData } = useParties({ page: 1, limit: 100, partyType: PartyType.CUSTOMER });
   const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.FINISHED_GOOD });
   const createMutation = useCreateSalesReturn();
 
@@ -161,10 +161,17 @@ export function SalesReturnFormDialog({ open, onOpenChange }) {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="sr-customer">Customer</Label>
-              <select id="sr-customer" value={form.customerPartyId} onChange={(e) => setForm({ ...form, customerPartyId: e.target.value })} className={SELECT} required>
-                <option value="" disabled>Select customer</option>
-                {(customerData?.rows || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <SearchableSelect
+                id="sr-customer"
+                value={form.customerPartyId}
+                onChange={(id) => setForm({ ...form, customerPartyId: id })}
+                useOptions={useParties}
+                filters={{ partyType: PartyType.CUSTOMER, status: 'active' }}
+                getOptionLabel={(option) => option.name}
+                getOptionHint={(option) => option.code}
+                placeholder="Select customer"
+                searchPlaceholder="Type a name or code…"
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="sr-date">Return Date</Label>

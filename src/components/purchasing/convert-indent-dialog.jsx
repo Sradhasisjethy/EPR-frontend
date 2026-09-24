@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { ShoppingCart, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,6 @@ export function ConvertIndentDialog({ open, onOpenChange, indent }) {
   const [rates, setRates] = useState({});
   const [error, setError] = useState('');
 
-  const { data: vendorData } = useParties({ page: 1, limit: 100, partyType: PartyType.VENDOR });
   const convert = useConvertIndent();
 
   useEffect(() => {
@@ -107,18 +107,17 @@ export function ConvertIndentDialog({ open, onOpenChange, indent }) {
                 <Label htmlFor="convert-vendor" className="text-xs font-medium">
                   Vendor / Supplier <span className="text-destructive">*</span>
                 </Label>
-                <select
+                <SearchableSelect
                   id="convert-vendor"
                   value={vendorPartyId}
-                  onChange={(e) => setVendorPartyId(e.target.value)}
-                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm font-medium focus:ring-1 focus:ring-primary"
-                  required
-                >
-                  <option value="" disabled>Select supplier</option>
-                  {(vendorData?.rows || []).map((v) => (
-                    <option key={v.id} value={v.id}>{v.name}</option>
-                  ))}
-                </select>
+                  onChange={(id) => setVendorPartyId(id)}
+                  useOptions={useParties}
+                  filters={{ partyType: PartyType.VENDOR, status: 'active' }}
+                  getOptionLabel={(option) => option.name}
+                  getOptionHint={(option) => option.code}
+                  placeholder="Select supplier"
+                  searchPlaceholder="Type a name or code…"
+                />
               </div>
 
               <div className="space-y-1.5">

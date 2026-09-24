@@ -64,3 +64,22 @@ export function useCreateCounterSale() {
     },
   });
 }
+
+/**
+ * Reverses a counter sale and the money it took, in one call.
+ *
+ * Not `useCancelInvoice`: that refuses while a receipt is allocated and tells
+ * the user to cancel the receipt first — which leaves the sale posted and
+ * reading as unpaid until they also come back and cancel the invoice. A sale
+ * made in one motion at a counter is undone in one motion too.
+ */
+export function useCancelCounterSale() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, reason }) =>
+      (await apiClient.post(`/retail/counter-sales/${id}/cancel`, { reason })).data.data,
+    // A counter sale touches invoices, receipts, stock and the ledger, so the
+    // screens showing any of those are all stale now.
+    onSuccess: () => queryClient.invalidateQueries(),
+  });
+}

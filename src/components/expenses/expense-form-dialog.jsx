@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +17,6 @@ export function ExpenseFormDialog({ open, onOpenChange }) {
   const [error, setError] = useState('');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: partyData } = useParties({ page: 1, limit: 100 });
   const createMutation = useCreateExpense();
 
   useEffect(() => {
@@ -82,10 +82,17 @@ export function ExpenseFormDialog({ open, onOpenChange }) {
           </div>
           <div className="space-y-1.5">
             <Label>Paid To (optional)</Label>
-            <select value={form.paidToPartyId} onChange={(e) => setForm({ ...form, paidToPartyId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-              <option value="">None</option>
-              {(partyData?.rows || []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            <SearchableSelect
+              value={form.paidToPartyId}
+              onChange={(id) => setForm({ ...form, paidToPartyId: id })}
+              useOptions={useParties}
+              filters={{ status: 'active' }}
+              getOptionLabel={(option) => option.name}
+              getOptionHint={(option) => option.code}
+              emptyOptionLabel="None"
+              placeholder="None"
+              searchPlaceholder="Type a name or code…"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Description (optional)</Label>

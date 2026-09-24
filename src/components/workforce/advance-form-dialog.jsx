@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { useCreateAdvance } from '@/hooks/use-workforce';
 import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
-import { PartyType } from '@/constants/enums';
 import { toPaise } from '@/lib/money';
 import { today } from '@/lib/date-format';
 import { toast } from 'sonner';
@@ -16,9 +16,6 @@ export function AdvanceFormDialog({ open, onOpenChange }) {
   const [error, setError] = useState('');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: contractorData } = useParties({ page: 1, limit: 100, partyType: PartyType.CONTRACTOR });
-  const { data: labourData } = useParties({ page: 1, limit: 100, partyType: PartyType.LABOUR });
-  const partyOptions = [...(contractorData?.rows || []), ...(labourData?.rows || [])];
   const createMutation = useCreateAdvance();
 
   useEffect(() => {
@@ -50,11 +47,22 @@ export function AdvanceFormDialog({ open, onOpenChange }) {
             </select>
           </div>
           <div className="space-y-1.5">
-            <Label>Contractor / Labourer</Label>
-            <select value={form.partyId} onChange={(e) => setForm({ ...form, partyId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
-              <option value="" disabled>Select party</option>
-              {partyOptions.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.partyType})</option>)}
-            </select>
+            <Label htmlFor="adv-party">Contractor / Labourer</Label>
+            {/* Both kinds in one searchable list. It used to be the first 100
+                contractors plus the first 100 labourers concatenated, so the
+                121st contractor could not be paid an advance. */}
+            <SearchableSelect
+              id="adv-party"
+              value={form.partyId}
+              onChange={(id) => setForm({ ...form, partyId: id })}
+              useOptions={useParties}
+              filters={{ partyTypes: 'CONTRACTOR,LABOUR', status: 'active' }}
+              getOptionLabel={(option) => option.name}
+              getOptionHint={(option) => (option.partyType === 'CONTRACTOR' ? 'Contractor' : 'Labour')}
+              placeholder="Select contractor or labourer"
+              searchPlaceholder="Type a name or code…"
+              emptyMessage="No contractor or labourer matches that."
+            />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">

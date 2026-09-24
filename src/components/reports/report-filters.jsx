@@ -23,10 +23,12 @@ import { cn } from '@/lib/utils';
  * These are master lists (locations, parties, products) that every report
  * screen needs, so they are fetched unconditionally and served from the
  * react-query cache on subsequent reports rather than being torn down and
- * refetched each time the user switches report. 200 is the API's maximum page
- * size (backend utils/pagination.js), not an arbitrary number.
+ * refetched each time the user switches report.
+ *
+ * Capped at 100 because the backend validation schemas (parties, factory,
+ * products) enforce `limit.max(100)`.
  */
-const MASTER_LIMIT = 200;
+const MASTER_LIMIT = 100;
 
 function useEntityOptions() {
   const factories = useFactories({ page: 1, limit: MASTER_LIMIT });

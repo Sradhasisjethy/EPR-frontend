@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,6 @@ export function PurchaseReturnFormDialog({ open, onOpenChange }) {
   const [error, setError] = useState('');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: vendorData } = useParties({ page: 1, limit: 100, partyType: PartyType.VENDOR });
   const { data: productData } = useProducts({ page: 1, limit: 100 });
   const createMutation = useCreatePurchaseReturn();
 
@@ -70,10 +70,16 @@ export function PurchaseReturnFormDialog({ open, onOpenChange }) {
             </div>
             <div className="space-y-1.5">
               <Label>Vendor</Label>
-              <select value={form.vendorPartyId} onChange={(e) => setForm({ ...form, vendorPartyId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
-                <option value="" disabled>Select vendor</option>
-                {(vendorData?.rows || []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-              </select>
+              <SearchableSelect
+                value={form.vendorPartyId}
+                onChange={(id) => setForm({ ...form, vendorPartyId: id })}
+                useOptions={useParties}
+                filters={{ partyType: PartyType.VENDOR, status: 'active' }}
+                getOptionLabel={(option) => option.name}
+                getOptionHint={(option) => option.code}
+                placeholder="Select vendor"
+                searchPlaceholder="Type a name or code…"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Return Date</Label>

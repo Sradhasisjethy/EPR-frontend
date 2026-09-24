@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Plus, Trash2, Truck, CornerDownRight, Loader2, Undo2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -60,7 +61,6 @@ export function CounterSaleDialog({ open, onOpenChange }) {
   const [removeError, setRemoveError] = useState('');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: customerData } = useParties({ page: 1, limit: 100, partyType: PartyType.CUSTOMER });
   const createSale = useCreateCounterSale();
   const { data: reasonCodesData } = useOverrideReasonCodes();
   const reasonCodes = (Array.isArray(reasonCodesData) ? reasonCodesData : []).filter((r) => r.isActive !== false);
@@ -270,15 +270,22 @@ export function CounterSaleDialog({ open, onOpenChange }) {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cs-buyer">Buyer</Label>
-              <select
+              {/* Walk-in stays the default and is chosen from the list like any
+                  buyer; the rest are searched, because 429 of them do not fit
+                  in a dropdown. */}
+              <SearchableSelect
                 id="cs-buyer"
                 value={form.customerPartyId}
-                onChange={(e) => setForm({ ...form, customerPartyId: e.target.value })}
-                className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
-              >
-                <option value={WALK_IN}>Walk-in customer</option>
-                {(customerData?.rows || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+                onChange={(id) => setForm({ ...form, customerPartyId: id })}
+                useOptions={useParties}
+                filters={{ partyType: PartyType.CUSTOMER, status: 'active' }}
+                getOptionLabel={(option) => option.name}
+                getOptionHint={(option) => option.code}
+                emptyOptionLabel="Walk-in customer"
+                emptyOptionValue={WALK_IN}
+                placeholder="Walk-in customer"
+                searchPlaceholder="Type a name or code…"
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cs-date">Date</Label>

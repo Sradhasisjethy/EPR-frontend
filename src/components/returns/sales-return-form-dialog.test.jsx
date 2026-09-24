@@ -42,7 +42,10 @@ const openForm = async (u) => {
   renderWithQuery(<SalesReturnFormDialog open onOpenChange={() => {}} />);
   await waitFor(() => expect(screen.getByRole('option', { name: 'Bhubaneswar Plant' })).toBeInTheDocument());
   await u.selectOptions(screen.getByLabelText('Factory'), 'f1');
-  await u.selectOptions(screen.getByLabelText('Customer'), 'c1');
+  // The customer picker searches rather than listing: there are 429 of them,
+  // and a <select> could only ever offer the first hundred.
+  await u.click(screen.getByRole('combobox', { name: 'Customer' }));
+  await u.click(await screen.findByRole('option', { name: /Sradhasis Jethy/ }));
 };
 
 describe('Recording a sales return', () => {

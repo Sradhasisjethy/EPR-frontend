@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,6 @@ export function GoodsReceiptFormDialog({ open, onOpenChange }) {
   const [error, setError] = useState('');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: vendorData } = useParties({ page: 1, limit: 100, partyType: PartyType.VENDOR });
   const { data: productData } = useProducts({ page: 1, limit: 100 });
   const { data: openOrders } = usePurchaseOrders({ page: 1, limit: 100, factoryId: form.factoryId || undefined, status: 'CONFIRMED' });
   const { data: partiallyReceivedOrders } = usePurchaseOrders({ page: 1, limit: 100, factoryId: form.factoryId || undefined, status: 'PARTIALLY_RECEIVED' });
@@ -180,19 +180,17 @@ export function GoodsReceiptFormDialog({ open, onOpenChange }) {
                 <Label htmlFor="grn-vendor" className="text-xs font-medium">
                   Supplier / Vendor <span className="text-destructive">*</span>
                 </Label>
-                <select
+                <SearchableSelect
                   id="grn-vendor"
                   value={form.vendorPartyId}
-                  onChange={(e) => setForm({ ...form, vendorPartyId: e.target.value })}
-                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm font-medium focus:ring-1 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed"
-                  required
-                  disabled={!!form.purchaseOrderId}
-                >
-                  <option value="" disabled>Select vendor</option>
-                  {(vendorData?.rows || []).map((v) => (
-                    <option key={v.id} value={v.id}>{v.name}</option>
-                  ))}
-                </select>
+                  onChange={(id) => setForm({ ...form, vendorPartyId: id })}
+                  useOptions={useParties}
+                  filters={{ partyType: PartyType.VENDOR, status: 'active' }}
+                  getOptionLabel={(option) => option.name}
+                  getOptionHint={(option) => option.code}
+                  placeholder="Select vendor"
+                  searchPlaceholder="Type a name or code…"
+                />
               </div>
 
               <div className="space-y-1.5">

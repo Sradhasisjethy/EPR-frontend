@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +17,6 @@ export function CreditNoteFormDialog({ open, onOpenChange }) {
   const [error, setError] = useState('');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: customerData } = useParties({ page: 1, limit: 100, partyType: PartyType.CUSTOMER });
   const createMutation = useCreateCreditNote();
 
   useEffect(() => {
@@ -49,10 +49,16 @@ export function CreditNoteFormDialog({ open, onOpenChange }) {
           </div>
           <div className="space-y-1.5">
             <Label>Customer</Label>
-            <select value={form.customerPartyId} onChange={(e) => setForm({ ...form, customerPartyId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
-              <option value="" disabled>Select customer</option>
-              {(customerData?.rows || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <SearchableSelect
+              value={form.customerPartyId}
+              onChange={(id) => setForm({ ...form, customerPartyId: id })}
+              useOptions={useParties}
+              filters={{ partyType: PartyType.CUSTOMER, status: 'active' }}
+              getOptionLabel={(option) => option.name}
+              getOptionHint={(option) => option.code}
+              placeholder="Select customer"
+              searchPlaceholder="Type a name or code…"
+            />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">

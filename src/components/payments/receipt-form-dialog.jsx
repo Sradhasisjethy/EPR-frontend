@@ -13,6 +13,7 @@ import { toPaise, formatINR, fromPaise } from '@/lib/money';
 import { today } from '@/lib/date-format';
 import { toast } from 'sonner';
 import { MoneyAccountSelect } from '@/components/ledger/money-account-select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 
 const emptyMode = { mode: 'CASH', amountRupees: '' };
 
@@ -23,7 +24,6 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
   const [error, setError] = useState('');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: customerData } = useParties({ page: 1, limit: 100, partyType: PartyType.CUSTOMER });
   const { data: invoicesData } = useSalesInvoices({ page: 1, limit: 50, customerPartyId: form.customerPartyId || undefined, status: 'POSTED', openOnly: true });
   const createMutation = useCreateReceipt();
 
@@ -45,6 +45,10 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
+    if (!form.customerPartyId) {
+      setError('Choose the customer this money came from.');
+      return;
+    }
     if (modes.some((m) => !m.amountRupees)) {
       setError('Every payment mode needs an amount.');
       return;
@@ -77,11 +81,21 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
               </select>
             </div>
             <div className="space-y-1.5">
-              <Label>Customer</Label>
-              <select value={form.customerPartyId} onChange={(e) => setForm({ ...form, customerPartyId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
-                <option value="" disabled>Select customer</option>
-                {(customerData?.rows || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <Label htmlFor="receipt-customer">Customer</Label>
+              {/* Searches every customer rather than the first hundred: with
+                  400 on the books, a plain select could not reach most of them. */}
+              <SearchableSelect
+                id="receipt-customer"
+                value={form.customerPartyId}
+                onChange={(id) => setForm({ ...form, customerPartyId: id })}
+                useOptions={useParties}
+                filters={{ partyType: PartyType.CUSTOMER, status: 'active' }}
+                getOptionLabel={(party) => party.name}
+                getOptionHint={(party) => party.code}
+                placeholder="Select customer"
+                searchPlaceholder="Search name, code or GSTIN…"
+                emptyMessage="No customer matches that."
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Receipt Date</Label>

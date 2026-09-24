@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -42,7 +43,6 @@ export function QuotationFormDialog({ open, onOpenChange, quotation = null, lead
   const [error, setError] = useState('');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: customerData } = useParties({ page: 1, limit: 100, partyType: PartyType.CUSTOMER });
   const create = useCreateQuotation();
   const update = useUpdateQuotation();
   const factories = factoryData?.rows || [];
@@ -185,10 +185,17 @@ export function QuotationFormDialog({ open, onOpenChange, quotation = null, lead
           {buyerMode === 'CUSTOMER' ? (
             <div className="space-y-1.5">
               <Label htmlFor="qt-customer">Customer</Label>
-              <select id="qt-customer" className={SELECT} value={customerPartyId} onChange={(e) => setCustomerPartyId(e.target.value)}>
-                <option value="">Select customer</option>
-                {(customerData?.rows || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <SearchableSelect
+                id="qt-customer"
+                value={customerPartyId}
+                onChange={(id) => setCustomerPartyId(id)}
+                useOptions={useParties}
+                filters={{ partyType: PartyType.CUSTOMER, status: 'active' }}
+                getOptionLabel={(option) => option.name}
+                getOptionHint={(option) => option.code}
+                placeholder="Select customer"
+                searchPlaceholder="Type a name or code…"
+              />
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-3">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,6 @@ export function MaterialIssueFormDialog({ open, onOpenChange }) {
   const [error, setError] = useState('');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: contractorData } = useParties({ page: 1, limit: 100, partyType: PartyType.CONTRACTOR });
   const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.RAW_MATERIAL });
   const createMutation = useIssueMaterial();
 
@@ -65,10 +65,16 @@ export function MaterialIssueFormDialog({ open, onOpenChange }) {
             </div>
             <div className="space-y-1.5">
               <Label>Contractor</Label>
-              <select value={form.contractorPartyId} onChange={(e) => setForm({ ...form, contractorPartyId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
-                <option value="" disabled>Select contractor</option>
-                {(contractorData?.rows || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <SearchableSelect
+                value={form.contractorPartyId}
+                onChange={(id) => setForm({ ...form, contractorPartyId: id })}
+                useOptions={useParties}
+                filters={{ partyType: PartyType.CONTRACTOR, status: 'active' }}
+                getOptionLabel={(option) => option.name}
+                getOptionHint={(option) => option.code}
+                placeholder="Select contractor"
+                searchPlaceholder="Type a name or code…"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Issue Date</Label>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Plus, Trash2, ShoppingCart, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,6 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
   const [error, setError] = useState('');
 
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: vendorData } = useParties({ page: 1, limit: 100, partyType: PartyType.VENDOR });
   const { data: productData } = useProducts({ page: 1, limit: 100 });
   const { data: fullOrder, isLoading: loadingOrder } = usePurchaseOrder(open && order?.id ? order.id : undefined);
 
@@ -197,18 +197,17 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
                 <Label htmlFor="po-vendor" className="text-xs font-medium">
                   Vendor / Supplier <span className="text-destructive">*</span>
                 </Label>
-                <select
+                <SearchableSelect
                   id="po-vendor"
                   value={form.vendorPartyId}
-                  onChange={(e) => setForm({ ...form, vendorPartyId: e.target.value })}
-                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm font-medium focus:ring-1 focus:ring-primary"
-                  required
-                >
-                  <option value="" disabled>Select vendor</option>
-                  {(vendorData?.rows || []).map((v) => (
-                    <option key={v.id} value={v.id}>{v.name}</option>
-                  ))}
-                </select>
+                  onChange={(id) => setForm({ ...form, vendorPartyId: id })}
+                  useOptions={useParties}
+                  filters={{ partyType: PartyType.VENDOR, status: 'active' }}
+                  getOptionLabel={(option) => option.name}
+                  getOptionHint={(option) => option.code}
+                  placeholder="Select vendor"
+                  searchPlaceholder="Type a name or code…"
+                />
               </div>
 
               <div className="space-y-1.5">
