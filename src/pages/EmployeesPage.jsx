@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
 import { useEmployees, useDeleteEmployee } from '@/hooks/use-employees';
 import { usePermissions } from '@/hooks/use-permissions';
+import { WebPermissions } from '@/constants/enums';
 import { EmployeeFormDialog } from '@/components/employees/employee-form-dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { TableSkeleton } from '@/components/ui/skeleton';
@@ -19,7 +20,18 @@ export default function EmployeesPage() {
   const { isLoading, isError, error: fetchError } = query;
   const deleteMutation = useDeleteEmployee();
   const { hasPermission } = usePermissions();
-  const canWrite = hasPermission('EMPLOYEE_WRITE');
+  /**
+   * These were one `canWrite = hasPermission('EMPLOYEE_WRITE')`, which nobody
+   * ever passed: `_WRITE` is the pre-split legacy code, and the API expands a
+   * stored one into EMPLOYEE_CREATE/MODIFY/DELETE rather than keeping it, so
+   * the literal string is held by no user. The whole screen was read-only for
+   * everyone but the two bypass roles. Split to match what the API checks per
+   * route, and taken from the shared constants rather than spelled inline.
+   */
+  const canCreate = hasPermission(WebPermissions.EMPLOYEE_CREATE);
+  const canModify = hasPermission(WebPermissions.EMPLOYEE_MODIFY);
+  const canDelete = hasPermission(WebPermissions.EMPLOYEE_DELETE);
+  const canAct = canCreate || canModify || canDelete;
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
@@ -106,7 +118,7 @@ export default function EmployeesPage() {
     },
   ];
 
-  if (canWrite) {
+  if (canAct) {
     columns.push({
       id: 'actions',
       header: '',
@@ -119,20 +131,24 @@ export default function EmployeesPage() {
           >
             <FileText size={16} />
           </button>
-          <button
-            onClick={() => { setEditingEmployee(row.original); setDialogOpen(true); }}
-            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title="Edit"
-          >
-            <Pencil size={16} />
-          </button>
-          <button
-            onClick={() => handleDelete(row.original)}
-            className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-            title="Delete"
-          >
-            <Trash2 size={16} />
-          </button>
+          {canModify && (
+            <button
+              onClick={() => { setEditingEmployee(row.original); setDialogOpen(true); }}
+              className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="Edit"
+            >
+              <Pencil size={16} />
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => handleDelete(row.original)}
+              className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+              title="Delete"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
         </div>
       ),
     });
@@ -163,7 +179,7 @@ export default function EmployeesPage() {
           columns={columns}
           {...tableProps}
           searchPlaceholder="Search employee…"
-          actionsNode={canWrite && (
+          actionsNode={canCreate && (
             <Button onClick={() => { setEditingEmployee(null); setDialogOpen(true); }}>
               <Plus size={16} /> Add Employee
             </Button>
@@ -171,7 +187,7 @@ export default function EmployeesPage() {
         />
       )}
 
-      {canWrite && (
+      {(canCreate || canModify) && (
         <EmployeeFormDialog open={dialogOpen} onOpenChange={setDialogOpen} employee={editingEmployee} />
       )}
       

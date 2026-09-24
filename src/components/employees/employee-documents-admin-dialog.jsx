@@ -5,14 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, FileText, Download, CheckCircle, ShieldCheck } from 'lucide-react';
 import { formatBytes, formatDate } from '@/lib/utils';
+import { openApiDocument } from '@/lib/api-document';
+import { toast } from 'sonner';
 import { usePermissions } from '@/hooks/use-permissions';
+import { WebPermissions } from '@/constants/enums';
 
 export function EmployeeDocumentsAdminDialog({ open, onOpenChange, employee }) {
   const employeeId = employee?.id;
   const { data: documents, isLoading } = useEmployeeDocuments(employeeId);
   const verifyMutation = useVerifyEmployeeDocument(employeeId);
   const { hasPermission } = usePermissions();
-  const canWrite = hasPermission('EMPLOYEE_WRITE');
+  // Was hasPermission('EMPLOYEE_WRITE') — a legacy code the API expands away,
+  // so no user held it and nobody could verify a document. Verifying is the
+  // write this dialog performs, and the route asks for EMPLOYEE_MODIFY.
+  const canWrite = hasPermission(WebPermissions.EMPLOYEE_MODIFY);
 
   const handleVerifyToggle = async (docId, currentVerifiedStatus) => {
     if (!canWrite) return;
@@ -75,15 +81,22 @@ export function EmployeeDocumentsAdminDialog({ open, onOpenChange, employee }) {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          asChild
+                        {/* Fetched through the API client, not linked. The
+                            files used to sit on a public static mount; they are
+                            now behind the same grant as the document list, so a
+                            plain <a href> would arrive without credentials. */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex items-center gap-1.5"
+                          onClick={() =>
+                            openApiDocument(doc.url).catch((error) =>
+                              toast.error(error.response?.data?.message || 'Could not open the document.')
+                            )
+                          }
                         >
-                          <a href={doc.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
-                            <Download size={14} />
-                            <span className="text-xs">View</span>
-                          </a>
+                          <Download size={14} />
+                          <span className="text-xs">View</span>
                         </Button>
                         
                         {canWrite && (

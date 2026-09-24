@@ -7,7 +7,8 @@ import { KeyHint } from '@/components/key-hint';
 import { useHotkey } from '@/hooks/use-hotkey';
 import { usePaginated } from '@/hooks/use-paginated';
 import { useCurrentUser } from '@/hooks/use-auth';
-import { canViewRates } from '@/lib/permissions';
+import { canViewRates, hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
 import { formatINR } from '@/lib/money';
 import { useExpenses, useCancelExpense } from '@/hooks/use-expenses';
 import { ExpenseFormDialog } from '@/components/expenses/expense-form-dialog';
@@ -19,6 +20,8 @@ export default function ExpensesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cancellingExpense, setCancellingExpense] = useState(null);
   const { data: user } = useCurrentUser();
+  const canCreate = hasPermission(user, WebPermissions.EXPENSE_CREATE);
+  const canCancel = hasPermission(user, WebPermissions.EXPENSE_MODIFY);
   const showRates = canViewRates(user);
 
   const { query, tableProps } = usePaginated(useExpenses);
@@ -51,7 +54,7 @@ export default function ExpensesPage() {
             { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
             {
               id: 'actions', header: '',
-              cell: ({ row }) => row.original.status === 'POSTED' && (
+              cell: ({ row }) => canCancel && row.original.status === 'POSTED' && (
                 <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => handleCancel(row.original)}>Cancel</button></div>
               ),
             },
@@ -59,9 +62,11 @@ export default function ExpensesPage() {
           {...tableProps}
           searchPlaceholder="Search expense no, category, description…"
           actionsNode={
+            canCreate && (
             <Button onClick={() => setDialogOpen(true)}>
           <Plus size={16} /> New Expense <KeyHint>N</KeyHint>
         </Button>
+            )
           }
         />
       )}

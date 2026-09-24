@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useCurrentUser } from '@/hooks/use-auth';
+import { hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
 import { usePaginated } from '@/hooks/use-paginated';
 import { Plus } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
@@ -19,6 +22,9 @@ const STATUS_STYLES = {
 };
 
 export default function TransfersPage() {
+  const { data: user } = useCurrentUser();
+  const canCreate = hasPermission(user, WebPermissions.TRANSFER_CREATE);
+  const canModify = hasPermission(user, WebPermissions.TRANSFER_MODIFY);
   const [initiateOpen, setInitiateOpen] = useState(false);
   const [receivingTransfer, setReceivingTransfer] = useState(null);
   const [cancellingTransfer, setCancellingTransfer] = useState(null);
@@ -58,7 +64,7 @@ export default function TransfersPage() {
               id: 'actions', header: '',
               cell: ({ row }) => (
                 <div className="flex justify-end gap-2">
-                  {row.original.status === 'IN_TRANSIT' && (
+                  {canModify && row.original.status === 'IN_TRANSIT' && (
                     <>
                       <button className="text-xs text-primary hover:underline" onClick={() => setReceivingTransfer(row.original)}>Receive</button>
                       <button
@@ -76,7 +82,7 @@ export default function TransfersPage() {
           {...tableProps}
           searchPlaceholder="Search transfer no, vehicle…"
           actionsNode={
-            <Button onClick={() => setInitiateOpen(true)}><Plus size={16} /> Initiate Transfer</Button>
+            canCreate && <Button onClick={() => setInitiateOpen(true)}><Plus size={16} /> Initiate Transfer</Button>
           }
         />
       )}

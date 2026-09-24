@@ -8,6 +8,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useRoleMembers, useAssignRoleMember, useRemoveRoleMember } from '@/hooks/use-roles';
+import { usePermissions } from '@/hooks/use-permissions';
+import { WebPermissions } from '@/constants/enums';
 import { useEmployees } from '@/hooks/use-employees';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserPlus, Trash2, Users, ShieldCheck } from 'lucide-react';
@@ -22,6 +24,15 @@ export function RoleMembersDialog({ open, onOpenChange, role }) {
 
   const assignMutation = useAssignRoleMember();
   const removeMutation = useRemoveRoleMember();
+  /**
+   * Membership is a grant, not a detail: putting someone in a role hands them
+   * everything the role holds. The API gates these on ROLE_CREATE and
+   * ROLE_DELETE and now also refuses to assign a role stronger than the actor's
+   * own, so the controls follow the same two grants.
+   */
+  const { hasPermission } = usePermissions();
+  const canAssign = hasPermission(WebPermissions.ROLE_CREATE);
+  const canRemove = hasPermission(WebPermissions.ROLE_DELETE);
 
   const assignedEmployeeIds = new Set(members.map((m) => m.employeeId));
   const availableEmployees = allEmployees.filter((emp) => !assignedEmployeeIds.has(emp.id));
@@ -73,6 +84,7 @@ export function RoleMembersDialog({ open, onOpenChange, role }) {
         )}
 
         {/* Quick Assign Section */}
+        {canAssign && (
         <div className="p-4 rounded-xl border border-border/80 bg-muted/20 space-y-3">
           <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
             <UserPlus className="w-4 h-4 text-primary" />
@@ -101,6 +113,7 @@ export function RoleMembersDialog({ open, onOpenChange, role }) {
             </Button>
           </div>
         </div>
+        )}
 
         {/* Assigned Members List */}
         <div className="space-y-2 pt-2">
@@ -142,14 +155,16 @@ export function RoleMembersDialog({ open, onOpenChange, role }) {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => handleRemove(member.employeeId)}
-                      disabled={removeMutation.isPending}
-                      className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0 ml-2"
-                      title="Remove user from this role"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {canRemove && (
+                      <button
+                        onClick={() => handleRemove(member.employeeId)}
+                        disabled={removeMutation.isPending}
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0 ml-2"
+                        title="Remove user from this role"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 );
               })}

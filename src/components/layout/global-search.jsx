@@ -1,26 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { NAVIGATION } from '@/constants/navigation';
+import { usePermissions } from '@/hooks/use-permissions';
 import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
 
+/**
+ * Flattens the nav into searchable entries, carrying each one's gate with it.
+ *
+ * The gate has to travel with the entry: this list was built once at module
+ * scope with no permission filter at all, so Cmd-K listed and navigated to every
+ * module in the product regardless of grants — the one hole the sidebar's
+ * filtering could not cover, since it reads the same NAVIGATION array.
+ */
 const SEARCH_LINKS = NAVIGATION.flatMap((item) => {
   if (item.children) {
     return item.children.map((child) => ({
       name: `${item.title} > ${child.title}`,
       path: child.href,
+      permission: child.permission ?? item.permission,
+      anyPermissions: child.anyPermissions ?? item.anyPermissions,
     }));
   }
-  return [{ name: item.title, path: item.href }];
+  return [{
+    name: item.title,
+    path: item.href,
+    permission: item.permission,
+    anyPermissions: item.anyPermissions,
+  }];
 });
 
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const { hasPermission, hasAnyPermission } = usePermissions();
+
+  // Same rule the sidebar applies, so the two agree on what exists.
+  const visibleLinks = useMemo(
+    () =>
+      SEARCH_LINKS.filter((link) => {
+        if (link.anyPermissions) return hasAnyPermission(link.anyPermissions);
+        if (link.permission) return hasPermission(link.permission);
+        return true;
+      }),
+    [hasPermission, hasAnyPermission]
+  );
 
   useEffect(() => {
     const down = (e) => {
@@ -33,7 +61,7 @@ export function GlobalSearch() {
     return () => document.removeEventListener('keydown', down);
   }, []);
 
-  const filteredLinks = SEARCH_LINKS.filter((link) =>
+  const filteredLinks = visibleLinks.filter((link) =>
     link.name.toLowerCase().includes(query.toLowerCase())
   );
 

@@ -1,4 +1,7 @@
 import { useCallback, useState } from 'react';
+import { useCurrentUser } from '@/hooks/use-auth';
+import { hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
 import { usePaginated } from '@/hooks/use-paginated';
 import { Plus, Printer } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
@@ -13,6 +16,9 @@ import { toast } from 'sonner';
 import { DateText } from '@/components/date-text';
 
 export default function DispatchPage() {
+  const { data: user } = useCurrentUser();
+  const canCreate = hasPermission(user, WebPermissions.DISPATCH_CREATE);
+  const canCancel = hasPermission(user, WebPermissions.DISPATCH_MODIFY);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cancellingChallan, setCancellingChallan] = useState(null);
   const { query, tableProps } = usePaginated(useDeliveryChallans);
@@ -60,7 +66,7 @@ export default function DispatchPage() {
                       <Printer size={12} /> {format === 'a4' ? 'A4' : 'Thermal'}
                     </button>
                   ))}
-                  {row.original.status === 'DISPATCHED' && (
+                  {canCancel && row.original.status === 'DISPATCHED' && (
                     <button
                       className="text-xs text-destructive hover:underline"
                       onClick={() => setCancellingChallan(row.original)}
@@ -75,9 +81,11 @@ export default function DispatchPage() {
           {...tableProps}
           searchPlaceholder="Search challan no, vehicle, driver…"
           actionsNode={
+            canCreate && (
             <Button onClick={() => setDialogOpen(true)}>
           <Plus size={16} /> New Delivery Challan <KeyHint>N</KeyHint>
         </Button>
+            )
           }
         />
       )}
