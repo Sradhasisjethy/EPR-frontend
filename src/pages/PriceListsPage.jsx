@@ -143,29 +143,6 @@ export default function PriceListsPage() {
               id: 'actions', header: '',
               cell: ({ row }) => (
                 <div className="flex items-center justify-end gap-1">
-<<<<<<< HEAD
-                  <button
-                    onClick={() => { setEditingId(row.original.id); setDialogOpen(true); }}
-                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                    title="Edit"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    onClick={() => setRatesFor(row.original)}
-                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                    title="Import or export this list's rates"
-                  >
-                    <FileSpreadsheet size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(row.original)}
-                    className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-=======
                   {canModify && (
                     <button
                       onClick={() => { setEditingId(row.original.id); setDialogOpen(true); }}
@@ -175,6 +152,13 @@ export default function PriceListsPage() {
                       <Pencil size={16} />
                     </button>
                   )}
+                  <button
+                    onClick={() => setRatesFor(row.original)}
+                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    title="Import or export this list's rates"
+                  >
+                    <FileSpreadsheet size={16} />
+                  </button>
                   {canDelete && (
                     <button
                       onClick={() => handleDeleteClick(row.original)}
@@ -184,7 +168,6 @@ export default function PriceListsPage() {
                       <Trash2 size={16} />
                     </button>
                   )}
->>>>>>> 7da0ac5383bc38954114af804a96ecc83366826d
                 </div>
               ),
             },

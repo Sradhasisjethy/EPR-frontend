@@ -1,11 +1,8 @@
 import { useState } from 'react';
-<<<<<<< HEAD
 import { MasterImportExportActions } from '@/components/master-data/import-export-actions';
-=======
 import { useCurrentUser } from '@/hooks/use-auth';
 import { hasPermission } from '@/lib/permissions';
 import { WebPermissions } from '@/constants/enums';
->>>>>>> 7da0ac5383bc38954114af804a96ecc83366826d
 import { Plus, Pencil, Ban, TriangleAlert } from 'lucide-react';
 import { usePaginated } from '@/hooks/use-paginated';
 import { DataTable } from '@/components/data-table/data-table';
@@ -88,11 +85,12 @@ export default function VehiclesPage() {
             The fleet behind the vehicle number on a challan, so the same lorry is spelt one way everywhere.
           </p>
         </div>
-<<<<<<< HEAD
         <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={openNew}>
-            <Plus size={16} className="mr-2" /> Add Vehicle
-          </Button>
+          {canCreate && (
+            <Button onClick={openNew}>
+              <Plus size={16} className="mr-2" /> Add Vehicle
+            </Button>
+          )}
           <MasterImportExportActions
             module="vehicles"
             label="Vehicles"
@@ -100,13 +98,6 @@ export default function VehiclesPage() {
             filters={{ ...(vehicleQuery.tableProps.searchValue ? { search: vehicleQuery.tableProps.searchValue } : {}) }}
           />
         </div>
-=======
-        {canCreate && (
-          <Button onClick={openNew}>
-            <Plus size={16} className="mr-2" /> Add Vehicle
-          </Button>
-        )}
->>>>>>> 7da0ac5383bc38954114af804a96ecc83366826d
       </div>
 
       <ActionError message={error} onDismiss={() => setError('')} />

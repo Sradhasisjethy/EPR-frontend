@@ -1,11 +1,8 @@
 import { useState } from 'react';
-<<<<<<< HEAD
 import { MasterImportExportActions } from '@/components/master-data/import-export-actions';
-=======
 import { useCurrentUser } from '@/hooks/use-auth';
 import { hasPermission } from '@/lib/permissions';
 import { WebPermissions } from '@/constants/enums';
->>>>>>> 7da0ac5383bc38954114af804a96ecc83366826d
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Plus, Filter, Building2, MapPin } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
@@ -284,12 +281,13 @@ export default function DepartmentsPage() {
           data={deptData?.rows || []}
           searchKey="name"
           actionsNode={
-<<<<<<< HEAD
             <>
-              <Button onClick={() => { setEditingDept(null); setDialogOpen(true); }}>
-                <Plus size={16} className="mr-1.5" />
-                Add Department
-              </Button>
+              {canCreate && (
+                <Button onClick={() => { setEditingDept(null); setDialogOpen(true); }}>
+                  <Plus size={16} className="mr-1.5" />
+                  Add Department
+                </Button>
+              )}
               <MasterImportExportActions
                 module="departments"
                 label="Departments"
@@ -297,14 +295,6 @@ export default function DepartmentsPage() {
                 filters={{ ...(selectedOrgId ? { organizationId: selectedOrgId } : {}) }}
               />
             </>
-=======
-            canCreate && (
-            <Button onClick={() => { setEditingDept(null); setDialogOpen(true); }}>
-              <Plus size={16} className="mr-1.5" />
-              Add Department
-            </Button>
-            )
->>>>>>> 7da0ac5383bc38954114af804a96ecc83366826d
           }
         />
       )}
