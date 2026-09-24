@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MasterImportExportActions } from '@/components/master-data/import-export-actions';
 import { Landmark, Plus, Wallet } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { Button } from '@/components/ui/button';
@@ -88,6 +89,12 @@ export function ChartOfAccounts() {
                 </Button>
               </>
             )}
+            <MasterImportExportActions
+              module="accounts"
+              label="Chart of Accounts"
+              resource="ACCOUNT"
+              filters={{ ...(showInactive ? { includeInactive: 'true' } : {}) }}
+            />
           </div>
         }
       />

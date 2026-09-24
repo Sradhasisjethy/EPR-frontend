@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { usePaginated } from '@/hooks/use-paginated';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileSpreadsheet, X } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { usePriceLists, useDeletePriceList } from '@/hooks/use-pricing';
+import { MasterImportExportActions } from '@/components/master-data/import-export-actions';
 import { PriceListFormDialog } from '@/components/pricing/price-list-form-dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from 'sonner';
@@ -14,6 +15,10 @@ export default function PriceListsPage() {
   const [editingId, setEditingId] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [priceListToDelete, setPriceListToDelete] = useState(null);
+  // Rates belong to one price list, so the file does too. Picking the list
+  // first is what makes "export, edit in Excel, upload" mean something
+  // unambiguous — a rate card without a list is just a column of numbers.
+  const [ratesFor, setRatesFor] = useState(null);
 
   const { query, tableProps } = usePaginated(usePriceLists);
   const { isLoading, isError } = query;
@@ -38,6 +43,28 @@ export default function PriceListsPage() {
     <div className="space-y-6">
 
       
+
+      {ratesFor && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card/50 p-3">
+          <p className="text-sm">
+            Rates in <strong>{ratesFor.name}</strong>
+          </p>
+          <MasterImportExportActions
+            module="price-list-items"
+            label={`rates in ${ratesFor.name}`}
+            resource="PRICING"
+            filters={{ priceListId: ratesFor.id }}
+          />
+          <button
+            type="button"
+            onClick={() => setRatesFor(null)}
+            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title="Close"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
@@ -115,6 +142,13 @@ export default function PriceListsPage() {
                     title="Edit"
                   >
                     <Pencil size={16} />
+                  </button>
+                  <button
+                    onClick={() => setRatesFor(row.original)}
+                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    title="Import or export this list's rates"
+                  >
+                    <FileSpreadsheet size={16} />
                   </button>
                   <button
                     onClick={() => handleDeleteClick(row.original)}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { MasterImportExportActions } from '@/components/master-data/import-export-actions';
 import { Plus } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { Button } from '@/components/ui/button';
@@ -131,7 +132,12 @@ function LeaveTypesCard({ canEdit }) {
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-      <h3 className="text-sm font-semibold">Leave types</h3>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold">Leave types</h3>
+        <div className="flex flex-wrap items-center gap-1">
+          <MasterImportExportActions module="leave-types" label="Leave Types" resource="LEAVE" />
+        </div>
+      </div>
       <ul className="text-sm space-y-1">
         {types.map((t) => (
           <li key={t.id} className="flex justify-between">

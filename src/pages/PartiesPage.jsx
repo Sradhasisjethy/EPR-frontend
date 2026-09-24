@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MasterImportExportActions } from '@/components/master-data/import-export-actions';
 import { usePaginated } from '@/hooks/use-paginated';
 import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
@@ -155,11 +156,26 @@ export default function PartiesPage() {
           ]}
           {...tableProps}
           searchPlaceholder="Search name, code, GSTIN or phone…"
-          actionsNode={canCreate && (
-          <Button onClick={() => { setEditingParty(null); setDialogOpen(true); }}>
-            <Plus size={16} /> Add Party
-          </Button>
-        )}
+          actionsNode={
+            <>
+              {canCreate && (
+                <Button onClick={() => { setEditingParty(null); setDialogOpen(true); }}>
+                  <Plus size={16} /> Add Party
+                </Button>
+              )}
+              <MasterImportExportActions
+                module="parties"
+                label="Parties"
+                resource="PARTY"
+                // The tab and the search box are what the user is looking at,
+                // so they are what the export contains.
+                filters={{
+                  ...(activeTab ? { partyType: activeTab } : {}),
+                  ...(tableProps.searchValue ? { search: tableProps.searchValue } : {}),
+                }}
+              />
+            </>
+          }
           emptyMessage="No parties yet. Add a customer, vendor, contractor or labourer to get started."
         />
       )}

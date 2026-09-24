@@ -18,6 +18,7 @@ import {
   useProducts, useDeleteProduct, useCreateUom, useUpdateUom, useCreateProductCategory, useUpdateProductCategory,
   useCreateHsnCode, useUpdateHsnCode,
   useMixDesigns, useDeleteMixDesign, } from '@/hooks/use-products';
+import { MasterImportExportActions } from '@/components/master-data/import-export-actions';
 import { MasterFormDialog } from '@/components/products/master-form-dialog';
 import { ProductFormDialog } from '@/components/products/product-form-dialog';
 import { MixDesignFormDialog } from '@/components/products/mix-design-form-dialog';
@@ -128,6 +129,31 @@ export default function ProductsPage() {
     'UoM Conversions': () => { setEditingConversion(null); setConversionDialogOpen(true); },
   };
 
+  /**
+   * Add, beside Import/Export/Sample for the tabs that have a master-data
+   * module. Mix designs and UoM conversions do not: a versioned recipe and a
+   * conversion factor are not flat rows, and a spreadsheet is the wrong shape
+   * for either.
+   */
+  const tabActions = (module, label, query) => (
+    <>
+      {canCreate && (
+        <Button onClick={addHandlers[activeTab]}>
+          <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
+        </Button>
+      )}
+      {module && (
+        <MasterImportExportActions
+          module={module}
+          label={label}
+          resource="PRODUCT"
+          // Export what the screen is showing, not the page of it on screen.
+          filters={{ ...(query.tableProps.searchValue ? { search: query.tableProps.searchValue } : {}) }}
+        />
+      )}
+    </>
+  );
+
   return (
     <div className="space-y-6">
 
@@ -183,11 +209,7 @@ export default function ProductsPage() {
             ]}
             {...productQuery.tableProps}
             emptyMessage="No products yet. Add a finished good or raw material to get started."
-          actionsNode={canCreate && (
-          <Button onClick={addHandlers[activeTab]}>
-            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
-          </Button>
-        )}
+            actionsNode={tabActions('products', 'Products', productQuery)}
             searchPlaceholder="Search product name or code…"
           />
         </QueryState>
@@ -241,11 +263,7 @@ export default function ProductsPage() {
             ]}
             {...mixQuery.tableProps}
             emptyMessage="No mix designs yet. Define one against a finished good so production knows what to consume."
-          actionsNode={canCreate && (
-          <Button onClick={addHandlers[activeTab]}>
-            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
-          </Button>
-        )}
+            actionsNode={tabActions(null, null, mixQuery)}
             searchPlaceholder="Search mix design…"
           />
         </QueryState>
@@ -273,11 +291,7 @@ export default function ProductsPage() {
             ]}
             {...uomQuery.tableProps}
             emptyMessage="No units of measure yet. Add one before creating products."
-          actionsNode={canCreate && (
-          <Button onClick={addHandlers[activeTab]}>
-            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
-          </Button>
-        )}
+            actionsNode={tabActions('uoms', 'Units of Measure', uomQuery)}
             searchPlaceholder="Search UoM…"
           />
         </QueryState>
@@ -305,11 +319,7 @@ export default function ProductsPage() {
             ]}
             {...categoryQuery.tableProps}
             emptyMessage="No categories yet. Categories group products for reporting and ageing thresholds."
-          actionsNode={canCreate && (
-          <Button onClick={addHandlers[activeTab]}>
-            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
-          </Button>
-        )}
+            actionsNode={tabActions('product-categories', 'Product Categories', categoryQuery)}
             searchPlaceholder="Search category…"
           />
         </QueryState>
@@ -343,11 +353,7 @@ export default function ProductsPage() {
             ]}
             {...hsnQuery.tableProps}
             emptyMessage="No HSN codes yet. Add the codes your products are taxed under."
-          actionsNode={canCreate && (
-          <Button onClick={addHandlers[activeTab]}>
-            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
-          </Button>
-        )}
+            actionsNode={tabActions('hsn-codes', 'HSN Codes', hsnQuery)}
             searchPlaceholder="Search HSN code…"
           />
         </QueryState>
@@ -469,11 +475,7 @@ export default function ProductsPage() {
             ]}
             {...conversionQuery.tableProps}
             emptyMessage="No conversions yet. Add one so a BOM can be written in a different unit from the stocking unit."
-          actionsNode={canCreate && (
-          <Button onClick={addHandlers[activeTab]}>
-            <Plus size={16} /> Add {activeTab === 'Mix Designs' ? 'Mix Design' : activeTab.replace(/s$/, '')}
-          </Button>
-        )}
+            actionsNode={tabActions(null, null, conversionQuery)}
             searchPlaceholder="Search by unit…"
           />
         </QueryState>

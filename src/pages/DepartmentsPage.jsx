@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MasterImportExportActions } from '@/components/master-data/import-export-actions';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Plus, Filter, Building2, MapPin } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
@@ -273,10 +274,18 @@ export default function DepartmentsPage() {
           data={deptData?.rows || []}
           searchKey="name"
           actionsNode={
-            <Button onClick={() => { setEditingDept(null); setDialogOpen(true); }}>
-              <Plus size={16} className="mr-1.5" />
-              Add Department
-            </Button>
+            <>
+              <Button onClick={() => { setEditingDept(null); setDialogOpen(true); }}>
+                <Plus size={16} className="mr-1.5" />
+                Add Department
+              </Button>
+              <MasterImportExportActions
+                module="departments"
+                label="Departments"
+                resource="ORG"
+                filters={{ ...(selectedOrgId ? { organizationId: selectedOrgId } : {}) }}
+              />
+            </>
           }
         />
       )}
