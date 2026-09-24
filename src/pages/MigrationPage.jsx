@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useCurrentUser } from '@/hooks/use-auth';
+import { hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
 import { Upload, CheckCircle2, AlertTriangle, FileSpreadsheet } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { Button } from '@/components/ui/button';
@@ -52,6 +55,8 @@ const parseCsv = (text) => {
 };
 
 export default function MigrationPage() {
+  const { data: user } = useCurrentUser();
+  const canRunMigration = hasPermission(user, WebPermissions.MIGRATION_RUN);
   const [kind, setKind] = useState('openingStock');
   const [csv, setCsv] = useState('');
   const [result, setResult] = useState(null);
@@ -167,14 +172,16 @@ export default function MigrationPage() {
 
           {error && <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">{error}</div>}
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => run(true)} disabled={runImport.isPending}>
-              Dry run
-            </Button>
-            <Button onClick={() => run(false)} disabled={runImport.isPending}>
-              <Upload size={16} /> {runImport.isPending ? 'Importing...' : 'Import'}
-            </Button>
-          </div>
+          {canRunMigration && (
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => run(true)} disabled={runImport.isPending}>
+                Dry run
+              </Button>
+              <Button onClick={() => run(false)} disabled={runImport.isPending}>
+                <Upload size={16} /> {runImport.isPending ? 'Importing...' : 'Import'}
+              </Button>
+            </div>
+          )}
 
           {result && (
             <div className={cn(

@@ -6,7 +6,8 @@ import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCurrentUser } from '@/hooks/use-auth';
-import { canViewRates } from '@/lib/permissions';
+import { canViewRates, hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
 import { formatINR } from '@/lib/money';
 import { useMaterialIssues, useContractorEntries, useAttendance, useAdvances, useCancelAdvance } from '@/hooks/use-workforce';
 import { MaterialIssueFormDialog } from '@/components/workforce/material-issue-form-dialog';
@@ -30,6 +31,8 @@ export default function WorkforcePage() {
   const [cancellingAdvance, setCancellingAdvance] = useState(null);
 
   const { data: user } = useCurrentUser();
+  const canRecordLabour = hasPermission(user, WebPermissions.LABOUR_CREATE);
+  const canRecordContractor = hasPermission(user, WebPermissions.CONTRACTOR_CREATE);
   const showRates = canViewRates(user);
   const [viewing, setViewing] = useState(null); // { kind, record }
 
@@ -39,11 +42,17 @@ export default function WorkforcePage() {
   const advances = usePaginated(useAdvances);
   const cancelAdvance = useCancelAdvance();
 
+  // Contractor job-work and daily-wage labour are separate resources in the
+  // catalog, and the tabs split the same way.
   const addHandlers = {
-    'Material Issues': () => setIssueOpen(true),
-    'Production Entries': () => setEntryOpen(true),
-    Attendance: () => setAttendanceOpen(true),
-    Advances: () => setAdvanceOpen(true),
+    ...(canRecordContractor ? {
+      'Material Issues': () => setIssueOpen(true),
+      'Production Entries': () => setEntryOpen(true),
+    } : {}),
+    ...(canRecordLabour ? {
+      Attendance: () => setAttendanceOpen(true),
+      Advances: () => setAdvanceOpen(true),
+    } : {}),
   };
 
   return (
@@ -92,9 +101,9 @@ export default function WorkforcePage() {
             ]}
             {...materialIssues.tableProps}
             searchPlaceholder="Search issue number…"
-          actionsNode={
+          actionsNode={addHandlers[activeTab] && (
             <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
-          }
+          )}
           />
         )
       )}
@@ -132,9 +141,9 @@ export default function WorkforcePage() {
             ]}
             {...contractorEntries.tableProps}
             searchPlaceholder="Search entry number…"
-          actionsNode={
+          actionsNode={addHandlers[activeTab] && (
             <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
-          }
+          )}
           />
         )
       )}
@@ -165,9 +174,9 @@ export default function WorkforcePage() {
             ]}
             {...attendance.tableProps}
             searchPlaceholder="Search by date…"
-          actionsNode={
+          actionsNode={addHandlers[activeTab] && (
             <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
-          }
+          )}
           />
         )
       )}
@@ -207,9 +216,9 @@ export default function WorkforcePage() {
             ]}
             {...advances.tableProps}
             searchPlaceholder="Search advance no, reason…"
-          actionsNode={
+          actionsNode={addHandlers[activeTab] && (
             <Button onClick={addHandlers[activeTab]}><Plus size={16} /> {activeTab === 'Attendance' ? 'Mark Attendance' : `New ${activeTab.replace(/s$/, '')}`}</Button>
-          }
+          )}
           />
         )
       )}

@@ -1,5 +1,11 @@
 import { useState } from 'react';
+<<<<<<< HEAD
 import { MasterImportExportActions } from '@/components/master-data/import-export-actions';
+=======
+import { useCurrentUser } from '@/hooks/use-auth';
+import { hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
+>>>>>>> 7da0ac5383bc38954114af804a96ecc83366826d
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Plus, Filter, Building2, MapPin } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
@@ -26,6 +32,10 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from 'sonner';
 
 export default function OfficesPage() {
+  const { data: user } = useCurrentUser();
+  const canCreate = hasPermission(user, WebPermissions.ORG_CREATE);
+  const canModify = hasPermission(user, WebPermissions.ORG_MODIFY);
+  const canDelete = hasPermission(user, WebPermissions.ORG_DELETE);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const selectedOrgId = searchParams.get('organizationId') || '';
@@ -175,8 +185,8 @@ export default function OfficesPage() {
                     setDetailDialogOpen(true);
                   }}
                   onViewDepartments={() => navigate(`/departments?officeId=${row.original.id}&organizationId=${row.original.organizationId || ''}`)}
-                  onEdit={() => { setEditingOffice(row.original); setDialogOpen(true); }}
-                  onDelete={() => handleDeleteClick(row.original)}
+                  onEdit={canModify ? () => { setEditingOffice(row.original); setDialogOpen(true); } : undefined}
+                  onDelete={canDelete ? () => handleDeleteClick(row.original) : undefined}
                 />
               ),
             },
@@ -184,6 +194,7 @@ export default function OfficesPage() {
           data={offData?.rows || []}
           searchKey="name"
           actionsNode={
+<<<<<<< HEAD
             <>
               <Button onClick={() => { setEditingOffice(null); setDialogOpen(true); }}>
                 <Plus size={16} className="mr-1.5" />
@@ -196,6 +207,14 @@ export default function OfficesPage() {
                 filters={{ ...(selectedOrgId ? { organizationId: selectedOrgId } : {}) }}
               />
             </>
+=======
+            canCreate && (
+            <Button onClick={() => { setEditingOffice(null); setDialogOpen(true); }}>
+              <Plus size={16} className="mr-1.5" />
+              Add Office
+            </Button>
+            )
+>>>>>>> 7da0ac5383bc38954114af804a96ecc83366826d
           }
         />
       )}

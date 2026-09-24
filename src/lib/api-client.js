@@ -1,5 +1,18 @@
 import axios from 'axios';
 
+/**
+ * Set once by the query provider, so the interceptor can drop cached permissions
+ * after a refresh without importing React state into this module.
+ *
+ * The API now rejects an access token whose permissions have changed since it
+ * was minted, and the 401 path below refreshes transparently. Without this, the
+ * refresh succeeds and the request retries with the *new* grant while the UI
+ * keeps rendering from the `currentUser` it cached under the old one — menus
+ * and buttons for things the server has just started refusing.
+ */
+let onSessionRefreshed = null;
+export const setSessionRefreshHandler = (fn) => { onSessionRefreshed = fn; };
+
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api/v1',
   withCredentials: true,
@@ -87,6 +100,8 @@ apiClient.interceptors.response.use(
 
         isRefreshing = false;
         processQueue(null, newAccessToken);
+        // Permissions may have been what forced the refresh; re-read them.
+        try { onSessionRefreshed?.(); } catch { /* never let this break the retry */ }
 
         return apiClient(originalRequest);
       } catch (err) {

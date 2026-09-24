@@ -13,8 +13,19 @@ import { WastageFormDialog } from '@/components/production/wastage-form-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { toast } from 'sonner';
 import { DateText } from '@/components/date-text';
+import { usePermissions } from '@/hooks/use-permissions';
+import { WebPermissions } from '@/constants/enums';
 
 const TABS = ['Plans', 'Orders', 'Entries', 'Consumption', 'Approvals', 'Wastage'];
+
+/**
+ * Signing off a material variance is deliberately a separate grant from
+ * recording one (BR-09): the role that does the work does not get to approve
+ * its own. The grant existed in the catalog and on the API route, but nothing
+ * on the client had ever asked for it — the Approvals tab and its Approve
+ * button rendered for anyone who could open the page.
+ */
+const APPROVALS_TAB = 'Approvals';
 
 const FULFILMENT_BADGE = {
   NOT_STARTED: 'pending',
@@ -23,7 +34,14 @@ const FULFILMENT_BADGE = {
 };
 
 export default function ProductionPage() {
-  const [activeTab, setActiveTab] = useTabParam(TABS, 'Plans', 'subtab');
+  const { hasPermission } = usePermissions();
+  const canRecordProduction = hasPermission(WebPermissions.PRODUCTION_CREATE);
+  const canRecordWastage = hasPermission(WebPermissions.WASTAGE_CREATE);
+  const canApproveVariance = hasPermission(WebPermissions.PRODUCTION_APPROVE_VARIANCE);
+  // Drop the tab itself, not just the button — otherwise the queue of pending
+  // approvals is still readable by anyone who may open Production.
+  const tabs = canApproveVariance ? TABS : TABS.filter((tab) => tab !== APPROVALS_TAB);
+  const [activeTab, setActiveTab] = useTabParam(tabs, 'Plans', 'subtab');
   const [generateOpen, setGenerateOpen] = useState(false);
   const [confirmingPlan, setConfirmingPlan] = useState(null);
   const [entryDialogOpen, setEntryDialogOpen] = useState(false);
@@ -42,13 +60,15 @@ export default function ProductionPage() {
   const consumptionQuery = usePaginated(useMaterialConsumptions);
   const approveVariance = useApproveVariance();
 
+  // Recording a casting run and recording wastage are separate resources in
+  // the catalog; the null entries are tabs that never had an add action.
   const addHandlers = {
-    Plans: () => setGenerateOpen(true),
+    Plans: canRecordProduction ? () => setGenerateOpen(true) : null,
     Orders: null,
-    Entries: () => setEntryDialogOpen(true),
+    Entries: canRecordProduction ? () => setEntryDialogOpen(true) : null,
     Consumption: null,
     Approvals: null,
-    Wastage: () => setWastageDialogOpen(true),
+    Wastage: canRecordWastage ? () => setWastageDialogOpen(true) : null,
   };
 
   return (
@@ -56,7 +76,7 @@ export default function ProductionPage() {
       
 
       <div className="flex border-b border-border mb-6">
-        {TABS.map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab}
             className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors', activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}
@@ -225,12 +245,14 @@ export default function ProductionPage() {
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => (
-                  <button
-                    className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:underline"
-                    onClick={() => approveVariance.mutate(row.original.id)}
-                  >
-                    <CheckCircle2 size={14} /> Approve
-                  </button>
+                  canApproveVariance && (
+                    <button
+                      className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:underline"
+                      onClick={() => approveVariance.mutate(row.original.id)}
+                    >
+                      <CheckCircle2 size={14} /> Approve
+                    </button>
+                  )
                 ),
               },
             ]}

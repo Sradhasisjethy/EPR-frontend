@@ -94,28 +94,47 @@ function Dashboard({ factoryId, setFactoryId }) {
 }
 
 function ProductionTab({ ops, trends }) {
+  /**
+   * A widget the API withheld is absent from `ops`, not zero.
+   *
+   * Every tile read `ops.x ?? 0`, so a user without the grant — the API now
+   * omits the key rather than the number — would see a wall of zeroes and
+   * conclude the plant produced nothing today. Absent means "not yours to see",
+   * which is a different statement from "none", so the tile goes rather than
+   * showing a figure that isn't true.
+   */
+  const has = (key) => ops[key] !== undefined;
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiTile
-          accent="rose" icon={FactoryIcon} label="Produced today"
-          value={ops.productionToday ?? 0} hint={`${ops.productionMTD ?? 0} this month`}
-        />
-        <KpiTile
-          accent="amber" icon={Percent} label="Yield (MTD)"
-          value={`${ops.yieldPercent ?? 0}%`}
-          hint={`${ops.rejectionPercent ?? 0}% rejected`}
-          hintTone={ops.rejectionPercent > 5 ? 'warn' : undefined}
-        />
-        <KpiTile
-          accent="lime" icon={Truck} label="Dispatches today"
-          value={ops.dispatchesToday ?? 0} hint={`${ops.pendingOrders ?? 0} orders open`}
-        />
-        <KpiTile
-          accent="sky" icon={Timer} label="Lots curing"
-          value={ops.curingLots ?? 0}
-          hint={`${ops.curingCompletingThisWeek?.length ?? 0} complete within 7 days`}
-        />
+        {has('productionToday') && (
+          <KpiTile
+            accent="rose" icon={FactoryIcon} label="Produced today"
+            value={ops.productionToday} hint={`${ops.productionMTD ?? 0} this month`}
+          />
+        )}
+        {has('yieldPercent') && (
+          <KpiTile
+            accent="amber" icon={Percent} label="Yield (MTD)"
+            value={`${ops.yieldPercent}%`}
+            hint={`${ops.rejectionPercent ?? 0}% rejected`}
+            hintTone={ops.rejectionPercent > 5 ? 'warn' : undefined}
+          />
+        )}
+        {has('dispatchesToday') && (
+          <KpiTile
+            accent="lime" icon={Truck} label="Dispatches today"
+            value={ops.dispatchesToday} hint={has('pendingOrders') ? `${ops.pendingOrders} orders open` : undefined}
+          />
+        )}
+        {has('curingLots') && (
+          <KpiTile
+            accent="sky" icon={Timer} label="Lots curing"
+            value={ops.curingLots}
+            hint={`${ops.curingCompletingThisWeek?.length ?? 0} complete within 7 days`}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -132,17 +151,24 @@ function ProductionTab({ ops, trends }) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiTile
-          accent="rose" icon={Package} label="Dead stock lots" value={ops.deadStockLots ?? 0}
-          tone={ops.deadStockLots > 0 ? 'danger' : 'good'} hint={`${ops.slowMovingLots ?? 0} slow-moving`}
-        />
+        {has('deadStockLots') && (
+          <KpiTile
+            accent="rose" icon={Package} label="Dead stock lots" value={ops.deadStockLots}
+            tone={ops.deadStockLots > 0 ? 'danger' : 'good'} hint={`${ops.slowMovingLots ?? 0} slow-moving`}
+          />
+        )}
+        {/* Personal, so never withheld. */}
         <KpiTile
           accent="amber" icon={AlertTriangle} label="Unread alerts" value={ops.unreadAlerts ?? 0}
           tone={ops.unreadAlerts > 0 ? 'warn' : undefined}
         />
-        <KpiTile accent="violet" icon={ClipboardList} label="Variance approvals" value={ops.pendingVarianceApprovals ?? 0}
-          tone={ops.pendingVarianceApprovals > 0 ? 'warn' : undefined} />
-        <KpiTile accent="teal" icon={ClipboardList} label="Open orders" value={ops.pendingOrders ?? 0} />
+        {has('pendingVarianceApprovals') && (
+          <KpiTile accent="violet" icon={ClipboardList} label="Variance approvals" value={ops.pendingVarianceApprovals}
+            tone={ops.pendingVarianceApprovals > 0 ? 'warn' : undefined} />
+        )}
+        {has('pendingOrders') && (
+          <KpiTile accent="teal" icon={ClipboardList} label="Open orders" value={ops.pendingOrders} />
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

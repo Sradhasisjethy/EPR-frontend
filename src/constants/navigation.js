@@ -121,8 +121,13 @@ export const NAVIGATION = [
     title: 'Contractor & Labour',
     icon: HardHat,
     href: '/workforce',
+    // PARTY_READ used to be in this list, on the reasoning that contractors and
+    // labourers are parties. It meant anyone granted Masters — which is exactly
+    // what PARTY_READ is — got the whole workforce module in their sidebar and
+    // could open it, then met a screen of 403s, because the API asks for
+    // CONTRACTOR_READ / LABOUR_READ and never for PARTY_READ. Reading the party
+    // master is not the same permission as running job-work and wages.
     anyPermissions: [
-      WebPermissions.PARTY_READ,
       WebPermissions.LABOUR_READ,
       WebPermissions.CONTRACTOR_READ,
     ],
@@ -178,3 +183,23 @@ export const NAVIGATION = [
     permission: WebPermissions.SETTINGS_READ,
   },
 ];
+
+/**
+ * The gate each module's landing route carries, keyed by route.
+ *
+ * Derived from NAVIGATION rather than written out again, so the sidebar and the
+ * router cannot disagree about who may open a module. Hiding a menu item was
+ * never access control — the route guard in components/auth/require-permission
+ * is what actually refuses entry — and deriving both from one list is what keeps
+ * the two consistent as modules are added.
+ *
+ * Routes that are not sidebar destinations (leaf pages such as /roles or
+ * /price-lists) name their permission at the route instead; there is nothing
+ * here to derive them from.
+ */
+export const NAV_GATE = Object.fromEntries(
+  NAVIGATION.filter((item) => item.href && (item.permission || item.anyPermissions)).map((item) => [
+    item.href,
+    { permission: item.permission, anyPermissions: item.anyPermissions },
+  ])
+);

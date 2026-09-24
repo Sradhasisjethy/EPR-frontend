@@ -11,7 +11,8 @@ import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { useSavedReports, useCreateSavedReport, useDeleteSavedReport, useRunReport, useRunSavedReport, useExportReport } from '@/hooks/use-reports';
 import { useDocumentSearch } from '@/hooks/use-analytics';
-import { ReportTypes } from '@/constants/enums';
+import { ReportTypes, WebPermissions } from '@/constants/enums';
+import { usePermissions } from '@/hooks/use-permissions';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { DateText } from '@/components/date-text';
@@ -66,6 +67,23 @@ export default function SavedReportsPage() {
   const savedReports = usePaginated(useSavedReports);
   const createReport = useCreateSavedReport();
   const deleteReport = useDeleteSavedReport();
+  /**
+   * Saving, deleting and exporting were all rendered unconditionally here,
+   * unlike the catalog reports next door, whose toolbar asks the API per report
+   * (`report.canExport`). This page runs the older saved-report endpoints,
+   * which carry a single REPORT_* grant each, so gate on those.
+   *
+   * Export stays a separate grant from read on purpose: downloading a whole
+   * filtered result set is a different act from reading a page of it on screen.
+   */
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission(WebPermissions.REPORT_CREATE);
+  const canDelete = hasPermission(WebPermissions.REPORT_DELETE);
+  const canExport = hasPermission(WebPermissions.REPORT_FINANCE_EXPORT)
+    || hasPermission(WebPermissions.REPORT_SALES_EXPORT)
+    || hasPermission(WebPermissions.REPORT_PURCHASE_EXPORT)
+    || hasPermission(WebPermissions.REPORT_INVENTORY_EXPORT)
+    || hasPermission(WebPermissions.REPORT_PRODUCTION_EXPORT);
   const runReport = useRunReport();
   const runSaved = useRunSavedReport();
   const exportReport = useExportReport();
@@ -213,25 +231,31 @@ export default function SavedReportsPage() {
                 <Label>Save as</Label>
                 <Input value={reportName} onChange={(e) => setReportName(e.target.value)} placeholder="Report name" className="w-56" />
               </div>
-              <Button variant="outline" onClick={handleSave} disabled={createReport.isPending}>
-                <Save size={16} /> Save
-              </Button>
+              {canCreate && (
+                <Button variant="outline" onClick={handleSave} disabled={createReport.isPending}>
+                  <Save size={16} /> Save
+                </Button>
+              )}
               {/* Value columns are dropped entirely from the file for users
                   without VIEW_RATES — the server decides, not the UI. */}
-              <Button
-                variant="outline"
-                onClick={() => exportReport.mutate({ reportType, params, format: 'csv' })}
-                disabled={exportReport.isPending}
-              >
-                <Download size={16} /> CSV
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => exportReport.mutate({ reportType, params, format: 'pdf' })}
-                disabled={exportReport.isPending}
-              >
-                <Download size={16} /> PDF
-              </Button>
+              {canExport && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => exportReport.mutate({ reportType, params, format: 'csv' })}
+                    disabled={exportReport.isPending}
+                  >
+                    <Download size={16} /> CSV
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => exportReport.mutate({ reportType, params, format: 'pdf' })}
+                    disabled={exportReport.isPending}
+                  >
+                    <Download size={16} /> PDF
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
@@ -258,13 +282,15 @@ export default function SavedReportsPage() {
                         <button onClick={() => handleRunSaved(row.original)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground" title="Run">
                           <Play size={16} />
                         </button>
-                        <button
-                          onClick={() => handleDeleteClick(row.original)}
-                          className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                          title="Delete"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDeleteClick(row.original)}
+                            className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
                     ),
                   },

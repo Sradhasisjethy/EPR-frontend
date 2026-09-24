@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useCurrentUser } from '@/hooks/use-auth';
+import { hasPermission } from '@/lib/permissions';
+import { WebPermissions } from '@/constants/enums';
 import { useQueryClient } from '@tanstack/react-query';
 import { Eye, EyeOff, ArrowUp, ArrowDown, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +23,8 @@ const UNHIDEABLE = new Set(['Dashboard']);
  * a security control is a dangerous thing to hand an administrator.
  */
 export default function NavigationPage() {
+  const { data: user } = useCurrentUser();
+  const canConfigure = hasPermission(user, WebPermissions.SETTINGS_MODIFY);
   const settingsQuery = useSettings();
   const upsertSetting = useUpsertSetting();
   const queryClient = useQueryClient();
@@ -106,14 +111,18 @@ export default function NavigationPage() {
             the organisation.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={resetAll}>
-            <RotateCcw size={15} className="mr-2" /> Reset
-          </Button>
-          <Button onClick={save} disabled={upsertSetting.isPending}>
-            {upsertSetting.isPending ? 'Saving…' : 'Save menu'}
-          </Button>
-        </div>
+        {/* This writes the sidebar for the whole organisation, so it is a
+            settings write, not a personal preference. */}
+        {canConfigure && (
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={resetAll}>
+              <RotateCcw size={15} className="mr-2" /> Reset
+            </Button>
+            <Button onClick={save} disabled={upsertSetting.isPending}>
+              {upsertSetting.isPending ? 'Saving…' : 'Save menu'}
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="p-3 rounded-lg border border-border bg-muted/40 text-sm text-muted-foreground max-w-3xl">

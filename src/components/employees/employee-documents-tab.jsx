@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Trash2, Download, FileText, UploadCloud, Loader2, ShieldCheck } from 'lucide-react';
 import { formatBytes, formatDate } from '@/lib/utils';
+import { openApiDocument } from '@/lib/api-document';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
@@ -130,14 +132,19 @@ export function EmployeeDocumentsTab({ employeeId }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    asChild
+                  {/* See the admin dialog: these are served through the API
+                      now, so they have to be fetched with credentials. */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Download"
+                    onClick={() =>
+                      openApiDocument(doc.url).catch((error) =>
+                        toast.error(error.response?.data?.message || 'Could not open the document.')
+                      )
+                    }
                   >
-                    <a href={doc.url} target="_blank" rel="noopener noreferrer" title="Download">
-                      <Download size={16} />
-                    </a>
+                    <Download size={16} />
                   </Button>
                   <Button 
                     variant="ghost" 
