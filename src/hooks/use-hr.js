@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 const refresh = (qc) => {
   qc.invalidateQueries({ queryKey: ['hr'] });
@@ -36,6 +37,7 @@ export function useLeaveRequests(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['hr', 'leave-requests'], '/hr/leave-requests');
 
 export function useLeaveBalances(employeeId, date) {
   return useQuery({

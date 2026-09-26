@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 const invalidateStock = (qc) => {
   qc.invalidateQueries({ queryKey: ['stock-lots'] });
@@ -12,6 +13,7 @@ const invalidateStock = (qc) => {
 export function useSalesReturns(params = {}) {
   return useQuery({ queryKey: ['sales-returns', params], queryFn: async () => (await apiClient.get('/returns/sales-returns', { params })).data.data, placeholderData: (prev) => prev });
 }
+registerListPrefetch(['sales-returns'], '/returns/sales-returns');
 export function useCreateSalesReturn() {
   const qc = useQueryClient();
   return useMutation({
@@ -31,6 +33,7 @@ export function useCancelSalesReturn() {
 export function usePurchaseReturns(params = {}) {
   return useQuery({ queryKey: ['purchase-returns', params], queryFn: async () => (await apiClient.get('/returns/purchase-returns', { params })).data.data, placeholderData: (prev) => prev });
 }
+registerListPrefetch(['purchase-returns'], '/returns/purchase-returns');
 export function useCreatePurchaseReturn() {
   const qc = useQueryClient();
   return useMutation({
@@ -50,6 +53,7 @@ export function useCancelPurchaseReturn() {
 export function useCreditNotes(params = {}) {
   return useQuery({ queryKey: ['credit-notes', params], queryFn: async () => (await apiClient.get('/returns/credit-notes', { params })).data.data, placeholderData: (prev) => prev });
 }
+registerListPrefetch(['credit-notes'], '/returns/credit-notes');
 export function useCreateCreditNote() {
   const qc = useQueryClient();
   return useMutation({
@@ -69,6 +73,7 @@ export function useCancelCreditNote() {
 export function useDebitNotes(params = {}) {
   return useQuery({ queryKey: ['debit-notes', params], queryFn: async () => (await apiClient.get('/returns/debit-notes', { params })).data.data, placeholderData: (prev) => prev });
 }
+registerListPrefetch(['debit-notes'], '/returns/debit-notes');
 export function useCreateDebitNote() {
   const qc = useQueryClient();
   return useMutation({

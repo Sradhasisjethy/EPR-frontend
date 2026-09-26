@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 /** The open session at this factory's till, or null. */
 export function useCurrentTill(factoryId) {
@@ -17,6 +18,7 @@ export function useTillSessions(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['cash-register', 'sessions'], '/cash-register/sessions');
 
 export function useTillSession(id) {
   return useQuery({

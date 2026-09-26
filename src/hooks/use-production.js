@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 import { openApiDocument } from '@/lib/api-document';
 
 // Plans
@@ -10,6 +11,7 @@ export function useProductionPlans(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['production-plans'], '/production/plans');
 export function useGenerateProposal() {
   const qc = useQueryClient();
   return useMutation({
@@ -33,6 +35,7 @@ export function useProductionEntries(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['production-entries'], '/production/entries');
 /**
  * Everything a casting run touches.
  *
@@ -74,6 +77,7 @@ export function usePendingApprovals(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['production-pending-approvals'], '/production/pending-approvals');
 export function useApproveVariance() {
   const qc = useQueryClient();
   return useMutation({
@@ -90,6 +94,7 @@ export function useWastageRecords(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['wastage-records'], '/production/wastage');
 export function useCreateWastage() {
   const qc = useQueryClient();
   return useMutation({
@@ -116,6 +121,7 @@ export function useProductionOrders(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['production', 'orders'], '/production/orders');
 
 /** Raw material actually consumed, across every run. */
 export function useMaterialConsumptions(params = {}) {
@@ -128,6 +134,7 @@ export function useMaterialConsumptions(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['production', 'consumptions'], '/production/consumptions');
 
 /**
  * Opens the shop-floor job card for a confirmed plan in a new tab.

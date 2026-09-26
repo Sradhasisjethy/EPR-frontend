@@ -19,7 +19,7 @@ export function RoleMembersDialog({ open, onOpenChange, role }) {
   const [error, setError] = useState('');
 
   const { data: members = [], isLoading: membersLoading } = useRoleMembers(role?.id);
-  const { data: employeesData } = useEmployees({ limit: 200 });
+  const { data: employeesData } = useEmployees({ limit: 200 }, { enabled: open });
   const allEmployees = employeesData?.rows || employeesData || [];
 
   const assignMutation = useAssignRoleMember();

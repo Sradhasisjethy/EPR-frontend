@@ -28,8 +28,8 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
   const [lines, setLines] = useState([{ ...emptyLine }]);
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: productData } = useProducts({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
+  const { data: productData } = useProducts({ page: 1, limit: 100 }, { enabled: open });
   const { data: fullOrder, isLoading: loadingOrder } = usePurchaseOrder(open && order?.id ? order.id : undefined);
 
   const createMutation = useCreatePurchaseOrder();

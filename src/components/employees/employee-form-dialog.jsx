@@ -62,10 +62,10 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
   });
   const [error, setError] = useState('');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
-  const { data: offData } = useOffices({ page: 1, limit: 100 });
-  const { data: deptData } = useDepartments({ page: 1, limit: 100 });
-  const { data: rolesData } = useRoles({ page: 1, limit: 100 });
+  const { data: orgData } = useOrganizations({ page: 1, limit: 100 }, { enabled: open });
+  const { data: offData } = useOffices({ page: 1, limit: 100 }, { enabled: open });
+  const { data: deptData } = useDepartments({ page: 1, limit: 100 }, { enabled: open });
+  const { data: rolesData } = useRoles({ page: 1, limit: 100 }, { enabled: open });
   const createMutation = useCreateEmployee();
   const updateMutation = useUpdateEmployee();
   const isSaving = createMutation.isPending || updateMutation.isPending;

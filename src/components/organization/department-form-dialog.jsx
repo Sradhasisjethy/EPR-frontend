@@ -37,10 +37,10 @@ export function DepartmentFormDialog({ open, onOpenChange, department, defaultOr
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
   const [quickOfficeDialogOpen, setQuickOfficeDialogOpen] = useState(false);
-  const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
-  const { data: officeData } = useOffices({ page: 1, limit: 100 });
-  const { data: deptData } = useDepartments({ page: 1, limit: 100 });
-  const { data: empData } = useEmployees({ page: 1, limit: 100 });
+  const { data: orgData } = useOrganizations({ page: 1, limit: 100 }, { enabled: open });
+  const { data: officeData } = useOffices({ page: 1, limit: 100 }, { enabled: open });
+  const { data: deptData } = useDepartments({ page: 1, limit: 100 }, { enabled: open });
+  const { data: empData } = useEmployees({ page: 1, limit: 100 }, { enabled: open });
   const createMutation = useCreateDepartment();
   const updateMutation = useUpdateDepartment();
   const isSaving = createMutation.isPending || updateMutation.isPending;

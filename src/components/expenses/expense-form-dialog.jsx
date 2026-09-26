@@ -16,7 +16,7 @@ export function ExpenseFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', expenseDate: '', category: '', mode: 'CASH', amountRupees: '', paidToPartyId: '', description: '' });
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   const createMutation = useCreateExpense();
 
   useEffect(() => {

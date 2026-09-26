@@ -22,8 +22,8 @@ export function GoodsReceiptFormDialog({ open, onOpenChange }) {
   const [lines, setLines] = useState([{ ...emptyLine }]);
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: productData } = useProducts({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
+  const { data: productData } = useProducts({ page: 1, limit: 100 }, { enabled: open });
   const { data: openOrders } = usePurchaseOrders({ page: 1, limit: 100, factoryId: form.factoryId || undefined, status: 'CONFIRMED' });
   const { data: partiallyReceivedOrders } = usePurchaseOrders({ page: 1, limit: 100, factoryId: form.factoryId || undefined, status: 'PARTIALLY_RECEIVED' });
   const { data: selectedPo } = usePurchaseOrder(form.purchaseOrderId || undefined);

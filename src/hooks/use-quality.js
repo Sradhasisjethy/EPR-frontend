@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 import { createResourceHooks } from '@/lib/create-resource-hooks';
 
 export const {
@@ -22,6 +23,7 @@ export function useHeldLots(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['quality', 'held-lots'], '/quality/held-lots');
 
 /**
  * Records the verdict on a pending test.

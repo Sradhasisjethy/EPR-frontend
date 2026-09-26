@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 export function useUomConversions(params = {}) {
   return useQuery({
@@ -8,6 +9,7 @@ export function useUomConversions(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['uom-conversions'], '/uom-conversions');
 
 const invalidate = (qc) => qc.invalidateQueries({ queryKey: ['uom-conversions'] });
 

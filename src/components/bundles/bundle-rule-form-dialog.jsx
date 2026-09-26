@@ -29,7 +29,7 @@ export function BundleRuleFormDialog({ open, onOpenChange, rule }) {
   const [showAllProducts, setShowAllProducts] = useState(false);
 
   // Only for the count in the hint below — the pickers search server-side.
-  const { data: accessoryData } = useProducts({ page: 1, limit: 1, isAccessory: 'true' });
+  const { data: accessoryData } = useProducts({ page: 1, limit: 1, isAccessory: 'true' }, { enabled: open });
   const createRule = useCreateBundleRule();
   const updateRule = useUpdateBundleRule();
 

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 const invalidate = (qc) => {
   qc.invalidateQueries({ queryKey: ['receipts'] });
@@ -13,6 +14,7 @@ const invalidate = (qc) => {
 export function useReceipts(params = {}) {
   return useQuery({ queryKey: ['receipts', params], queryFn: async () => (await apiClient.get('/receipts', { params })).data.data, placeholderData: (prev) => prev });
 }
+registerListPrefetch(['receipts'], '/receipts');
 /**
  * The detail read, not the list row: only this resolves an allocation's
  * `invoiceId` into an invoice number, which is what makes the "applied to" list
@@ -45,6 +47,7 @@ export function useCancelReceipt() {
 export function usePayments(params = {}) {
   return useQuery({ queryKey: ['payments', params], queryFn: async () => (await apiClient.get('/payments', { params })).data.data, placeholderData: (prev) => prev });
 }
+registerListPrefetch(['payments'], '/payments');
 export function usePayment(id) {
   return useQuery({
     queryKey: ['payments', 'detail', id],

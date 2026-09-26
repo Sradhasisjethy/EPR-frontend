@@ -1,13 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
-export function useRoles(params = {}) {
+export function useRoles(params = {}, options = {}) {
   return useQuery({
+    ...options,
     queryKey: ['roles', params],
     queryFn: async () => (await apiClient.get('/roles', { params })).data.data,
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['roles'], '/roles');
 
 export function useRole(id) {
   return useQuery({

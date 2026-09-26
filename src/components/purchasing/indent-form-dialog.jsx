@@ -22,8 +22,8 @@ export function IndentFormDialog({ open, onOpenChange }) {
   const [lines, setLines] = useState([{ ...emptyLine }]);
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: productData } = useProducts({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
+  const { data: productData } = useProducts({ page: 1, limit: 100 }, { enabled: open });
   const createMutation = useCreateIndent();
 
   const productMap = new Map((productData?.rows || []).map((p) => [p.id, p]));

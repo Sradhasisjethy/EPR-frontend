@@ -1,29 +1,36 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
-export function useOrganizations(params = {}) {
+export function useOrganizations(params = {}, options = {}) {
   return useQuery({
+    ...options,
     queryKey: ['organizations', params],
     queryFn: async () => (await apiClient.get('/organizations', { params })).data.data,
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['organizations'], '/organizations');
 
-export function useOffices(params = {}) {
+export function useOffices(params = {}, options = {}) {
   return useQuery({
+    ...options,
     queryKey: ['offices', params],
     queryFn: async () => (await apiClient.get('/offices', { params })).data.data,
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['offices'], '/offices');
 
-export function useDepartments(params = {}) {
+export function useDepartments(params = {}, options = {}) {
   return useQuery({
+    ...options,
     queryKey: ['departments', params],
     queryFn: async () => (await apiClient.get('/departments', { params })).data.data,
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['departments'], '/departments');
 
 export function useCreateOrganization() {
   const queryClient = useQueryClient();

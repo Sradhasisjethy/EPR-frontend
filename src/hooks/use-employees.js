@@ -1,13 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
-export function useEmployees(params = {}) {
+export function useEmployees(params = {}, options = {}) {
   return useQuery({
+    ...options,
     queryKey: ['users', params],
     queryFn: async () => (await apiClient.get('/users', { params })).data.data,
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['users'], '/users');
 
 export function useEmployee(id) {
   return useQuery({

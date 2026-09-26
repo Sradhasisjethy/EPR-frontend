@@ -15,8 +15,8 @@ export function ProductionEntryFormDialog({ open, onOpenChange, defaultFactoryId
   const [materialOverrides, setMaterialOverrides] = useState({}); // { rawMaterialProductId: { actualQty, varianceReason } }
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.FINISHED_GOOD });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
+  const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.FINISHED_GOOD }, { enabled: open });
   // Resolved by production date, matching what the server will actually
   // consume. Selecting the `isActive` version instead meant a backdated entry
   // showed one recipe and posted another.

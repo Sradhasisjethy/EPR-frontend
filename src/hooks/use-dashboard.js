@@ -6,6 +6,10 @@ export function useDashboardStats(factoryId) {
     queryKey: ['dashboardStats', factoryId || 'all'],
     queryFn: async () =>
       (await apiClient.get('/dashboard/stats', { params: factoryId ? { factoryId } : {} })).data.data,
-    refetchInterval: 30000, // Refresh every 30 seconds for real-time feel
+    // Every open dashboard re-asks on this interval, and the answer is 65 SQL
+    // queries (cached server-side for 45 s now). The figures are daily and
+    // monthly totals; ninety seconds is well inside what "live" means for them
+    // and cuts the standing load of the page by two thirds.
+    refetchInterval: 90000,
   });
 }

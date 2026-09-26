@@ -29,7 +29,7 @@ export function PaymentFormDialog({ open, onOpenChange }) {
   const [allocations, setAllocations] = useState({});
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   // Vendors, contractors, and labour can all be paid — no partyType filter here.
   const { data: invoicesData } = usePurchaseInvoices({ page: 1, limit: 50, vendorPartyId: form.partyId || undefined });
   const unpaidInvoices = (invoicesData?.rows || []).filter((inv) => inv.paymentStatus !== 'PAID');

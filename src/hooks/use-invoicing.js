@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 import { openApiDocument } from '@/lib/api-document';
 
 export function useSalesInvoices(params = {}) {
@@ -9,6 +10,7 @@ export function useSalesInvoices(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['sales-invoices'], '/invoices');
 
 export function useSalesInvoice(id) {
   return useQuery({

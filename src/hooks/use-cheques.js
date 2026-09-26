@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 export function useCheques(params = {}) {
   return useQuery({
@@ -8,6 +9,7 @@ export function useCheques(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['cheques'], '/cheques');
 
 // A bounce reverses the underlying receipt/payment and posts bank charges, so
 // the ledger and the parent document are invalidated alongside the cheque.

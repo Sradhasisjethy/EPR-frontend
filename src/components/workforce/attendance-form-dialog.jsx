@@ -14,8 +14,8 @@ export function AttendanceFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', labourPartyId: '', attendanceDate: '', status: 'PRESENT', overtimeHours: '' });
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: labourData } = useParties({ page: 1, limit: 100, partyType: PartyType.LABOUR });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
+  const { data: labourData } = useParties({ page: 1, limit: 100, partyType: PartyType.LABOUR }, { enabled: open });
   const createMutation = useMarkAttendance();
 
   useEffect(() => {

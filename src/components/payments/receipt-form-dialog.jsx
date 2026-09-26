@@ -23,7 +23,7 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
   const [allocations, setAllocations] = useState({}); // invoiceId -> amountRupees
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   const { data: invoicesData } = useSalesInvoices({ page: 1, limit: 50, customerPartyId: form.customerPartyId || undefined, status: 'POSTED', openOnly: true });
   const createMutation = useCreateReceipt();
 

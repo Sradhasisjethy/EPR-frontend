@@ -26,8 +26,8 @@ export function MixDesignFormDialog({ open, onOpenChange, mixDesign, defaultProd
   const [lines, setLines] = useState([{ ...emptyLine }]);
   const [error, setError] = useState('');
 
-  const { data: productData } = useProducts({ page: 1, limit: 100 });
-  const { data: uomData } = useUoms({ page: 1, limit: 100 });
+  const { data: productData } = useProducts({ page: 1, limit: 100 }, { enabled: open });
+  const { data: uomData } = useUoms({ page: 1, limit: 100 }, { enabled: open });
   const finishedGoods = (productData?.rows || []).filter((p) => p.productType === ProductType.FINISHED_GOOD);
   const rawMaterials = (productData?.rows || []).filter((p) => p.productType === ProductType.RAW_MATERIAL);
 

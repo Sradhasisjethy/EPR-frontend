@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 /**
  * Generates the standard list/get/create/update/delete react-query hooks for a
@@ -12,6 +13,9 @@ import { apiClient } from '@/lib/api-client';
  * @param {string} basePath - API path, e.g. '/factories'
  */
 export function createResourceHooks(key, basePath) {
+  // Every generated list is warmed after login; see list-prefetch.js.
+  registerListPrefetch([key, 'list'], basePath);
+
   const useList = (params = {}, options = {}) =>
     useQuery({
       queryKey: [key, 'list', params],

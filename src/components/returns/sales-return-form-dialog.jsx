@@ -48,8 +48,8 @@ export function SalesReturnFormDialog({ open, onOpenChange }) {
   const [manualLines, setManualLines] = useState([]);
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.FINISHED_GOOD });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
+  const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.FINISHED_GOOD }, { enabled: open });
   const createMutation = useCreateSalesReturn();
 
   const returnable = useReturnableItems({ factoryId: form.factoryId, customerPartyId: form.customerPartyId });

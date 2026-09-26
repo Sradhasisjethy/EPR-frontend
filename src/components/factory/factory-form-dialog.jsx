@@ -24,7 +24,7 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
   const isEditing = !!factory;
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
-  const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
+  const { data: orgData } = useOrganizations({ page: 1, limit: 100 }, { enabled: open });
   const createMutation = useCreateFactory();
   const updateMutation = useUpdateFactory();
   const isSaving = createMutation.isPending || updateMutation.isPending;

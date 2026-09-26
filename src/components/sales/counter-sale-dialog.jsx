@@ -60,7 +60,7 @@ export function CounterSaleDialog({ open, onOpenChange }) {
   const [removeForm, setRemoveForm] = useState({ reasonCode: '', reasonNote: '' });
   const [removeError, setRemoveError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   const createSale = useCreateCounterSale();
   const { data: reasonCodesData } = useOverrideReasonCodes();
   const reasonCodes = (Array.isArray(reasonCodesData) ? reasonCodesData : []).filter((r) => r.isActive !== false);

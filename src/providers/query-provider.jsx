@@ -9,6 +9,11 @@ export function QueryProvider({ children }) {
         defaultOptions: {
           queries: {
             staleTime: 60 * 1000, // 1 minute
+            // How long a list nobody is looking at stays in memory. The
+            // default five minutes threw away the tables warmed at login
+            // before most people had opened them; half an hour of first pages
+            // is a few hundred rows.
+            gcTime: 30 * 60 * 1000,
             refetchOnWindowFocus: false,
           },
         },

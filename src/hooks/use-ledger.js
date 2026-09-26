@@ -1,13 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 /**
  * The chart of accounts. With no params this is every active account, as it
  * always was; `{ moneyOnly: true }` narrows it to cash and bank accounts, and
  * `{ subType: 'BANK' }` to one kind.
  */
-export function useAccounts(params = {}) {
+export function useAccounts(params = {}, options = {}) {
   return useQuery({
+    ...options,
     select: (data) => (Array.isArray(data) ? data : []),
     queryKey: ['ledger', 'accounts', params],
     queryFn: async () => (await apiClient.get('/ledger/accounts', { params })).data.data,
@@ -84,6 +86,7 @@ export function useVouchers(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['ledger', 'vouchers'], '/ledger/vouchers');
 
 export function useVoucher(id) {
   return useQuery({

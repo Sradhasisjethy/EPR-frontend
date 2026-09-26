@@ -29,7 +29,7 @@ export function InspectionFormDialog({ open, onOpenChange, lot, defaultFactoryId
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   const { data: lotData } = useStockLots({
     page: 1, limit: 100,
     factoryId: form.factoryId || undefined,

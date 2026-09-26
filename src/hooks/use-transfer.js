@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 export function useTransfers(params = {}) {
   return useQuery({
@@ -8,6 +9,7 @@ export function useTransfers(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['transfers'], '/transfers');
 
 export function useTransfer(id) {
   return useQuery({

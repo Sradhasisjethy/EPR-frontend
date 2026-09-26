@@ -41,7 +41,7 @@ function Segmented({ value, onChange, options, label }) {
 export function AssetFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState(blank());
   const [error, setError] = useState('');
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   const create = useCreateFixedAsset();
   const factories = factoryData?.rows || [];
 

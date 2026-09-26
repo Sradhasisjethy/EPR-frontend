@@ -42,8 +42,8 @@ export function PriceListFormDialog({ open, onOpenChange, priceListId }) {
   const { data: existing } = usePriceList(priceListId);
   // Needs the whole catalogue: it bulk-populates every active product and
   // matches CSV imports by name, both of which break on a truncated list.
-  const { data: productData } = useAllProducts();
-  const { data: partyData } = useParties({ page: 1, limit: 100 });
+  const { data: productData } = useAllProducts({}, { enabled: open });
+  const { data: partyData } = useParties({ page: 1, limit: 100 }, { enabled: open });
   const createMutation = useCreatePriceList();
   const updateMutation = useUpdatePriceList();
   const isSaving = createMutation.isPending || updateMutation.isPending;

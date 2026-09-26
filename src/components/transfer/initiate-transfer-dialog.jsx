@@ -17,7 +17,7 @@ export function InitiateTransferDialog({ open, onOpenChange }) {
   const [lines, setLines] = useState([{ ...emptyLine }]);
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   const { data: lotData } = useStockLots({ page: 1, limit: 100, factoryId: form.fromFactoryId || undefined, status: 'AVAILABLE' });
   const initiateMutation = useInitiateTransfer();
 

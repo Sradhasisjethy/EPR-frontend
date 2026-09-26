@@ -21,7 +21,7 @@ export function LeadFormDialog({ open, onOpenChange, lead = null }) {
   const [form, setForm] = useState(blank());
   const [error, setError] = useState('');
   const { data: sources = [] } = useLeadSources();
-  const { data: employeeData } = useEmployees({ page: 1, limit: 200 });
+  const { data: employeeData } = useEmployees({ page: 1, limit: 200 }, { enabled: open });
   const create = useCreateLead();
   const update = useUpdateLead();
 

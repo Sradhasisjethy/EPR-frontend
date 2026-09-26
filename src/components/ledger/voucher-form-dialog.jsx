@@ -32,8 +32,8 @@ export function VoucherFormDialog({ open, onOpenChange, voucherType = 'JOURNAL' 
   const [transfer, setTransfer] = useState({ fromId: '', toId: '', rupees: '' });
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: accounts = [] } = useAccounts();
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
+  const { data: accounts = [] } = useAccounts({}, { enabled: open });
   const create = useCreateVoucher();
 
   const factories = factoryData?.rows || [];

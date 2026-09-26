@@ -17,8 +17,8 @@ export function ProductionEntryFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', contractorPartyId: '', productId: '', productionDate: '', quantity: '', pieceRateRupees: '' });
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.FINISHED_GOOD });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
+  const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.FINISHED_GOOD }, { enabled: open });
   const createMutation = useCreateContractorEntry();
 
   useEffect(() => {

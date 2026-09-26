@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
@@ -6,53 +7,64 @@ import { WebPermissions as P } from '@/constants/enums';
 import { NAV_GATE } from '@/constants/navigation';
 import LoginPage from '@/pages/LoginPage';
 import DashboardPage from '@/pages/DashboardPage';
-import EmployeesPage from '@/pages/EmployeesPage';
-import OrganizationPage from '@/pages/OrganizationPage';
-import OfficesPage from '@/pages/OfficesPage';
-import DepartmentsPage from '@/pages/DepartmentsPage';
-import RolesPage from '@/pages/RolesPage';
-import RoleFormPage from '@/pages/RoleFormPage';
-import SettingsPage from '@/pages/SettingsPage';
-import FactoriesPage from '@/pages/FactoriesPage';
-import ProductsPage from '@/pages/ProductsPage';
-import PartiesPage from '@/pages/PartiesPage';
-import AuditLogPage from '@/pages/AuditLogPage';
-import MyProfilePage from '@/pages/MyProfilePage';
-import PriceListsPage from '@/pages/PriceListsPage';
-import InventoryPage from '@/pages/InventoryPage';
-import PurchasingPage from '@/pages/PurchasingPage';
-import TransfersPage from '@/pages/TransfersPage';
-import SalesOrdersPage from '@/pages/SalesOrdersPage';
-import ProductionPage from '@/pages/ProductionPage';
-import QualityPage from '@/pages/QualityPage';
-import VehiclesPage from '@/pages/VehiclesPage';
-import ReservationsPage from '@/pages/ReservationsPage';
-import NavigationPage from '@/pages/NavigationPage';
-import DispatchPage from '@/pages/DispatchPage';
-import InvoicingPage from '@/pages/InvoicingPage';
-import ReturnsPage from '@/pages/ReturnsPage';
-import PaymentsPage from '@/pages/PaymentsPage';
-import WorkforcePage from '@/pages/WorkforcePage';
-import ExpensesPage from '@/pages/ExpensesPage';
-import LedgerPage from '@/pages/LedgerPage';
-import GstrPage from '@/pages/GstrPage';
-import AnalyticsPage from '@/pages/AnalyticsPage';
-import ReportsPage from '@/pages/ReportsPage';
-import SavedReportsPage from '@/pages/SavedReportsPage';
-import NotificationsPage from '@/pages/NotificationsPage';
-import MigrationPage from '@/pages/MigrationPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import NotFoundPage from '@/pages/NotFoundPage';
-import AdministrationPage from '@/pages/AdministrationPage';
-import MastersPage from '@/pages/MastersPage';
-import SalesPage from '@/pages/SalesPage';
-import ProductionModulePage from '@/pages/ProductionModulePage';
-import InventoryModulePage from '@/pages/InventoryModulePage';
-import FinancePage from '@/pages/FinancePage';
+import { pageLoaders } from '@/pages/page-loaders';
+
+/**
+ * Every page past the dashboard is its own chunk, fetched the first time it is
+ * visited. Before this the whole app was one 1.5 MB script: a counter clerk
+ * who only ever opens Sales downloaded the GST return, the ledger, analytics
+ * and the report builder on every fresh login. The four pages that gate or
+ * follow login stay eager so first paint does not wait on a second request.
+ * The rest are fetched in the background right after login; see page-loaders.js.
+ */
+const EmployeesPage = lazy(pageLoaders.EmployeesPage);
+const OrganizationPage = lazy(pageLoaders.OrganizationPage);
+const OfficesPage = lazy(pageLoaders.OfficesPage);
+const DepartmentsPage = lazy(pageLoaders.DepartmentsPage);
+const RolesPage = lazy(pageLoaders.RolesPage);
+const RoleFormPage = lazy(pageLoaders.RoleFormPage);
+const SettingsPage = lazy(pageLoaders.SettingsPage);
+const FactoriesPage = lazy(pageLoaders.FactoriesPage);
+const ProductsPage = lazy(pageLoaders.ProductsPage);
+const PartiesPage = lazy(pageLoaders.PartiesPage);
+const AuditLogPage = lazy(pageLoaders.AuditLogPage);
+const MyProfilePage = lazy(pageLoaders.MyProfilePage);
+const PriceListsPage = lazy(pageLoaders.PriceListsPage);
+const InventoryPage = lazy(pageLoaders.InventoryPage);
+const PurchasingPage = lazy(pageLoaders.PurchasingPage);
+const TransfersPage = lazy(pageLoaders.TransfersPage);
+const SalesOrdersPage = lazy(pageLoaders.SalesOrdersPage);
+const ProductionPage = lazy(pageLoaders.ProductionPage);
+const QualityPage = lazy(pageLoaders.QualityPage);
+const VehiclesPage = lazy(pageLoaders.VehiclesPage);
+const ReservationsPage = lazy(pageLoaders.ReservationsPage);
+const NavigationPage = lazy(pageLoaders.NavigationPage);
+const DispatchPage = lazy(pageLoaders.DispatchPage);
+const InvoicingPage = lazy(pageLoaders.InvoicingPage);
+const ReturnsPage = lazy(pageLoaders.ReturnsPage);
+const PaymentsPage = lazy(pageLoaders.PaymentsPage);
+const WorkforcePage = lazy(pageLoaders.WorkforcePage);
+const ExpensesPage = lazy(pageLoaders.ExpensesPage);
+const LedgerPage = lazy(pageLoaders.LedgerPage);
+const GstrPage = lazy(pageLoaders.GstrPage);
+const AnalyticsPage = lazy(pageLoaders.AnalyticsPage);
+const ReportsPage = lazy(pageLoaders.ReportsPage);
+const SavedReportsPage = lazy(pageLoaders.SavedReportsPage);
+const NotificationsPage = lazy(pageLoaders.NotificationsPage);
+const MigrationPage = lazy(pageLoaders.MigrationPage);
+const AdministrationPage = lazy(pageLoaders.AdministrationPage);
+const MastersPage = lazy(pageLoaders.MastersPage);
+const SalesPage = lazy(pageLoaders.SalesPage);
+const ProductionModulePage = lazy(pageLoaders.ProductionModulePage);
+const InventoryModulePage = lazy(pageLoaders.InventoryModulePage);
+const FinancePage = lazy(pageLoaders.FinancePage);
 
 export default function App() {
   return (
     <BrowserRouter>
+      <Suspense fallback={null}>
       <Routes>
         {/* Login owns the full viewport (split brand panel + form), so it sits
             outside AuthLayout's centred-card shell rather than inside it. */}
@@ -61,6 +73,10 @@ export default function App() {
         <Route element={<AuthLayout />}>
           <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>
+
+        {/* Lazy pages inside the shell suspend on DashboardLayout's own boundary,
+            so the sidebar stays put while a chunk loads; this outer one only
+            catches a chunk that suspends before the shell exists. */}
 
         {/* DashboardLayout proves you are logged in; RequirePermission proves
             you may be on this particular page. Without the second, hiding a
@@ -225,6 +241,7 @@ export default function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

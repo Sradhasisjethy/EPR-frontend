@@ -38,7 +38,7 @@ export function AccountFormDialog({ open, onOpenChange, account = null, preset =
   const [error, setError] = useState('');
 
   const { data: groups = [] } = useAccountGroups();
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   const create = useCreateAccount();
   const update = useUpdateAccount();
 

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 /**
  * Counter sales — a walk-in buying across the counter, as opposed to the
@@ -16,6 +17,7 @@ export function useCounterSales(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['counter-sales'], '/retail/counter-sales');
 
 /**
  * What the basket comes to, priced by the server.

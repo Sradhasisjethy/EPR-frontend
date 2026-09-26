@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 export function useFixedAssets(params = {}) {
   return useQuery({
@@ -8,6 +9,7 @@ export function useFixedAssets(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['fixed-assets'], '/fixed-assets');
 
 export function useDepreciationRuns(params = {}) {
   return useQuery({
@@ -16,6 +18,7 @@ export function useDepreciationRuns(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['fixed-assets', 'runs'], '/fixed-assets/depreciation/runs');
 
 /** What a run would post. Only asked for once a factory and date are both chosen. */
 export function useDepreciationPreview({ factoryId, upTo }) {

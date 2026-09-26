@@ -15,7 +15,7 @@ export function AdvanceFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', partyId: '', advanceDate: '', mode: 'BANK', amountRupees: '', reason: '' });
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   const createMutation = useCreateAdvance();
 
   useEffect(() => {

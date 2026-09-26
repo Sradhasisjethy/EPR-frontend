@@ -139,8 +139,10 @@ export default function LoginPage() {
           navigate('/');
         },
         onError: (err) => {
+          const serverMessage = err.response?.data?.message;
+          const networkError = !err.response || err.code === 'ERR_NETWORK';
           setError(
-            err.response?.data?.message || 'Failed to sign in. Please check your credentials.'
+            serverMessage || (networkError ? 'Unable to connect to the server. Check your network connections.' : 'Failed to sign in. Please check your credentials.')
           );
         },
       }

@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 export function useExpenses(params = {}) {
   return useQuery({ queryKey: ['expenses', params], queryFn: async () => (await apiClient.get('/expenses', { params })).data.data, placeholderData: (prev) => prev });
 }
+registerListPrefetch(['expenses'], '/expenses');
 
 export function useCreateExpense() {
   const qc = useQueryClient();

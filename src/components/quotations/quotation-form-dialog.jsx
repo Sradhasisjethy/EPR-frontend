@@ -42,7 +42,7 @@ export function QuotationFormDialog({ open, onOpenChange, quotation = null, lead
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   const create = useCreateQuotation();
   const update = useUpdateQuotation();
   const factories = factoryData?.rows || [];

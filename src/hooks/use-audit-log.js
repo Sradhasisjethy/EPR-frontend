@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 export function useAuditLogs(params = {}) {
   return useQuery({
@@ -11,3 +12,4 @@ export function useAuditLogs(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['audit-logs'], '/audit-logs');

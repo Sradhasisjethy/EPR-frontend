@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 import { openApiDocument } from '@/lib/api-document';
 
 export function useDeliveryChallans(params = {}) {
@@ -9,6 +10,7 @@ export function useDeliveryChallans(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['delivery-challans'], '/dispatch/challans');
 
 const invalidate = (qc) => {
   qc.invalidateQueries({ queryKey: ['delivery-challans'] });

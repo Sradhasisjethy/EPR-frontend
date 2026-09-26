@@ -50,8 +50,8 @@ export function OfficeFormDialog({ open, onOpenChange, office, defaultOrganizati
   const [quickDeptError, setQuickDeptError] = useState('');
 
   const [deptSearch, setDeptSearch] = useState('');
-  const { data: orgData } = useOrganizations({ page: 1, limit: 100 });
-  const { data: deptData } = useDepartments({ page: 1, limit: 100 });
+  const { data: orgData } = useOrganizations({ page: 1, limit: 100 }, { enabled: open });
+  const { data: deptData } = useDepartments({ page: 1, limit: 100 }, { enabled: open });
   const createMutation = useCreateOffice();
   const updateMutation = useUpdateOffice();
   const createDeptMutation = useCreateDepartment();

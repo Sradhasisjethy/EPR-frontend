@@ -33,7 +33,7 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
   const [warning, setWarning] = useState('');
   const [allowOverride, setAllowOverride] = useState(false);
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   const createMutation = useCreateSalesOrder();
   const updateMutation = useUpdateSalesOrder();
   const isEditing = !!order;

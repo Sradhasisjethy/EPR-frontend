@@ -12,7 +12,7 @@ export function UomConversionDialog({ open, onOpenChange, conversion }) {
   const [form, setForm] = useState({ fromUomId: '', toUomId: '', factor: '' });
   const [error, setError] = useState('');
 
-  const { data: uomData } = useUoms({ page: 1, limit: 100 });
+  const { data: uomData } = useUoms({ page: 1, limit: 100 }, { enabled: open });
   const createMutation = useCreateUomConversion();
   const updateMutation = useUpdateUomConversion();
 

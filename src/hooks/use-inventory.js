@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 /**
  * Stock rolled up per material, rather than per lot. The lot list answers
@@ -12,6 +13,7 @@ export function useStockByMaterial(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['stock-by-material'], '/inventory/stock');
 
 export function useStockLots(params = {}) {
   return useQuery({
@@ -20,6 +22,7 @@ export function useStockLots(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['stock-lots'], '/inventory/lots');
 
 export function useStockLedger(params = {}) {
   return useQuery({
@@ -28,6 +31,7 @@ export function useStockLedger(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['stock-ledger'], '/inventory/ledger');
 
 export function useStockBalance(factoryId, productId) {
   return useQuery({
@@ -55,6 +59,7 @@ export function useStockAdjustments(params = {}) {
     keepPreviousData: true,
   });
 }
+registerListPrefetch(['stock-adjustments'], '/inventory/adjustments');
 
 /**
  * Records a physical count against a lot. `countedQty` is what was actually
@@ -89,3 +94,4 @@ export function useStockReservations(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['inventory', 'reservations'], '/inventory/reservations');

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 const invalidateStock = (qc) => {
   qc.invalidateQueries({ queryKey: ['stock-lots'] });
@@ -12,6 +13,7 @@ const invalidateStock = (qc) => {
 export function useMaterialIssues(params = {}) {
   return useQuery({ queryKey: ['contractor-material-issues', params], queryFn: async () => (await apiClient.get('/workforce/contractor/material-issues', { params })).data.data, placeholderData: (prev) => prev });
 }
+registerListPrefetch(['contractor-material-issues'], '/workforce/contractor/material-issues');
 export function useIssueMaterial() {
   const qc = useQueryClient();
   return useMutation({
@@ -24,6 +26,7 @@ export function useIssueMaterial() {
 export function useContractorEntries(params = {}) {
   return useQuery({ queryKey: ['contractor-production-entries', params], queryFn: async () => (await apiClient.get('/workforce/contractor/production-entries', { params })).data.data, placeholderData: (prev) => prev });
 }
+registerListPrefetch(['contractor-production-entries'], '/workforce/contractor/production-entries');
 export function useCreateContractorEntry() {
   const qc = useQueryClient();
   return useMutation({
@@ -36,6 +39,7 @@ export function useCreateContractorEntry() {
 export function useAttendance(params = {}) {
   return useQuery({ queryKey: ['attendance', params], queryFn: async () => (await apiClient.get('/workforce/labour/attendance', { params })).data.data, placeholderData: (prev) => prev });
 }
+registerListPrefetch(['attendance'], '/workforce/labour/attendance');
 export function useMarkAttendance() {
   const qc = useQueryClient();
   return useMutation({
@@ -48,6 +52,7 @@ export function useMarkAttendance() {
 export function useAdvances(params = {}) {
   return useQuery({ queryKey: ['advances', params], queryFn: async () => (await apiClient.get('/workforce/advances', { params })).data.data, placeholderData: (prev) => prev });
 }
+registerListPrefetch(['advances'], '/workforce/advances');
 export function useCreateAdvance() {
   const qc = useQueryClient();
   return useMutation({

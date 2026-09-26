@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 export function useIndents(params = {}) {
   return useQuery({
@@ -8,6 +9,7 @@ export function useIndents(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['purchase-indents'], '/purchasing/indents');
 
 export function useThreeWayMatch(purchaseInvoiceId) {
   return useQuery({

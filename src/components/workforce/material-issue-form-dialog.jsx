@@ -20,8 +20,8 @@ export function MaterialIssueFormDialog({ open, onOpenChange }) {
   const [lines, setLines] = useState([{ ...emptyLine }]);
   const [error, setError] = useState('');
 
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
-  const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.RAW_MATERIAL });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
+  const { data: productData } = useProducts({ page: 1, limit: 100, productType: ProductType.RAW_MATERIAL }, { enabled: open });
   const createMutation = useIssueMaterial();
 
   useEffect(() => {

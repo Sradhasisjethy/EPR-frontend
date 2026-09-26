@@ -39,9 +39,9 @@ export function ProductFormDialog({ open, onOpenChange, product }) {
   const isEditing = !!product;
   const [form, setForm] = useState(emptyForm());
   const [error, setError] = useState('');
-  const { data: uomData } = useUoms({ page: 1, limit: 100 });
-  const { data: categoryData } = useProductCategories({ page: 1, limit: 100 });
-  const { data: hsnData } = useHsnCodes({ page: 1, limit: 100 });
+  const { data: uomData } = useUoms({ page: 1, limit: 100 }, { enabled: open });
+  const { data: categoryData } = useProductCategories({ page: 1, limit: 100 }, { enabled: open });
+  const { data: hsnData } = useHsnCodes({ page: 1, limit: 100 }, { enabled: open });
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
   const isSaving = createMutation.isPending || updateMutation.isPending;

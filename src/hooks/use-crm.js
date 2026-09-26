@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 const refresh = (qc) => qc.invalidateQueries({ queryKey: ['crm'] });
 
@@ -10,6 +11,7 @@ export function useLeads(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['crm', 'leads'], '/crm/leads');
 
 export function useLead(id) {
   return useQuery({

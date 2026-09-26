@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 export function GeneratePlanDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', planDate: '' });
   const [error, setError] = useState('');
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   const generateMutation = useGenerateProposal();
 
   useEffect(() => {

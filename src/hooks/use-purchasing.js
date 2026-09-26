@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 // Purchase Orders
 export function usePurchaseOrders(params = {}) {
@@ -9,6 +10,7 @@ export function usePurchaseOrders(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['purchase-orders'], '/purchasing/orders');
 export function usePurchaseOrder(id) {
   return useQuery({
     queryKey: ['purchase-orders', 'detail', id],
@@ -53,6 +55,7 @@ export function useGoodsReceipts(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['goods-receipts'], '/purchasing/receipts');
 export function useCreateGoodsReceipt() {
   const qc = useQueryClient();
   return useMutation({
@@ -75,6 +78,7 @@ export function usePurchaseInvoices(params = {}) {
     placeholderData: (prev) => prev,
   });
 }
+registerListPrefetch(['purchase-invoices'], '/purchasing/invoices');
 export function useCreatePurchaseInvoice() {
   const qc = useQueryClient();
   return useMutation({

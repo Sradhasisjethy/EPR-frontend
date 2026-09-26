@@ -26,7 +26,7 @@ export function DepreciationRunDialog({ open, onOpenChange }) {
   const [factoryId, setFactoryId] = useState('');
   const [upTo, setUpTo] = useState(lastMonthEnd(today()));
   const [error, setError] = useState('');
-  const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { data: factoryData } = useFactories({ page: 1, limit: 100 }, { enabled: open });
   const factories = factoryData?.rows || [];
   const preview = useDepreciationPreview({ factoryId: open ? factoryId : '', upTo });
   const run = useRunDepreciation();

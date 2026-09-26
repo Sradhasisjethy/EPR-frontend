@@ -154,8 +154,12 @@ function FinancialYearRowActions({
           </>
         )}
 
-        {/* Safe Deletion: Strictly hidden once transactions touch or year is active/closed */}
-        {isPlanned && (
+        {/* Safe Deletion: hidden while a year is live. A planned year can go
+            while its numbering is unused; a closed year can go only if it
+            never held anything (the API refuses otherwise, naming what it
+            holds) — without that, a duplicate code closed by mistake could
+            never be removed. */}
+        {(isPlanned || isClosed) && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem

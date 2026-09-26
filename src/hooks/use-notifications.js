@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { registerListPrefetch } from '@/lib/list-prefetch';
 
 export function useNotifications(params = {}, options = {}) {
   return useQuery({
@@ -9,6 +10,7 @@ export function useNotifications(params = {}, options = {}) {
     ...options,
   });
 }
+registerListPrefetch(['notifications'], '/notifications');
 
 export function useUnreadCount() {
   return useQuery({

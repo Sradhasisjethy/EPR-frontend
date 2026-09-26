@@ -65,7 +65,7 @@ export function VehicleFormDialog({ open, onOpenChange, vehicle }) {
   const [error, setError] = useState('');
 
   // Fetch vendors/transporters for Carrier linkage
-  const { data: partyData } = useParties({ page: 1, limit: 100, partyType: 'VENDOR' });
+  const { data: partyData } = useParties({ page: 1, limit: 100, partyType: 'VENDOR' }, { enabled: open });
   const createVehicle = useCreateVehicle();
   const updateVehicle = useUpdateVehicle();
   const isEdit = Boolean(vehicle);
