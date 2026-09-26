@@ -12,16 +12,26 @@ import { useStockAgeing, useDashboardKpis, useCostingReport, useAlerts, useCance
 import { useTabParam } from '@/hooks/use-tab-param';
 import AttachRatePage from '@/pages/AttachRatePage';
 import { DateText } from '@/components/date-text';
+import { PageDescription } from '@/components/layout/page-description';
+import { useUIStore } from '@/store/ui-store';
 
 const TABS = ['Dashboard', 'Stock Ageing', 'Costing', 'Alerts', 'Cancellations', 'Attach Rate'];
 
-const StatCard = ({ label, value, hint }) => (
-  <div className="p-4 rounded-xl border border-border bg-card">
-    <p className="text-xs text-muted-foreground">{label}</p>
-    <p className="text-lg font-semibold">{value}</p>
-    {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
-  </div>
-);
+const StatCard = ({ label, value, hint }) => {
+  const { glassMode } = useUIStore();
+  return (
+    <div
+      className={cn(
+        'p-4 rounded-xl transition-all',
+        glassMode ? 'glass-card border border-white/20 dark:border-white/10 shadow-xs' : 'border border-border bg-card'
+      )}
+    >
+      <p className={cn('text-xs', glassMode ? 'text-foreground/75 font-medium' : 'text-muted-foreground')}>{label}</p>
+      <p className="text-lg font-semibold">{value}</p>
+      {hint && <p className={cn('text-xs mt-1', glassMode ? 'text-foreground/60' : 'text-muted-foreground')}>{hint}</p>}
+    </div>
+  );
+};
 
 const Skeleton = () => <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />;
 
@@ -40,6 +50,7 @@ export default function AnalyticsPage() {
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
+  const { glassMode } = useUIStore();
 
   const dateParams = range.fromDate && range.toDate ? range : {};
   const dashboard = useDashboardKpis(factoryId, dateParams);
@@ -50,41 +61,88 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-muted-foreground">Dashboards, stock ageing, costing, alerts and cancellation analysis (M32-M38)</p>
-      </div>
+      <PageDescription>Dashboards, stock ageing, costing, alerts and cancellation analysis (M32-M38)</PageDescription>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+      <div
+        className={cn(
+          "grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl",
+          glassMode && "glass-card p-4 rounded-2xl border border-white/20 dark:border-white/10 shadow-xs"
+        )}
+      >
         <div className="space-y-1.5">
-          <Label>Factory</Label>
-          <select value={factoryId} onChange={(e) => setFactoryId(e.target.value)} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+          <Label className={cn(glassMode && "text-foreground/90 font-medium")}>Factory</Label>
+          <select
+            value={factoryId}
+            onChange={(e) => setFactoryId(e.target.value)}
+            className={cn(
+              "w-full h-9 px-3 rounded-md border text-sm transition-all",
+              glassMode ? "glass-surface border-white/25 text-foreground" : "border-input bg-background"
+            )}
+          >
             <option value="" disabled>Select factory</option>
             {(factoryData?.rows || []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label>From (optional)</Label>
-          <Input type="date" value={range.fromDate} onChange={(e) => setRange({ ...range, fromDate: e.target.value })} />
+          <Label className={cn(glassMode && "text-foreground/90 font-medium")}>From (optional)</Label>
+          <Input
+            type="date"
+            value={range.fromDate}
+            onChange={(e) => setRange({ ...range, fromDate: e.target.value })}
+            className={cn(glassMode && "glass-surface border-white/25 text-foreground")}
+          />
         </div>
         <div className="space-y-1.5">
-          <Label>To (optional)</Label>
-          <Input type="date" value={range.toDate} onChange={(e) => setRange({ ...range, toDate: e.target.value })} />
+          <Label className={cn(glassMode && "text-foreground/90 font-medium")}>To (optional)</Label>
+          <Input
+            type="date"
+            value={range.toDate}
+            onChange={(e) => setRange({ ...range, toDate: e.target.value })}
+            className={cn(glassMode && "glass-surface border-white/25 text-foreground")}
+          />
         </div>
       </div>
 
-      <div className="flex border-b border-border mb-6">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors', activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {glassMode ? (
+        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                activeTab === tab
+                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+              )}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex border-b border-border mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors', activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {!factoryId && <p className="text-sm text-muted-foreground">Select a factory to load analytics.</p>}
+      {!factoryId && (
+        <div className={cn(
+          "p-8 text-center rounded-2xl border transition-all",
+          glassMode ? "glass-card border-white/20 text-foreground/85 font-medium shadow-xs" : "border-border text-muted-foreground"
+        )}>
+          Select a factory to load analytics.
+        </div>
+      )}
 
       {activeTab === 'Dashboard' && factoryId && (
         dashboard.isLoading ? <Skeleton /> : dashboard.data && (

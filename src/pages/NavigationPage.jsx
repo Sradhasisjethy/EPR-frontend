@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ActionError } from '@/components/query-state';
 import { NAVIGATION } from '@/constants/navigation';
 import { useSettings, useUpsertSetting } from '@/hooks/use-settings';
+import { PageDescription } from '@/components/layout/page-description';
 import { cn } from '@/lib/utils';
 
 const SETTING_KEY = 'navigation';
@@ -104,13 +105,10 @@ export default function NavigationPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          
-          <p className="text-sm text-muted-foreground max-w-2xl">
-            Choose which modules appear in the sidebar and in what order. This applies to everyone in
-            the organisation.
-          </p>
-        </div>
+        <PageDescription className="max-w-2xl">
+          Choose which modules appear in the sidebar and in what order. This applies to everyone in
+          the organisation.
+        </PageDescription>
         {/* This writes the sidebar for the whole organisation, so it is a
             settings write, not a personal preference. */}
         {canConfigure && (

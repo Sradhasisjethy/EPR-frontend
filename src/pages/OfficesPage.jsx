@@ -26,9 +26,11 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useUIStore } from '@/store/ui-store';
 import { toast } from 'sonner';
 
 export default function OfficesPage() {
+  const { glassMode } = useUIStore();
   const { data: user } = useCurrentUser();
   const canCreate = hasPermission(user, WebPermissions.ORG_CREATE);
   const canModify = hasPermission(user, WebPermissions.ORG_MODIFY);
@@ -78,7 +80,7 @@ export default function OfficesPage() {
 
 
       {/* Filter Toolbar */}
-      <div className="flex items-center justify-between pt-2">
+      <div className={cn("flex items-center justify-between p-3 rounded-2xl", glassMode ? "glass-card shadow-xs" : "")}>
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             <Filter size={13} className="text-primary" />

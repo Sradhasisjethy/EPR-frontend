@@ -8,6 +8,7 @@ import { useCurrentUser } from '@/hooks/use-auth';
 import { hasPermission } from '@/lib/permissions';
 import { WebPermissions } from '@/constants/enums';
 import { today } from '@/lib/date-format';
+import { PageDescription } from '@/components/layout/page-description';
 import { useUIStore } from '@/store/ui-store';
 import { cn } from '@/lib/utils';
 
@@ -73,13 +74,11 @@ export default function AttachRatePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-sm text-muted-foreground max-w-2xl">
-          How often an accessory goes out with the product it belongs to, and the reasons given when
-          it does not. Removals only count when a reason was recorded, which is why the reason list
-          is kept short.
-        </p>
-      </div>
+      <PageDescription className="max-w-2xl">
+        How often an accessory goes out with the product it belongs to, and the reasons given when
+        it does not. Removals only count when a reason was recorded, which is why the reason list
+        is kept short.
+      </PageDescription>
 
       <div className="flex flex-wrap gap-3 items-end">
         <div className="space-y-1">

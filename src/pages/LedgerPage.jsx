@@ -11,6 +11,7 @@ import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { useTrialBalance, usePartyLedger, useCashBook, useMoneyAccounts } from '@/hooks/use-ledger';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { useUIStore } from '@/store/ui-store';
 import { DateText } from '@/components/date-text';
 import { hasPermission } from '@/lib/permissions';
 import { WebPermissions } from '@/constants/enums';
@@ -40,6 +41,7 @@ const cashBookParams = ({ account, from, to }) => {
 };
 
 export default function LedgerPage() {
+  const { glassMode } = useUIStore();
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
   const tabs = ALL_TABS.filter((t) => !t.permission || hasPermission(user, t.permission)).map((t) => t.key);
@@ -63,17 +65,38 @@ export default function LedgerPage() {
     <div className="space-y-6">
       
 
-      <div className="flex border-b border-border mb-6">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors', activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {glassMode ? (
+        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6 print:hidden">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                activeTab === tab
+                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+              )}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex border-b border-border mb-6 print:hidden">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer', activeTab === tab ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground')}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      )}
 
       {activeTab === 'Trial Balance' && (
         <div className="space-y-4">
@@ -147,7 +170,7 @@ export default function LedgerPage() {
 
       {activeTab === 'Cash Book' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 max-w-3xl">
+          <div className={cn("grid grid-cols-1 sm:grid-cols-4 gap-4 max-w-3xl p-4 rounded-xl border border-border shadow-xs", glassMode ? "glass-card" : "bg-card")}>
             <div className="space-y-1.5">
               <Label htmlFor="cb-factory">Factory</Label>
               <select id="cb-factory" value={factoryId} onChange={(e) => setFactoryId(e.target.value)} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
@@ -173,7 +196,7 @@ export default function LedgerPage() {
             </div>
           </div>
           {factoryId && showRates && cashBook.data && (
-            <div className="flex flex-wrap gap-x-8 gap-y-1 text-sm">
+            <div className={cn("flex flex-wrap gap-x-8 gap-y-1 text-sm p-3.5 rounded-xl border border-border shadow-xs", glassMode ? "glass-card" : "bg-card")}>
               <span>Opening <span className="font-semibold tabular-nums">{formatINR(cashBook.data.openingBalancePaise)}</span></span>
               <span>In <span className="font-semibold tabular-nums text-emerald-600">{formatINR(cashBook.data.totalInPaise)}</span></span>
               <span>Out <span className="font-semibold tabular-nums text-rose-600">{formatINR(cashBook.data.totalOutPaise)}</span></span>

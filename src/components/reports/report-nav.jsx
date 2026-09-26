@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUIStore } from '@/store/ui-store';
 
 /**
  * Two levels of navigation inside one module: category tabs across the top,
@@ -12,6 +13,38 @@ import { cn } from '@/lib/utils';
  */
 
 export function ReportCategoryTabs({ categories, activeCategory }) {
+  const { glassMode } = useUIStore();
+
+  if (glassMode) {
+    return (
+      <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-3" role="tablist" aria-label="Report categories">
+        {categories.map((category) => {
+          const active = category.id === activeCategory;
+          return (
+            <Link
+              key={category.id}
+              to={`/reports/${category.id}`}
+              role="tab"
+              aria-selected={active}
+              title={category.description}
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5',
+                active
+                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+              )}
+            >
+              {category.name}
+              <span className={cn('ml-1 text-xs px-1.5 py-0.2 rounded-full font-bold', active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground')}>
+                {category.reports.length}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="-mb-px flex gap-1 overflow-x-auto border-b border-border" role="tablist" aria-label="Report categories">
       {categories.map((category) => {
@@ -40,10 +73,11 @@ export function ReportCategoryTabs({ categories, activeCategory }) {
 }
 
 export function ReportPicker({ category, activeReport }) {
+  const { glassMode } = useUIStore();
   if (!category) return null;
 
   return (
-    <div className="flex flex-wrap gap-1.5" role="tablist" aria-label={`${category.name} reports`}>
+    <div className={cn("flex flex-wrap gap-1.5 p-1 rounded-2xl", glassMode && "glass-card p-2 shadow-xs mb-1")} role="tablist" aria-label={`${category.name} reports`}>
       {category.reports.map((report) => {
         const active = report.slug === activeReport;
         return (
@@ -54,10 +88,12 @@ export function ReportPicker({ category, activeReport }) {
             aria-selected={active}
             title={report.description}
             className={cn(
-              'rounded-full border px-3 py-1.5 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'rounded-xl border px-3.5 py-1.5 text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               active
-                ? 'border-primary bg-primary/10 font-medium text-primary'
-                : 'border-border bg-card text-muted-foreground hover:border-foreground/20 hover:text-foreground'
+                ? 'border-primary bg-primary text-primary-foreground shadow-sm font-semibold'
+                : glassMode
+                  ? 'border-border/60 bg-background/60 text-foreground/80 hover:bg-background/90 hover:text-foreground'
+                  : 'border-border bg-card text-muted-foreground hover:border-foreground/20 hover:text-foreground'
             )}
           >
             {report.name}
@@ -76,10 +112,11 @@ export function ReportPicker({ category, activeReport }) {
  * of assuming every discount happened to be zero.
  */
 export function ReportLimitations({ limitations }) {
+  const { glassMode } = useUIStore();
   if (!limitations?.length) return null;
 
   return (
-    <details className="group rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm">
+    <details className={cn("group rounded-xl border border-border px-3.5 py-2.5 text-sm", glassMode ? "glass-card shadow-xs" : "bg-muted/30")}>
       <summary className="flex cursor-pointer list-none items-center gap-2 text-muted-foreground marker:hidden">
         <Info size={14} aria-hidden="true" />
         <span className="font-medium">

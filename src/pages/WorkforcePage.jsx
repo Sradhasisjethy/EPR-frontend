@@ -17,12 +17,15 @@ import { AdvanceFormDialog } from '@/components/workforce/advance-form-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { WorkforceDetailDialog } from '@/components/workforce/workforce-detail-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { useUIStore } from '@/store/ui-store';
 import { toast } from 'sonner';
 import { DateText } from '@/components/date-text';
+import { PageDescription } from '@/components/layout/page-description';
 
 const TABS = ['Material Issues', 'Production Entries', 'Attendance', 'Advances'];
 
 export default function WorkforcePage() {
+  const { glassMode } = useUIStore();
   const [activeTab, setActiveTab] = useTabParam(TABS, 'Material Issues', 'subtab');
   const [issueOpen, setIssueOpen] = useState(false);
   const [entryOpen, setEntryOpen] = useState(false);
@@ -57,23 +60,42 @@ export default function WorkforcePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-muted-foreground">Job-work material issues, piece-rate production, attendance and advances (M26/M27)</p>
-      </div>
+      <PageDescription>Job-work material issues, piece-rate production, attendance and advances (M26/M27)</PageDescription>
 
       
 
-      <div className="flex border-b border-border mb-6">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors', activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {glassMode ? (
+        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                activeTab === tab
+                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+              )}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex border-b border-border mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer', activeTab === tab ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground')}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      )}
 
       {activeTab === 'Material Issues' && (
         materialIssues.query.isLoading ? <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" /> : (

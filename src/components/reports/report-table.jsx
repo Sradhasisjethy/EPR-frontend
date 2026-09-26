@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUIStore } from '@/store/ui-store';
 import { alignClass, formatCell, statusToneClass } from '@/lib/report-format';
 
 /**
@@ -59,6 +60,7 @@ function Cell({ row, column }) {
 }
 
 export function ReportTable({ columns, rows, sort, onSortChange, isFetching }) {
+  const { glassMode } = useUIStore();
   const sortStateFor = (key) => (sort?.by === key ? sort.dir : null);
 
   const toggleSort = (column) => {
@@ -71,7 +73,7 @@ export function ReportTable({ columns, rows, sort, onSortChange, isFetching }) {
   };
 
   return (
-    <div className={cn('rounded-xl border border-border bg-card transition-opacity', isFetching && 'opacity-60')}>
+    <div className={cn('rounded-xl border border-border overflow-hidden transition-opacity shadow-xs', glassMode ? 'glass-card' : 'bg-card', isFetching && 'opacity-60')}>
       {/* Wide reports scroll inside this container; the page itself never
           scrolls sideways. max-h keeps the sticky header useful on long pages. */}
       <div className="overflow-auto max-h-[calc(100vh-22rem)] rounded-xl">

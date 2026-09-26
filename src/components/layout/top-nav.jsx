@@ -51,41 +51,56 @@ export function TopNav() {
   };
 
   return (
-    // No background, no blur, no border, and not sticky. AppShell puts the
-    // scroll container on <main>, and this header is its sibling — the page
-    // scrolls underneath it, never through it. Every wash I tried here was
-    // solving a collision that cannot happen, and over a wallpaper the blur
-    // was itself the white band it was meant to avoid.
-    <header className="h-16 flex items-center justify-between gap-2 px-4 sm:px-6 shrink-0">
-      {/* Below lg the rail is off-screen, so this is the only way into it. */}
-      <button
-        onClick={() => setSidebarOpen(true)}
-        className="lg:hidden -ml-2 mr-1 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors shrink-0"
-        aria-label="Open navigation"
-      >
-        <Menu size={20} />
-      </button>
-
-      <div className="flex flex-col justify-center min-w-0 flex-1">
-        <h1 className="text-xl font-bold tracking-tight truncate leading-none">{title}</h1>
-        {trail.length > 1 && (
-          <p className="text-xs text-muted-foreground truncate mt-1">
-            {trail.slice(0, -1).join(' / ')}
-          </p>
+    <div className={cn("shrink-0 transition-all duration-300", glassMode ? "px-4 sm:px-6 pt-3 pb-1" : "")}>
+      <header
+        className={cn(
+          "flex items-center justify-between gap-2 transition-all duration-300 max-w-7xl mx-auto",
+          glassMode
+            ? "glass-card h-14 rounded-2xl border px-4 sm:px-5 shadow-xs"
+            : "h-16 px-4 sm:px-6"
         )}
-      </div>
+      >
+        {/* Below lg the rail is off-screen, so this is the only way into it. */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className={cn(
+            "lg:hidden -ml-2 mr-1 p-2 rounded-xl transition-colors shrink-0",
+            glassMode
+              ? "text-foreground hover:bg-white/20 dark:hover:bg-white/10"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+          )}
+          aria-label="Open navigation"
+        >
+          <Menu size={20} />
+        </button>
 
-      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-        <div className="hidden sm:block"><GlobalSearch /></div>
-        <NotificationBell />
+        <div className="flex flex-col justify-center min-w-0 flex-1">
+          <h1 className={cn("text-xl font-bold tracking-tight truncate leading-none", glassMode && "text-foreground drop-shadow-xs")}>
+            {title}
+          </h1>
+          {trail.length > 1 && (
+            <p className={cn("text-xs truncate mt-1", glassMode ? "text-foreground/75 font-medium" : "text-muted-foreground")}>
+              {trail.slice(0, -1).join(' / ')}
+            </p>
+          )}
+        </div>
 
-        <div className="relative" ref={dropdownRef}>
-          <button
-            className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary hover:bg-primary/30 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          >
-            <User size={18} />
-          </button>
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+          <div className="hidden sm:block"><GlobalSearch /></div>
+          <NotificationBell />
+
+          <div className="relative" ref={dropdownRef}>
+            <button
+              className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background",
+                glassMode
+                  ? "bg-primary/30 text-primary border border-white/20 shadow-xs hover:bg-primary/40"
+                  : "bg-primary/20 text-primary hover:bg-primary/30"
+              )}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              <User size={18} />
+            </button>
 
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-1.5rem)] rounded-xl shadow-lg bg-popover border border-border py-1 z-50 animate-in fade-in slide-in-from-top-2">
@@ -199,5 +214,6 @@ export function TopNav() {
         </div>
       </div>
     </header>
-  );
+  </div>
+);
 }

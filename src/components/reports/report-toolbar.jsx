@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Columns3, Download, FileSpreadsheet, FileText, RotateCcw, Search, SlidersHorizontal, Table2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { useUIStore } from '@/store/ui-store';
 import { ReportFilters } from './report-filters';
 import { ReportBusy } from './report-states';
 
@@ -101,6 +103,7 @@ export function ReportToolbar({
   exporting,
   isFetching,
 }) {
+  const { glassMode } = useUIStore();
   const [searchDraft, setSearchDraft] = useState(search ?? '');
   const [showMore, setShowMore] = useState(false);
   const debouncedSearch = useDebouncedCallback(onSearchChange, 350);
@@ -121,7 +124,7 @@ export function ReportToolbar({
   const searchable = (report.searchFields || []).length > 0;
 
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-card p-3.5">
+    <div className={cn("space-y-3 rounded-xl border border-border p-4 shadow-xs", glassMode ? "glass-card" : "bg-card")}>
       <div className="flex flex-wrap items-center gap-2">
         {searchable && (
           <div className="relative min-w-[16rem] flex-1">
@@ -135,7 +138,10 @@ export function ReportToolbar({
               }}
               placeholder={`Search ${report.searchFields.join(', ')}`}
               aria-label={`Search ${report.name}`}
-              className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className={cn(
+                "h-9 w-full rounded-md border border-input pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring",
+                glassMode ? "glass-surface" : "bg-background"
+              )}
             />
           </div>
         )}

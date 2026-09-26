@@ -12,6 +12,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { QueryState, ActionError } from '@/components/query-state';
 import { useVehicles, useDeleteVehicle } from '@/hooks/use-vehicles';
 import { VehicleFormDialog } from '@/components/vehicles/vehicle-form-dialog';
+import { PageDescription } from '@/components/layout/page-description';
 
 const TYPE_LABEL = {
   TRUCK: 'Truck',
@@ -78,13 +79,10 @@ export default function VehiclesPage() {
   return (
     <div className="space-y-6">
 
-      <div className="flex items-center justify-between">
-        <div>
-          
-          <p className="text-sm text-muted-foreground">
-            The fleet behind the vehicle number on a challan, so the same lorry is spelt one way everywhere.
-          </p>
-        </div>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <PageDescription>
+          The fleet behind the vehicle number on a challan, so the same lorry is spelt one way everywhere.
+        </PageDescription>
         <div className="flex flex-wrap items-center gap-2">
           {canCreate && (
             <Button onClick={openNew}>

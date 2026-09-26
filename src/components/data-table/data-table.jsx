@@ -217,8 +217,11 @@ export function DataTable({
         </div>
       </div>
 
-      <div className="flex items-center justify-between py-2 gap-4 flex-wrap">
-        <p className="text-sm text-muted-foreground">
+      <div className={cn(
+        "flex items-center justify-between py-2 gap-4 flex-wrap",
+        glassMode && "glass-card px-4 py-2.5 rounded-xl border border-white/20 dark:border-white/10 shadow-xs"
+      )}>
+        <p className={cn("text-sm", glassMode ? "text-foreground/85 font-medium" : "text-muted-foreground")}>
           Page {currentPage} of {lastPage} &middot; {rowCount} total
         </p>
 
@@ -227,37 +230,60 @@ export function DataTable({
             <select
               value={pagination.pageSize}
               onChange={(e) => onPaginationChange({ pageIndex: 0, pageSize: Number(e.target.value) })}
-              className="h-8 px-2 rounded-md border border-input bg-background text-xs"
+              className={cn(
+                "h-8 px-2 rounded-md border text-xs transition-all",
+                glassMode ? "glass-surface border-white/25 text-foreground" : "border-input bg-background"
+              )}
               title="Rows per page"
             >
               {[10, 25, 50, 100].map((n) => (
-                <option key={n} value={n}>{n} / page</option>
+                <option key={n} value={n} className="bg-popover text-popover-foreground">{n} / page</option>
               ))}
             </select>
           )}
           <button
-            className="px-3 py-1 text-sm rounded-md border border-input hover:bg-muted disabled:opacity-50 transition-colors"
+            className={cn(
+              "px-3 py-1 text-sm rounded-md border transition-colors cursor-pointer",
+              glassMode
+                ? "glass-surface border-white/25 text-foreground hover:bg-white/20 dark:hover:bg-white/10 disabled:opacity-40"
+                : "border-input hover:bg-muted disabled:opacity-50"
+            )}
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
           >
             First
           </button>
           <button
-            className="px-3 py-1 text-sm rounded-md border border-input hover:bg-muted disabled:opacity-50 transition-colors"
+            className={cn(
+              "px-3 py-1 text-sm rounded-md border transition-colors cursor-pointer",
+              glassMode
+                ? "glass-surface border-white/25 text-foreground hover:bg-white/20 dark:hover:bg-white/10 disabled:opacity-40"
+                : "border-input hover:bg-muted disabled:opacity-50"
+            )}
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
             Previous
           </button>
           <button
-            className="px-3 py-1 text-sm rounded-md border border-input hover:bg-muted disabled:opacity-50 transition-colors"
+            className={cn(
+              "px-3 py-1 text-sm rounded-md border transition-colors cursor-pointer",
+              glassMode
+                ? "glass-surface border-white/25 text-foreground hover:bg-white/20 dark:hover:bg-white/10 disabled:opacity-40"
+                : "border-input hover:bg-muted disabled:opacity-50"
+            )}
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
             Next
           </button>
           <button
-            className="px-3 py-1 text-sm rounded-md border border-input hover:bg-muted disabled:opacity-50 transition-colors"
+            className={cn(
+              "px-3 py-1 text-sm rounded-md border transition-colors cursor-pointer",
+              glassMode
+                ? "glass-surface border-white/25 text-foreground hover:bg-white/20 dark:hover:bg-white/10 disabled:opacity-40"
+                : "border-input hover:bg-muted disabled:opacity-50"
+            )}
             onClick={() => table.setPageIndex(lastPage - 1)}
             disabled={!table.getCanNextPage()}
           >

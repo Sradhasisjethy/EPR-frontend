@@ -9,6 +9,9 @@ import { ReportSummary } from '@/components/reports/report-summary';
 import { ReportTable } from '@/components/reports/report-table';
 import { ReportPagination } from '@/components/reports/report-pagination';
 import { ReportEmptyState, ReportErrorState, ReportSummarySkeleton, ReportTableSkeleton } from '@/components/reports/report-states';
+import { PageDescription } from '@/components/layout/page-description';
+import { useUIStore } from '@/store/ui-store';
+import { cn } from '@/lib/utils';
 
 /**
  * The Reports module.
@@ -274,16 +277,15 @@ function ReportsWorkspace({ categories, category, categoryId, reportSlug }) {
 
 function ReportHeader({ categories, category, reportSlug, definition }) {
   const listed = category.reports.find((r) => r.slug === reportSlug);
+  const { glassMode } = useUIStore();
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-muted-foreground">Operational and financial reporting across every module</p>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PageDescription>Operational and financial reporting across every module</PageDescription>
         <Link
           to="/reports/saved"
-          className="inline-flex items-center gap-1.5 rounded-md border border-input px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-sm font-medium text-foreground/80 glass-card transition-all hover:bg-primary hover:text-primary-foreground shadow-xs"
         >
           <Wrench size={14} /> Saved report builder
         </Link>
@@ -292,9 +294,16 @@ function ReportHeader({ categories, category, reportSlug, definition }) {
       <ReportCategoryTabs categories={categories} activeCategory={category.id} />
       <ReportPicker category={category} activeReport={reportSlug} />
 
-      <div>
-        <h3 className="text-lg font-semibold tracking-tight">{definition?.name || listed?.name || 'Report'}</h3>
-        <p className="text-sm text-muted-foreground">{definition?.description || listed?.description}</p>
+      <div className={cn(
+        "transition-all",
+        glassMode ? "glass-card p-4 rounded-2xl border border-white/20 dark:border-white/10 shadow-xs" : ""
+      )}>
+        <h3 className="text-lg font-bold text-foreground tracking-tight">{definition?.name || listed?.name || 'Report'}</h3>
+        {(definition?.description || listed?.description) && (
+          <p className={cn("text-sm mt-1", glassMode ? "text-foreground/80 font-medium" : "text-muted-foreground")}>
+            {definition?.description || listed?.description}
+          </p>
+        )}
       </div>
     </div>
   );

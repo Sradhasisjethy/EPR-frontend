@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { BundleRuleFormDialog } from '@/components/bundles/bundle-rule-form-dialog';
+import { PageDescription } from '@/components/layout/page-description';
 import { useUIStore } from '@/store/ui-store';
 import { cn } from '@/lib/utils';
 import {
@@ -60,11 +61,11 @@ export default function BundlesPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <p className="text-sm text-muted-foreground max-w-2xl">
+        <PageDescription className="max-w-2xl">
           What goes out with a product as a matter of course — gaskets with an RCC pipe, a frame with
           a manhole cover. A published bundle cannot be edited, because orders have been quoted from
           it, so change one by publishing a new version from a date.
-        </p>
+        </PageDescription>
         <Button onClick={() => { setEditing(null); setDialogOpen(true); }}>
           <Plus size={16} className="mr-2" /> New Bundle
         </Button>

@@ -62,7 +62,7 @@ export function MasterImportExportActions({ module, label, resource, filters = {
         </Button>
       )}
       {canRead && (
-        <Button type="button" variant="ghost" onClick={onSample} disabled={template.isPending}>
+        <Button type="button" variant="outline" onClick={onSample} disabled={template.isPending}>
           {template.isPending ? <Loader2 className="animate-spin" /> : <FileSpreadsheet />} Sample Excel
         </Button>
       )}

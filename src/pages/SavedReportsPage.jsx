@@ -16,6 +16,8 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { DateText } from '@/components/date-text';
+import { PageDescription } from '@/components/layout/page-description';
+import { useUIStore } from '@/store/ui-store';
 
 /**
  * The M40 saved-report builder and document search.
@@ -66,6 +68,7 @@ export default function SavedReportsPage() {
   const { data: partyData } = useParties({ page: 1, limit: 100 });
   const savedReports = usePaginated(useSavedReports);
   const createReport = useCreateSavedReport();
+  const { glassMode } = useUIStore();
   const deleteReport = useDeleteSavedReport();
   /**
    * Saving, deleting and exporting were all rendered unconditionally here,
@@ -138,77 +141,114 @@ export default function SavedReportsPage() {
   const renderField = (field) => {
     if (field === 'factoryId') {
       return (
-        <select value={params.factoryId || ''} onChange={(e) => setParams({ ...params, factoryId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-          <option value="">Select factory</option>
-          {(factoryData?.rows || []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+        <select
+          value={params.factoryId || ''}
+          onChange={(e) => setParams({ ...params, factoryId: e.target.value })}
+          className={cn("w-full h-9 px-3 rounded-md border text-sm transition-all", glassMode ? "glass-surface border-white/20 text-foreground" : "border-input bg-background")}
+        >
+          <option value="" className="bg-popover text-popover-foreground">Select factory</option>
+          {(factoryData?.rows || []).map((f) => <option key={f.id} value={f.id} className="bg-popover text-popover-foreground">{f.name}</option>)}
         </select>
       );
     }
     if (field === 'partyId') {
       return (
-        <select value={params.partyId || ''} onChange={(e) => setParams({ ...params, partyId: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-          <option value="">Select party</option>
-          {(partyData?.rows || []).map((p) => <option key={p.id} value={p.id}>{p.name} ({p.partyType})</option>)}
+        <select
+          value={params.partyId || ''}
+          onChange={(e) => setParams({ ...params, partyId: e.target.value })}
+          className={cn("w-full h-9 px-3 rounded-md border text-sm transition-all", glassMode ? "glass-surface border-white/20 text-foreground" : "border-input bg-background")}
+        >
+          <option value="" className="bg-popover text-popover-foreground">Select party</option>
+          {(partyData?.rows || []).map((p) => <option key={p.id} value={p.id} className="bg-popover text-popover-foreground">{p.name} ({p.partyType})</option>)}
         </select>
       );
     }
     if (field === 'accountKey') {
       return (
-        <select value={params.accountKey || 'CASH'} onChange={(e) => setParams({ ...params, accountKey: e.target.value })} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-          <option value="CASH">Cash</option>
-          <option value="BANK">Bank</option>
+        <select
+          value={params.accountKey || 'CASH'}
+          onChange={(e) => setParams({ ...params, accountKey: e.target.value })}
+          className={cn("w-full h-9 px-3 rounded-md border text-sm transition-all", glassMode ? "glass-surface border-white/20 text-foreground" : "border-input bg-background")}
+        >
+          <option value="CASH" className="bg-popover text-popover-foreground">Cash</option>
+          <option value="BANK" className="bg-popover text-popover-foreground">Bank</option>
         </select>
       );
     }
     if (['fromDate', 'toDate', 'from', 'to'].includes(field)) {
-      return <Input type="date" value={params[field] || ''} onChange={(e) => setParams({ ...params, [field]: e.target.value })} />;
+      return <Input type="date" value={params[field] || ''} onChange={(e) => setParams({ ...params, [field]: e.target.value })} className={cn(glassMode && "glass-surface text-foreground")} />;
     }
     if (field === 'deadStockDays') {
-      return <Input type="number" min="1" value={params.deadStockDays || ''} onChange={(e) => setParams({ ...params, deadStockDays: Number(e.target.value) || undefined })} placeholder="90" />;
+      return <Input type="number" min="1" value={params.deadStockDays || ''} onChange={(e) => setParams({ ...params, deadStockDays: Number(e.target.value) || undefined })} placeholder="90" className={cn(glassMode && "glass-surface text-foreground")} />;
     }
-    return <Input value={params[field] || ''} onChange={(e) => setParams({ ...params, [field]: e.target.value })} />;
+    return <Input value={params[field] || ''} onChange={(e) => setParams({ ...params, [field]: e.target.value })} className={cn(glassMode && "glass-surface text-foreground")} />;
   };
 
   return (
     <div className="space-y-6">
 
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-muted-foreground">Ad-hoc analytics, saved parameter sets and cross-module document search (M39/M40)</p>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PageDescription>Ad-hoc analytics, saved parameter sets and cross-module document search (M39/M40)</PageDescription>
         <Link
           to="/reports"
-          className="inline-flex items-center gap-1.5 rounded-md border border-input px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm transition-all shadow-xs",
+            glassMode ? "glass-card border-white/20 text-foreground hover:bg-white/20" : "border-input hover:bg-muted text-muted-foreground hover:text-foreground"
+          )}
         >
           <ArrowLeft size={14} /> Back to Reports
         </Link>
       </div>
 
-      <div className="flex border-b border-border mb-6">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors', activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {glassMode ? (
+        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                activeTab === tab
+                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+              )}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex border-b border-border mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer', activeTab === tab ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground')}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      )}
 
       {activeTab === 'Report Builder' && (
         <div className="space-y-8">
           {error && <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">{error}</div>}
 
-          <div className="space-y-4 p-4 rounded-xl border border-border bg-card">
+          <div className={cn("space-y-4 p-4 rounded-2xl border shadow-xs", glassMode ? "glass-card border-white/20 dark:border-white/10" : "border-border bg-card")}>
             <div className="space-y-1.5 max-w-sm">
-              <Label>Report Type</Label>
+              <Label className={cn(glassMode && "text-foreground/90 font-medium")}>Report Type</Label>
               <select
                 value={reportType}
                 onChange={(e) => { setReportType(e.target.value); setParams({}); setResult(null); }}
-                className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+                className={cn(
+                  "w-full h-9 px-3 rounded-md border text-sm transition-all",
+                  glassMode ? "glass-surface border-white/25 text-foreground" : "border-input bg-background"
+                )}
               >
-                {Object.values(ReportTypes).map((t) => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
+                {Object.values(ReportTypes).map((t) => <option key={t} value={t} className="bg-popover text-popover-foreground">{t.replace(/_/g, ' ')}</option>)}
               </select>
             </div>
 
@@ -228,8 +268,8 @@ export default function SavedReportsPage() {
                 <Play size={16} /> {runReport.isPending ? 'Running...' : 'Run Report'}
               </Button>
               <div className="space-y-1.5">
-                <Label>Save as</Label>
-                <Input value={reportName} onChange={(e) => setReportName(e.target.value)} placeholder="Report name" className="w-56" />
+                <Label className={cn(glassMode && "text-foreground/90 font-medium")}>Save as</Label>
+                <Input value={reportName} onChange={(e) => setReportName(e.target.value)} placeholder="Report name" className={cn("w-56", glassMode && "glass-surface text-foreground")} />
               </div>
               {canCreate && (
                 <Button variant="outline" onClick={handleSave} disabled={createReport.isPending}>
@@ -261,13 +301,17 @@ export default function SavedReportsPage() {
 
           {result && (
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Result</h3>
-              <pre className="p-4 rounded-xl border border-border bg-card text-xs overflow-auto max-h-[32rem]">{JSON.stringify(result, null, 2)}</pre>
+              <div className={cn(glassMode && "glass-card px-4 py-2.5 rounded-2xl border border-white/20 dark:border-white/10 shadow-xs inline-block")}>
+                <h3 className="text-sm font-bold text-foreground">Result</h3>
+              </div>
+              <pre className={cn("p-4 rounded-xl border text-xs overflow-auto max-h-[32rem]", glassMode ? "glass-card border-white/20 dark:border-white/10 text-foreground" : "border-border bg-card")}>{JSON.stringify(result, null, 2)}</pre>
             </div>
           )}
 
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold">Saved Reports</h3>
+          <div className="space-y-3">
+            <div className={cn("flex items-center justify-between", glassMode && "glass-card px-4 py-2.5 rounded-2xl border border-white/20 dark:border-white/10 shadow-xs")}>
+              <h3 className="text-base font-bold text-foreground tracking-tight">Saved Reports</h3>
+            </div>
             {savedReports.query.isLoading ? (
               <div className="w-full h-64 rounded-xl border border-border bg-card animate-pulse" />
             ) : (
@@ -315,11 +359,11 @@ export default function SavedReportsPage() {
 
       {activeTab === 'Document Search' && (
         <div className="space-y-4">
-          <div className="space-y-1.5 max-w-md">
-            <Label>Search by document number</Label>
+          <div className={cn("space-y-1.5 max-w-md p-4 rounded-2xl border shadow-xs", glassMode ? "glass-card border-white/20 dark:border-white/10" : "border-border bg-card")}>
+            <Label className={cn(glassMode && "text-foreground/90 font-medium")}>Search by document number</Label>
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="e.g. INV/0001, GRN, SO/00" className="pl-9" />
+              <Input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="e.g. INV/0001, GRN, SO/00" className={cn("pl-9", glassMode && "glass-surface text-foreground")} />
             </div>
           </div>
           {searchTerm.trim().length < 2 ? (

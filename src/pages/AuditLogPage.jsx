@@ -2,6 +2,7 @@ import { DataTable } from '@/components/data-table/data-table';
 import { usePaginated } from '@/hooks/use-paginated';
 import { useAuditLogs } from '@/hooks/use-audit-log';
 import { DateText } from '@/components/date-text';
+import { PageDescription } from '@/components/layout/page-description';
 
 const ACTION_COLORS = {
   CREATE: 'text-emerald-600',
@@ -14,9 +15,7 @@ export default function AuditLogPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-muted-foreground">Every create/update, who did it, and when (BR-30, M17)</p>
-      </div>
+      <PageDescription>Every create/update, who did it, and when (BR-30, M17)</PageDescription>
 
       {isLoading ? (
         <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
