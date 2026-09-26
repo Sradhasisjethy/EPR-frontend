@@ -51,10 +51,10 @@ export function TopNav() {
   };
 
   return (
-    <div className={cn("shrink-0 transition-all duration-300", glassMode ? "px-4 sm:px-6 pt-3 pb-1" : "")}>
+    <div className={cn("shrink-0 transition-all duration-300 relative z-40", glassMode ? "px-4 sm:px-6 pt-3 pb-1" : "")}>
       <header
         className={cn(
-          "flex items-center justify-between gap-2 transition-all duration-300 max-w-7xl mx-auto",
+          "flex items-center justify-between gap-2 transition-all duration-300 max-w-7xl mx-auto relative z-40",
           glassMode
             ? "glass-card h-14 rounded-2xl border px-4 sm:px-5 shadow-xs"
             : "h-16 px-4 sm:px-6"
@@ -89,7 +89,7 @@ export function TopNav() {
           <div className="hidden sm:block"><GlobalSearch /></div>
           <NotificationBell />
 
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative z-50" ref={dropdownRef}>
             <button
               className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background",
@@ -103,7 +103,7 @@ export function TopNav() {
             </button>
 
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-1.5rem)] rounded-xl shadow-lg bg-popover border border-border py-1 z-50 animate-in fade-in slide-in-from-top-2">
+            <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-1.5rem)] rounded-2xl shadow-2xl bg-popover border border-border py-1 z-50 animate-in fade-in slide-in-from-top-2">
               {user && (
                 <div className="px-4 py-2 border-b border-border">
                   <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
