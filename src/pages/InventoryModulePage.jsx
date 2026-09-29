@@ -3,6 +3,8 @@ import { cn } from '@/lib/utils';
 import { WebPermissions } from '@/constants/enums';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { hasPermission } from '@/lib/permissions';
+import { useUIStore } from '@/store/ui-store';
+import { PageDescription } from '@/components/layout/page-description';
 import { ShieldAlert } from 'lucide-react';
 
 import InventoryPage from './InventoryPage';
@@ -17,6 +19,7 @@ const ALL_TABS = [
 
 export default function InventoryModulePage() {
   const { data: user } = useCurrentUser();
+  const { glassMode } = useUIStore();
 
   const tabs = ALL_TABS.filter((tab) => {
     if (!tab.permission) return true;
@@ -28,9 +31,7 @@ export default function InventoryModulePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-muted-foreground">Manage your stock, transfers, and inventory reports</p>
-      </div>
+      <PageDescription>Manage your stock, transfers, and inventory reports</PageDescription>
 
       {tabs.length === 0 ? (
         <div className="p-12 text-center rounded-2xl border border-border bg-card/40 my-4">
@@ -44,22 +45,43 @@ export default function InventoryModulePage() {
         </div>
       ) : (
         <>
-          <div className="flex gap-1 overflow-x-auto pb-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                className={cn(
-                  'px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap',
-                  activeTab === tab.key
-                    ? 'bg-primary/15 text-primary'
-                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                )}
-                onClick={() => setActiveTab(tab.key)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          {glassMode ? (
+            <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  className={cn(
+                    'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                    activeTab === tab.key
+                      ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                      : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+                  )}
+                  onClick={() => setActiveTab(tab.key)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex gap-1 overflow-x-auto pb-2 border-b border-border">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  className={cn(
+                    'px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer',
+                    activeTab === tab.key
+                      ? 'bg-primary/15 text-primary font-semibold'
+                      : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  )}
+                  onClick={() => setActiveTab(tab.key)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="pt-2">
             {activeTab === 'stock' && <InventoryPage />}

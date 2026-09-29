@@ -68,20 +68,41 @@ export default function SettingsPage() {
     <div className="space-y-6">
       
 
-      <div className="flex border-b border-border">
-        {['General', 'Appearance', 'Security'].map(tab => (
-          <button
-            key={tab}
-            className={cn(
-              "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
-              activeTab === tab.toLowerCase() ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-            onClick={() => setActiveTab(tab.toLowerCase())}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {glassMode ? (
+        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
+          {['General', 'Appearance', 'Security'].map(tab => (
+            <button
+              key={tab}
+              type="button"
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                activeTab === tab.toLowerCase()
+                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+              )}
+              onClick={() => setActiveTab(tab.toLowerCase())}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex border-b border-border mb-6">
+          {['General', 'Appearance', 'Security'].map(tab => (
+            <button
+              key={tab}
+              type="button"
+              className={cn(
+                "px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer",
+                activeTab === tab.toLowerCase() ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => setActiveTab(tab.toLowerCase())}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="pt-4 max-w-2xl">
         {activeTab === 'appearance' && (

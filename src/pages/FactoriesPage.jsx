@@ -37,6 +37,7 @@ import { FinancialYearPeriodsDialog } from '@/components/factory/financial-year-
 import { FinancialYearCloseWizardDialog } from '@/components/factory/financial-year-close-wizard-dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { useUIStore } from '@/store/ui-store';
 import { DateText } from '@/components/date-text';
 import { toast } from 'sonner';
 
@@ -177,6 +178,7 @@ function FinancialYearRowActions({
 }
 
 export default function FactoriesPage() {
+  const { glassMode } = useUIStore();
   const [activeTab, setActiveTab] = useTabParam(['factories', 'financial-years'], 'factories', 'subtab');
   const [factoryDialogOpen, setFactoryDialogOpen] = useState(false);
   const [editingFactory, setEditingFactory] = useState(null);
@@ -236,23 +238,47 @@ export default function FactoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex border-b border-border mb-6">
-        {['Factories', 'Financial Years'].map((tab) => {
-          const key = tab.toLowerCase().replace(' ', '-');
-          return (
-            <button
-              key={tab}
-              className={cn(
-                'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
-                activeTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-              )}
-              onClick={() => setActiveTab(key)}
-            >
-              {tab}
-            </button>
-          );
-        })}
-      </div>
+      {glassMode ? (
+        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
+          {['Factories', 'Financial Years'].map((tab) => {
+            const key = tab.toLowerCase().replace(' ', '-');
+            return (
+              <button
+                key={tab}
+                type="button"
+                className={cn(
+                  'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                  activeTab === key
+                    ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                    : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+                )}
+                onClick={() => setActiveTab(key)}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex border-b border-border mb-6">
+          {['Factories', 'Financial Years'].map((tab) => {
+            const key = tab.toLowerCase().replace(' ', '-');
+            return (
+              <button
+                key={tab}
+                type="button"
+                className={cn(
+                  'px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer',
+                  activeTab === key ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'
+                )}
+                onClick={() => setActiveTab(key)}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {activeTab === 'factories' && (
         factoryLoading ? (

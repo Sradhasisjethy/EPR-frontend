@@ -27,9 +27,11 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useUIStore } from '@/store/ui-store';
 import { toast } from 'sonner';
 
 export default function DepartmentsPage() {
+  const { glassMode } = useUIStore();
   const { data: user } = useCurrentUser();
   const canCreate = hasPermission(user, WebPermissions.ORG_CREATE);
   const canModify = hasPermission(user, WebPermissions.ORG_MODIFY);
@@ -96,7 +98,7 @@ export default function DepartmentsPage() {
 
 
       {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+      <div className={cn("flex flex-wrap items-center justify-between gap-4 p-3 rounded-2xl", glassMode ? "glass-card shadow-xs" : "")}>
         <div className="flex flex-wrap items-center gap-4">
           {/* Org Filter */}
           <div className="flex items-center gap-2">

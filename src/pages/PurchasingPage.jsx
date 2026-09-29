@@ -18,10 +18,12 @@ import {
   useGoodsReceipts, useCancelGoodsReceipt, usePurchaseInvoices, useCancelPurchaseInvoice,
 } from '@/hooks/use-purchasing';
 import { PurchaseOrderFormDialog } from '@/components/purchasing/purchase-order-form-dialog';
+import { PageDescription } from '@/components/layout/page-description';
 import { GoodsReceiptFormDialog } from '@/components/purchasing/goods-receipt-form-dialog';
 import { PurchaseInvoiceFormDialog } from '@/components/purchasing/purchase-invoice-form-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { useUIStore } from '@/store/ui-store';
 import { DateText } from '@/components/date-text';
 import { toast } from 'sonner';
 
@@ -38,6 +40,7 @@ const PAYMENT_LABEL = { UNPAID: 'Unpaid', PARTIALLY_PAID: 'Partially Paid', PAID
 
 export default function PurchasingPage() {
   const [activeTab, setActiveTab] = useTabParam(TABS, 'Indents', 'subtab');
+  const { glassMode } = useUIStore();
   const [indentDialogOpen, setIndentDialogOpen] = useState(false);
   const [viewingIndent, setViewingIndent] = useState(null);
   const [convertingIndent, setConvertingIndent] = useState(null);
@@ -100,23 +103,42 @@ export default function PurchasingPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-muted-foreground">Purchase orders, goods receipt, and vendor invoices (M12)</p>
-      </div>
+      <PageDescription>Purchase orders, goods receipt, and vendor invoices (M12)</PageDescription>
 
       
 
-      <div className="flex border-b border-border mb-6">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors', activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {glassMode ? (
+        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                activeTab === tab
+                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+              )}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex border-b border-border mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer', activeTab === tab ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground')}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      )}
 
       {actionError && (
         <div className="p-3 mb-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">{actionError}</div>

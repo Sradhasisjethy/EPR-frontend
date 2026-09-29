@@ -10,6 +10,8 @@ import { canViewRates } from '@/lib/permissions';
 import { formatINR } from '@/lib/money';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/use-notifications';
 import { DateText } from '@/components/date-text';
+import { PageDescription } from '@/components/layout/page-description';
+import { useUIStore } from '@/store/ui-store';
 import { toast } from 'sonner';
 
 const SEVERITIES = ['', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
@@ -43,6 +45,7 @@ const MetadataCell = ({ metadata, showRates }) => {
 };
 
 export default function NotificationsPage() {
+  const { glassMode } = useUIStore();
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [severity, setSeverity] = useState('');
 
@@ -58,31 +61,52 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-muted-foreground">Alerts raised by the nightly jobs — dead stock, overdue money, curing, data integrity (M24)</p>
-        </div>
-        <Button variant="outline" onClick={() => markAllRead.mutate(undefined, {
-          onSuccess: () => toast.success('All alerts marked read'),
-          onError: (err) => toast.error(err.response?.data?.message || 'Could not mark the alerts read.'),
-        })} disabled={markAllRead.isPending}>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <PageDescription>Alerts raised by the nightly jobs — dead stock, overdue money, curing, data integrity (M24)</PageDescription>
+        <Button
+          variant="outline"
+          className={cn(glassMode && "glass-card border-white/20 text-foreground hover:bg-white/20 shadow-xs")}
+          onClick={() => markAllRead.mutate(undefined, {
+            onSuccess: () => toast.success('All alerts marked read'),
+            onError: (err) => toast.error(err.response?.data?.message || 'Could not mark the alerts read.'),
+          })}
+          disabled={markAllRead.isPending}
+        >
           <CheckCheck size={16} /> Mark all read
         </Button>
       </div>
 
-      <div className="flex items-end gap-4 flex-wrap">
+      <div className={cn(
+        "flex items-end gap-4 flex-wrap p-4 rounded-2xl border shadow-xs transition-all",
+        glassMode ? "glass-card border-white/20 dark:border-white/10" : "bg-card border-border"
+      )}>
         <div className="space-y-1.5 w-44">
-          <Label>Severity</Label>
+          <Label className={cn(glassMode && "text-foreground/90 font-medium")}>Severity</Label>
           <select
             value={severity}
             onChange={(e) => setSeverity(e.target.value)}
-            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+            className={cn(
+              "w-full h-9 px-3 rounded-md border text-sm transition-all focus:outline-none focus:ring-1 focus:ring-ring",
+              glassMode ? "glass-surface border-white/25 text-foreground" : "border-input bg-background"
+            )}
           >
-            {SEVERITIES.map((s) => <option key={s} value={s}>{s || 'All severities'}</option>)}
+            {SEVERITIES.map((s) => (
+              <option key={s} value={s} className="bg-popover text-popover-foreground">
+                {s || 'All severities'}
+              </option>
+            ))}
           </select>
         </div>
-        <label className="flex items-center gap-2 text-sm h-9">
-          <input type="checkbox" checked={unreadOnly} onChange={(e) => setUnreadOnly(e.target.checked)} />
+        <label className={cn(
+          "flex items-center gap-2 text-sm h-9 cursor-pointer select-none",
+          glassMode && "text-foreground/90 font-medium"
+        )}>
+          <input
+            type="checkbox"
+            checked={unreadOnly}
+            onChange={(e) => setUnreadOnly(e.target.checked)}
+            className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
+          />
           Unread only
         </label>
       </div>

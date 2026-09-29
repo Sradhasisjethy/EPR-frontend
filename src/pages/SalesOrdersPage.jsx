@@ -17,6 +17,7 @@ import { SalesOrderFormDialog } from '@/components/sales/sales-order-form-dialog
 import { SalesOrderDetailDialog } from '@/components/sales/sales-order-detail-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
 import { DateText } from '@/components/date-text';
+import { useUIStore } from '@/store/ui-store';
 import { toast } from 'sonner';
 
 const STATUS_MAP = {
@@ -39,6 +40,7 @@ const STATUS_TABS = [
 const SORTABLE_COLUMNS = ['orderNumber', 'orderDate', 'status', 'totalAmountPaise'];
 
 export default function SalesOrdersPage() {
+  const { glassMode } = useUIStore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [detailId, setDetailId] = useState(null);
@@ -104,20 +106,41 @@ export default function SalesOrdersPage() {
 
       
 
-      <div className="flex flex-wrap border-b border-border">
-        {STATUS_TABS.map((tab) => (
-          <button
-            key={tab.key}
-            className={cn(
-              'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
-              status === tab.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-            )}
-            onClick={() => setStatus(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {glassMode ? (
+        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                status === tab.key
+                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+              )}
+              onClick={() => setStatus(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-wrap border-b border-border">
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              className={cn(
+                'px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer',
+                status === tab.key ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => setStatus(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {actionError && (
         <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">{actionError}</div>

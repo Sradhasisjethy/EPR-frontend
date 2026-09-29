@@ -12,6 +12,7 @@ import { canViewRates, hasPermission } from '@/lib/permissions';
 import { WebPermissions } from '@/constants/enums';
 import { formatINR } from '@/lib/money';
 import { cn } from '@/lib/utils';
+import { useUIStore } from '@/store/ui-store';
 import { OpenTillDialog, CloseTillDialog } from '@/components/cash-register/till-dialogs';
 
 const Variance = ({ paise }) => {
@@ -43,12 +44,21 @@ export default function CashRegisterPage() {
   const till = useCurrentTill(factoryId);
   const { query, tableProps } = usePaginated(useTillSessions, factoryId ? { factoryId } : {});
   const open = till.data;
+  const { glassMode } = useUIStore();
 
   return (
     <div className="space-y-5">
       <div className="space-y-1.5 max-w-xs">
-        <Label htmlFor="till-factory">Factory</Label>
-        <select id="till-factory" value={factoryId} onChange={(e) => setFactoryId(e.target.value)} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
+        <Label htmlFor="till-factory" className={cn(glassMode && "text-foreground/90 font-medium")}>Factory</Label>
+        <select
+          id="till-factory"
+          value={factoryId}
+          onChange={(e) => setFactoryId(e.target.value)}
+          className={cn(
+            "w-full h-9 px-3 rounded-md border text-sm transition-all",
+            glassMode ? "glass-surface border-white/25 text-foreground" : "border-input bg-background"
+          )}
+        >
           <option value="">Select factory</option>
           {factories.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
         </select>
@@ -58,17 +68,20 @@ export default function CashRegisterPage() {
         till.isLoading ? (
           <div className="h-28 rounded-xl border border-border bg-card animate-pulse" />
         ) : open ? (
-          <div className="rounded-xl border border-border bg-card p-4 flex flex-wrap items-center gap-x-8 gap-y-3">
+          <div className={cn(
+            "p-4 rounded-2xl border flex flex-wrap items-center gap-x-8 gap-y-3 shadow-xs",
+            glassMode ? "glass-card border-white/20 dark:border-white/10" : "bg-card border-border"
+          )}>
             <div>
-              <p className="text-xs text-muted-foreground">Till open · {open.sessionNumber}</p>
+              <p className={cn("text-xs", glassMode ? "text-foreground/75 font-medium" : "text-muted-foreground")}>Till open · {open.sessionNumber}</p>
               <p className="font-medium">since <DateText value={open.openedAt} withTime /></p>
             </div>
             {showRates && (
               <>
-                <div><p className="text-xs text-muted-foreground">Opened with</p><p className="font-medium tabular-nums">{formatINR(open.openingCountedPaise)}</p></div>
-                <div><p className="text-xs text-muted-foreground">Cash in</p><p className="font-medium tabular-nums text-emerald-600">{formatINR(open.totalInPaise)}</p></div>
-                <div><p className="text-xs text-muted-foreground">Cash out</p><p className="font-medium tabular-nums text-rose-600">{formatINR(open.totalOutPaise)}</p></div>
-                <div><p className="text-xs text-muted-foreground">Should be in the drawer</p><p className="text-lg font-semibold tabular-nums">{formatINR(open.expectedNowPaise)}</p></div>
+                <div><p className={cn("text-xs", glassMode ? "text-foreground/75" : "text-muted-foreground")}>Opened with</p><p className="font-medium tabular-nums">{formatINR(open.openingCountedPaise)}</p></div>
+                <div><p className={cn("text-xs", glassMode ? "text-foreground/75" : "text-muted-foreground")}>Cash in</p><p className="font-medium tabular-nums text-emerald-600">{formatINR(open.totalInPaise)}</p></div>
+                <div><p className={cn("text-xs", glassMode ? "text-foreground/75" : "text-muted-foreground")}>Cash out</p><p className="font-medium tabular-nums text-rose-600">{formatINR(open.totalOutPaise)}</p></div>
+                <div><p className={cn("text-xs", glassMode ? "text-foreground/75" : "text-muted-foreground")}>Should be in the drawer</p><p className="text-lg font-semibold tabular-nums">{formatINR(open.expectedNowPaise)}</p></div>
               </>
             )}
             {canClose && (
@@ -76,8 +89,11 @@ export default function CashRegisterPage() {
             )}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-border p-6 text-center">
-            <p className="text-sm text-muted-foreground">No till is open at this factory.</p>
+          <div className={cn(
+            "p-8 text-center rounded-2xl border transition-all",
+            glassMode ? "glass-card border-white/20 text-foreground/85 shadow-xs" : "border-dashed border-border"
+          )}>
+            <p className={cn("text-sm", glassMode ? "text-foreground/85 font-medium" : "text-muted-foreground")}>No till is open at this factory.</p>
             {canOpen && <Button className="mt-3" onClick={() => setOpening(true)}><Unlock size={16} /> Open till</Button>}
           </div>
         )

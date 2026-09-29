@@ -18,6 +18,7 @@ import { hasPermission } from '@/lib/permissions';
 import { WebPermissions } from '@/constants/enums';
 import { today } from '@/lib/date-format';
 import { cn } from '@/lib/utils';
+import { useUIStore } from '@/store/ui-store';
 import { toast } from 'sonner';
 
 const SELECT = 'w-full h-9 px-3 rounded-md border border-input bg-background text-sm';
@@ -115,6 +116,7 @@ function ApplyLeaveDialog({ open, onOpenChange, employees }) {
 }
 
 function LeaveTypesCard({ canEdit }) {
+  const { glassMode } = useUIStore();
   const { data: types = [] } = useLeaveTypes();
   const create = useCreateLeaveType();
   const [form, setForm] = useState({ code: '', name: '', daysPerYear: '', isPaid: true });
@@ -131,7 +133,7 @@ function LeaveTypesCard({ canEdit }) {
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+    <div className={cn("rounded-xl border border-border p-4 space-y-3 shadow-xs", glassMode ? "glass-card" : "bg-card")}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold">Leave types</h3>
         <div className="flex flex-wrap items-center gap-1">
@@ -169,11 +171,12 @@ function LeaveTypesCard({ canEdit }) {
 }
 
 function BalancesCard({ employees }) {
+  const { glassMode } = useUIStore();
   const [employeeId, setEmployeeId] = useState('');
   const { data } = useLeaveBalances(employeeId);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+    <div className={cn("rounded-xl border border-border p-4 space-y-3 shadow-xs", glassMode ? "glass-card" : "bg-card")}>
       <h3 className="text-sm font-semibold">Balances</h3>
       <select aria-label="Employee balances" className={SELECT} value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>
         <option value="">Select an employee</option>

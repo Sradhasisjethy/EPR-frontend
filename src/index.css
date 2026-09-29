@@ -945,3 +945,103 @@ html:not(.dark) .wallpaper-active .infideep-auth span {
     transform: none;
   }
 }
+
+/* ==========================================================================
+   PRINT STYLES - Professional Financial Reporting & ERP Document Printing
+   ========================================================================== */
+@media print {
+  /* 1. Hide all application chrome, navigation, headers, and UI widgets */
+  aside,
+  header,
+  nav,
+  .print\:hidden,
+  [data-slot="sidebar"],
+  button {
+    display: none !important;
+  }
+
+  /* 2. Global Document Clean Sheet */
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm 12mm 15mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 10pt !important;
+    line-height: 1.4 !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    width: 100% !important;
+  }
+
+  /* 3. Invert/Reset theme variables to pure crisp high-contrast black on white */
+  :root, .dark, [data-theme="dark"] {
+    --background: 0 0% 100% !important;
+    --foreground: 222.2 84% 4.9% !important;
+    --card: 0 0% 100% !important;
+    --card-foreground: 222.2 84% 4.9% !important;
+    --muted: 210 20% 96% !important;
+    --muted-foreground: 215 16% 40% !important;
+    --border: 214 20% 80% !important;
+  }
+
+  /* 4. Reset layout wrappers */
+  .h-screen, .overflow-hidden, .overflow-y-auto {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  .lg\:ml-\[88px\], .lg\:ml-\[260px\] {
+    margin-left: 0 !important;
+  }
+
+  .max-w-7xl, .max-w-3xl {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* 5. Statement Styling for Paper */
+  .financial-statement-card {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    padding: 24px !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .financial-statement-card * {
+    color: #0f172a !important;
+  }
+
+  .financial-statement-card .text-muted-foreground {
+    color: #475569 !important;
+  }
+
+  .financial-statement-card .text-rose-600,
+  .financial-statement-card .text-destructive {
+    color: #b91c1c !important;
+  }
+
+  .financial-statement-card .border-border {
+    border-color: #cbd5e1 !important;
+  }
+
+  .break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
+

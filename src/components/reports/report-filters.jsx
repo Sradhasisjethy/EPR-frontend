@@ -5,6 +5,7 @@ import { useFactories } from '@/hooks/use-factory';
 import { useParties } from '@/hooks/use-parties';
 import { useProducts, useProductCategories } from '@/hooks/use-products';
 import { cn } from '@/lib/utils';
+import { useUIStore } from '@/store/ui-store';
 
 /**
  * Filter controls, rendered from the descriptors the server publishes with each
@@ -63,11 +64,12 @@ const selectClass =
   'h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50';
 
 function FilterControl({ control, value, onChange, entityOptions }) {
+  const { glassMode } = useUIStore();
   const id = `report-filter-${control.key}`;
 
   if (control.control === 'toggle') {
     return (
-      <label htmlFor={id} className="flex h-9 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2.5 text-sm">
+      <label htmlFor={id} className={cn("flex h-9 cursor-pointer items-center gap-2 rounded-md border border-input px-2.5 text-sm", glassMode ? "glass-surface text-foreground" : "bg-background")}>
         <input
           id={id}
           type="checkbox"
@@ -82,7 +84,7 @@ function FilterControl({ control, value, onChange, entityOptions }) {
 
   const field = (() => {
     if (control.control === 'date') {
-      return <Input id={id} type="date" value={value || ''} onChange={(event) => onChange(event.target.value)} className="h-9" />;
+      return <Input id={id} type="date" value={value || ''} onChange={(event) => onChange(event.target.value)} className={cn("h-9", glassMode && "glass-surface text-foreground")} />;
     }
 
     if (control.control === 'text') {
@@ -92,7 +94,7 @@ function FilterControl({ control, value, onChange, entityOptions }) {
           value={value || ''}
           onChange={(event) => onChange(event.target.value)}
           placeholder={`Any ${control.label.toLowerCase()}`}
-          className="h-9"
+          className={cn("h-9", glassMode && "glass-surface text-foreground")}
         />
       );
     }
@@ -103,10 +105,18 @@ function FilterControl({ control, value, onChange, entityOptions }) {
         : control.options || [];
 
     return (
-      <select id={id} value={value || ''} onChange={(event) => onChange(event.target.value)} className={selectClass}>
-        <option value="">All</option>
+      <select
+        id={id}
+        value={value || ''}
+        onChange={(event) => onChange(event.target.value)}
+        className={cn(
+          "h-9 w-full rounded-md border px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50",
+          glassMode ? "glass-surface border-input text-foreground" : "border-input bg-background"
+        )}
+      >
+        <option value="" className="bg-popover text-popover-foreground">All</option>
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option key={option.value} value={option.value} className="bg-popover text-popover-foreground">
             {option.label}
           </option>
         ))}

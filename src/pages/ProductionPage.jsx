@@ -11,6 +11,7 @@ import { ConfirmPlanDialog } from '@/components/production/confirm-plan-dialog';
 import { ProductionEntryFormDialog } from '@/components/production/production-entry-form-dialog';
 import { WastageFormDialog } from '@/components/production/wastage-form-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { useUIStore } from '@/store/ui-store';
 import { toast } from 'sonner';
 import { DateText } from '@/components/date-text';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -34,6 +35,7 @@ const FULFILMENT_BADGE = {
 };
 
 export default function ProductionPage() {
+  const { glassMode } = useUIStore();
   const { hasPermission } = usePermissions();
   const canRecordProduction = hasPermission(WebPermissions.PRODUCTION_CREATE);
   const canRecordWastage = hasPermission(WebPermissions.WASTAGE_CREATE);
@@ -75,29 +77,66 @@ export default function ProductionPage() {
     <div className="space-y-6">
       
 
-      <div className="flex border-b border-border mb-6">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors', activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-            {tab === 'Approvals' && approvalQuery.query.data?.count > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 min-w-4 px-1">
-                {approvalQuery.query.data.count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      {glassMode ? (
+        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5',
+                activeTab === tab
+                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+              )}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+              {tab === 'Approvals' && approvalQuery.query.data?.count > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 min-w-4 px-1">
+                  {approvalQuery.query.data.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex border-b border-border mb-6">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer', activeTab === tab ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground')}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+              {tab === 'Approvals' && approvalQuery.query.data?.count > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 min-w-4 px-1">
+                  {approvalQuery.query.data.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       {activeTab === 'Plans' && (
         planQuery.query.isLoading ? <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" /> : (
           <DataTable
             columns={[
               { id: 'planDate', header: 'Plan Date', cell: ({ row }) => <DateText value={row.original.planDate} /> },
-              { id: 'lines', header: 'Lines', cell: ({ row }) => row.original.lines?.length ?? 0 },
+              {
+                id: 'lines',
+                header: 'Lines',
+                cell: ({ row }) => {
+                  const count = row.original.lines?.length ?? 0;
+                  return count === 0 ? (
+                    <span className="text-xs text-muted-foreground">0 (No shortfall)</span>
+                  ) : (
+                    <span className="text-xs font-medium text-foreground">{count} {count === 1 ? 'item' : 'items'}</span>
+                  );
+                },
+              },
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status === 'CONFIRMED' ? 'active' : 'pending'} /> },
               {
                 id: 'actions', header: '',

@@ -68,7 +68,7 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-96 rounded-md shadow-lg bg-card border border-border z-50 animate-in fade-in slide-in-from-top-2">
+        <div className="absolute right-0 mt-2 w-96 rounded-2xl shadow-2xl bg-popover/95 backdrop-blur-2xl border border-border z-50 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center justify-between px-4 py-2 border-b border-border">
             <p className="text-sm font-medium">Notifications</p>
             {unread > 0 && (

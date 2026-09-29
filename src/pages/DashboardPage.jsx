@@ -1,7 +1,10 @@
 import { lazy, Suspense, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  AlertTriangle, ClipboardList, Factory as FactoryIcon, Package, Percent,
-  PiggyBank, Timer, TrendingUp, Truck, Wallet,
+  AlertTriangle, ArrowUpRight, BarChart3, Boxes,
+  CheckCircle2, ChevronRight, ClipboardList, Factory as FactoryIcon, FileText,
+  Layers, Package, Percent, PiggyBank,
+  Receipt, ShoppingCart, Timer, TrendingUp, Truck, Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
@@ -13,16 +16,23 @@ import { formatINR } from '@/lib/money';
 import { useDashboardStats } from '@/hooks/use-dashboard';
 import { useFactories } from '@/hooks/use-factory';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { useUIStore } from '@/store/ui-store';
 
 // recharts is roughly half a megabyte and only this route draws charts, so it
 // is split out rather than shipped to every page.
 const TrendArea = lazy(() => import('@/components/dashboard/charts').then((m) => ({ default: m.TrendArea })));
 const YieldDonut = lazy(() => import('@/components/dashboard/charts').then((m) => ({ default: m.YieldDonut })));
 const PipelineBars = lazy(() => import('@/components/dashboard/charts').then((m) => ({ default: m.PipelineBars })));
+const SalesVsPurchasesChart = lazy(() => import('@/components/dashboard/charts').then((m) => ({ default: m.SalesVsPurchasesChart })));
+const TopProductsBarChart = lazy(() => import('@/components/dashboard/charts').then((m) => ({ default: m.TopProductsBarChart })));
+const TopCustomersBarChart = lazy(() => import('@/components/dashboard/charts').then((m) => ({ default: m.TopCustomersBarChart })));
+const StockAgeingDonut = lazy(() => import('@/components/dashboard/charts').then((m) => ({ default: m.StockAgeingDonut })));
+const ReceivablesAgeingBarChart = lazy(() => import('@/components/dashboard/charts').then((m) => ({ default: m.ReceivablesAgeingBarChart })));
+const LiquidityOverviewChart = lazy(() => import('@/components/dashboard/charts').then((m) => ({ default: m.LiquidityOverviewChart })));
 
-const ChartFallback = () => <div className="h-[220px] rounded-xl bg-muted/40 animate-pulse" />;
+const ChartFallback = () => <div className="h-[240px] rounded-xl bg-muted/40 animate-pulse" />;
 
-const TABS = ['Production', 'Sales'];
+const TABS = ['Production', 'Sales', 'Reports'];
 
 export default function DashboardPage() {
   const [factoryId, setFactoryId] = useState('');
@@ -33,6 +43,7 @@ function Dashboard({ factoryId, setFactoryId }) {
   const { data: factoryData } = useFactories({ page: 1, limit: 100 });
   const { data, isLoading, isError } = useDashboardStats(factoryId || undefined);
   const [activeTab, setActiveTab] = useTabParam(TABS, 'Production');
+  const { glassMode } = useUIStore();
 
   if (isLoading) {
     return (
@@ -50,59 +61,91 @@ function Dashboard({ factoryId, setFactoryId }) {
   // (AC-14.1) — a presence check here, not a permission check.
   const fin = data?.financial;
   const sales = data?.sales;
-  const tabs = fin ? TABS : ['Production'];
+  const tabs = fin ? ['Production', 'Sales', 'Reports'] : ['Production', 'Reports'];
   const tab = tabs.includes(activeTab) ? activeTab : 'Production';
 
   return (
     <div className="space-y-6">
-      {/* Tabs and the factory filter share one row. The page title lives in the
-          top bar now, so a separate header row here left the select stranded
-          on the far right with nothing opposite it. */}
-      <div className="flex items-center justify-between gap-4 flex-wrap border-b border-border">
-        <div className="flex">
-          {tabs.map((name) => (
-            <button
-              key={name}
-              onClick={() => setActiveTab(name)}
-              className={cn(
-                'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
-                tab === name
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              )}
+      {glassMode ? (
+        /* Glassmorphic Bar (When Glassmorphism is ON) */
+        <div className="glass-card flex items-center justify-between gap-4 flex-wrap p-2 rounded-2xl shadow-xs">
+          <div className="flex items-center p-1 rounded-xl bg-muted/70 border border-border/40 gap-1">
+            {tabs.map((name) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => setActiveTab(name)}
+                className={cn(
+                  'px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 cursor-pointer',
+                  tab === name
+                    ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                    : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+                )}
+              >
+                {name === 'Production' && <FactoryIcon size={16} />}
+                {name === 'Sales' && <TrendingUp size={16} />}
+                {name === 'Reports' && <BarChart3 size={16} />}
+                {name}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/40 border border-border/40">
+            <Label className="text-xs font-medium text-foreground/80 shrink-0">Factory</Label>
+            <select
+              value={factoryId}
+              onChange={(e) => setFactoryId(e.target.value)}
+              className="h-8 w-52 px-2.5 rounded-lg border border-border bg-card text-foreground text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
             >
-              {name}
-            </button>
-          ))}
+              <option value="">All my factories</option>
+              {(factoryData?.rows || []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+          </div>
         </div>
-        <div className="flex items-center gap-2 pb-2">
-          <Label className="text-xs text-muted-foreground shrink-0">Factory</Label>
-          <select
-            value={factoryId}
-            onChange={(e) => setFactoryId(e.target.value)}
-            className="h-9 w-52 px-3 rounded-lg border border-input bg-background text-sm"
-          >
-            <option value="">All my factories</option>
-            {(factoryData?.rows || []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-          </select>
+      ) : (
+        /* Standard Clean Tab Bar (When Glassmorphism is OFF) */
+        <div className="flex items-center justify-between gap-4 flex-wrap border-b border-border">
+          <div className="flex">
+            {tabs.map((name) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => setActiveTab(name)}
+                className={cn(
+                  'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2 cursor-pointer',
+                  tab === name
+                    ? 'border-primary text-primary font-semibold'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {name === 'Production' && <FactoryIcon size={15} />}
+                {name === 'Sales' && <TrendingUp size={15} />}
+                {name === 'Reports' && <BarChart3 size={15} />}
+                {name}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 pb-2">
+            <Label className="text-xs text-muted-foreground shrink-0">Factory</Label>
+            <select
+              value={factoryId}
+              onChange={(e) => setFactoryId(e.target.value)}
+              className="h-9 w-52 px-3 rounded-lg border border-input bg-background text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+            >
+              <option value="">All my factories</option>
+              {(factoryData?.rows || []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+          </div>
         </div>
-      </div>
+      )}
 
-      {tab === 'Production' ? <ProductionTab ops={ops} trends={data.trends} /> : <SalesTab fin={fin} sales={sales} trends={data.trends} />}
+      {tab === 'Production' && <ProductionTab ops={ops} trends={data.trends} />}
+      {tab === 'Sales' && <SalesTab fin={fin} sales={sales} trends={data.trends} />}
+      {tab === 'Reports' && <ReportsTab fin={fin} sales={sales} ops={ops} trends={data.trends} />}
     </div>
   );
 }
 
 function ProductionTab({ ops, trends }) {
-  /**
-   * A widget the API withheld is absent from `ops`, not zero.
-   *
-   * Every tile read `ops.x ?? 0`, so a user without the grant — the API now
-   * omits the key rather than the number — would see a wall of zeroes and
-   * conclude the plant produced nothing today. Absent means "not yours to see",
-   * which is a different statement from "none", so the tile goes rather than
-   * showing a figure that isn't true.
-   */
   const has = (key) => ops[key] !== undefined;
 
   return (
@@ -157,7 +200,6 @@ function ProductionTab({ ops, trends }) {
             tone={ops.deadStockLots > 0 ? 'danger' : 'good'} hint={`${ops.slowMovingLots ?? 0} slow-moving`}
           />
         )}
-        {/* Personal, so never withheld. */}
         <KpiTile
           accent="amber" icon={AlertTriangle} label="Unread alerts" value={ops.unreadAlerts ?? 0}
           tone={ops.unreadAlerts > 0 ? 'warn' : undefined}
@@ -234,32 +276,41 @@ function SalesTab({ fin, sales, trends }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Panel title="Receivables ageing">
-          <div className="space-y-2 pt-1">
-            {[
-              ['Not due', ageing.notDue, 'bg-emerald-500'],
-              ['1–30 days', ageing.d1_30, 'bg-amber-400'],
-              ['31–60 days', ageing.d31_60, 'bg-amber-500'],
-              ['61–90 days', ageing.d61_90, 'bg-orange-500'],
-              ['90+ days', ageing.d90Plus, 'bg-destructive'],
-            ].map(([label, value, colour]) => {
-              const pct = fin.receivablesPaise > 0 ? ((value || 0) / fin.receivablesPaise) * 100 : 0;
-              return (
-                <div key={label} className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">{label}</span>
-                    <span className="tabular-nums">{formatINR(value || 0)}</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div className={cn('h-full rounded-full', colour)} style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <Panel
+          title="Receivables ageing"
+          action={
+            <Link to="/reports/finance/party-ageing" className="text-xs text-primary hover:underline flex items-center gap-1">
+              Full ageing <ArrowUpRight size={13} />
+            </Link>
+          }
+        >
+          <Suspense fallback={<ChartFallback />}>
+            <ReceivablesAgeingBarChart ageing={ageing} total={fin.receivablesPaise} height={200} />
+          </Suspense>
         </Panel>
 
+        <Panel
+          title="Top products this month"
+          action={
+            <Link to="/reports/sales/sales-register" className="text-xs text-primary hover:underline flex items-center gap-1">
+              Sales register <ArrowUpRight size={13} />
+            </Link>
+          }
+        >
+          <Suspense fallback={<ChartFallback />}>
+            <TopProductsBarChart data={sales?.topProducts} height={200} />
+          </Suspense>
+        </Panel>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Panel title="Top customers this month">
+          <Suspense fallback={<ChartFallback />}>
+            <TopCustomersBarChart data={sales?.topCustomers} height={200} />
+          </Suspense>
+        </Panel>
+
+        <Panel title="Customer invoices list">
           <DataTable
             columns={[
               { accessorKey: 'name', header: 'Customer' },
@@ -282,6 +333,327 @@ function SalesTab({ fin, sales, trends }) {
           tone={fin.deadStockPercent > 10 ? 'danger' : fin.deadStockPercent > 5 ? 'warn' : 'good'}
         />
       </div>
+    </div>
+  );
+}
+
+/**
+ * The Reports Graphical Charts Suite.
+ * Visual analytics across sales, purchasing, inventory, liquidity, and production.
+ */
+const REPORT_CATEGORIES = ['All', 'Sales', 'Purchases', 'Inventory', 'Finance', 'Production'];
+
+function ReportsTab({ fin, sales, ops, trends }) {
+  const ageing = fin?.receivablesAgeing || {};
+  const stockValuation = fin?.stockAgeing;
+  const stockLots = ops?.stockAgeingLots;
+  const [filter, setFilter] = useTabParam(REPORT_CATEGORIES, 'All', 'filter');
+  const { glassMode } = useUIStore();
+
+  return (
+    <div className="space-y-6">
+      {/* Header bar with category filter pills */}
+      <div className={cn(
+        'flex items-center justify-between gap-3 p-3.5 rounded-2xl flex-wrap',
+        glassMode ? 'glass-card shadow-xs' : 'bg-card border border-border shadow-xs'
+      )}>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+            <BarChart3 size={18} />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold text-foreground">Graphical Business Reports</h2>
+            <p className="text-xs text-muted-foreground">Interactive analytics across business modules</p>
+          </div>
+        </div>
+
+        {/* Category Pills */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {REPORT_CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              id={`filter-pill-${cat.toLowerCase()}`}
+              data-filter={cat}
+              onClick={() => setFilter(cat)}
+              className={cn(
+                'px-3 py-1.5 text-xs rounded-lg font-medium transition-colors cursor-pointer',
+                filter === cat
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* SALES REPORTS: Visible under 'All' or 'Sales' */}
+      {(filter === 'All' || filter === 'Sales') && (
+        <div className="space-y-4">
+          <div>
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card/90 backdrop-blur-sm border border-border shadow-xs text-xs font-semibold text-foreground tracking-wider uppercase">
+              <TrendingUp size={14} className="text-primary" /> Sales & Revenue Reports
+            </span>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {fin && (
+              <Panel
+                title="Sales Revenue Trend (12-Mo)"
+                action={
+                  <Link to="/reports/sales/sales-register" className="text-xs text-primary hover:underline flex items-center gap-1">
+                    Sales Report <ArrowUpRight size={13} />
+                  </Link>
+                }
+              >
+                <Suspense fallback={<ChartFallback />}>
+                  <TrendArea data={trends} valueKey="salesPaise" money height={240} />
+                </Suspense>
+              </Panel>
+            )}
+
+            <Panel
+              title="Order Book & Fulfillment Pipeline"
+              action={
+                <Link to="/reports/orders/order-status" className="text-xs text-primary hover:underline flex items-center gap-1">
+                  Order Status <ArrowUpRight size={13} />
+                </Link>
+              }
+            >
+              <Suspense fallback={<ChartFallback />}>
+                <PipelineBars data={sales?.pipeline} height={240} />
+              </Suspense>
+            </Panel>
+          </div>
+
+          {fin && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Panel
+                title="Top 5 Products by Revenue (MTD)"
+                action={
+                  <Link to="/reports/sales/sales-register" className="text-xs text-primary hover:underline flex items-center gap-1">
+                    Product Analysis <ArrowUpRight size={13} />
+                  </Link>
+                }
+              >
+                <Suspense fallback={<ChartFallback />}>
+                  <TopProductsBarChart data={sales?.topProducts} height={240} />
+                </Suspense>
+              </Panel>
+
+              <Panel
+                title="Top 5 Customers by Invoiced Revenue (MTD)"
+                action={
+                  <Link to="/reports/parties/party-ledger" className="text-xs text-primary hover:underline flex items-center gap-1">
+                    Party Ledgers <ArrowUpRight size={13} />
+                  </Link>
+                }
+              >
+                <Suspense fallback={<ChartFallback />}>
+                  <TopCustomersBarChart data={sales?.topCustomers} height={240} />
+                </Suspense>
+              </Panel>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* PURCHASES REPORTS: Visible under 'All' or 'Purchases' */}
+      {(filter === 'All' || filter === 'Purchases') && fin && (
+        <div className="space-y-4">
+          <div>
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card/90 backdrop-blur-sm border border-border shadow-xs text-xs font-semibold text-foreground tracking-wider uppercase">
+              <Truck size={14} className="text-amber-500" /> Purchases & Procurement Reports
+            </span>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Panel
+              title="Monthly Sales vs Purchases (12-Mo Comparison)"
+              className="lg:col-span-2"
+              action={
+                <Link to="/reports/purchase/purchase-register" className="text-xs text-primary hover:underline flex items-center gap-1">
+                  Purchase Register <ArrowUpRight size={13} />
+                </Link>
+              }
+            >
+              <Suspense fallback={<ChartFallback />}>
+                <SalesVsPurchasesChart data={trends} height={260} />
+              </Suspense>
+            </Panel>
+
+            <Panel
+              title="Top 5 Vendors by Procurement (MTD)"
+              action={
+                <Link to="/reports/parties/party-ledger" className="text-xs text-primary hover:underline flex items-center gap-1">
+                  Vendor Ledger <ArrowUpRight size={13} />
+                </Link>
+              }
+            >
+              <Suspense fallback={<ChartFallback />}>
+                <TopCustomersBarChart
+                  data={fin?.topVendors}
+                  color="hsl(38, 92%, 50%)"
+                  emptyText="No vendor invoices this month."
+                  height={260}
+                />
+              </Suspense>
+            </Panel>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Panel
+              title="Procurement Expense History (12-Mo)"
+              action={
+                <Link to="/reports/purchase/purchase-register" className="text-xs text-primary hover:underline flex items-center gap-1">
+                  Purchase Details <ArrowUpRight size={13} />
+                </Link>
+              }
+            >
+              <Suspense fallback={<ChartFallback />}>
+                <TrendArea data={trends} valueKey="purchasePaise" colour="hsl(38, 92%, 50%)" money height={240} />
+              </Suspense>
+            </Panel>
+
+            <Panel title="Purchasing & Payables Summary">
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="p-4 rounded-xl border border-border bg-card space-y-1">
+                  <p className="text-xs text-muted-foreground">Purchases This Month</p>
+                  <p className="text-xl font-bold tabular-nums text-foreground">{formatINR(fin?.purchaseMTDPaise)}</p>
+                </div>
+                <div className="p-4 rounded-xl border border-border bg-card space-y-1">
+                  <p className="text-xs text-muted-foreground">Accounts Payable (Owed)</p>
+                  <p className="text-xl font-bold tabular-nums text-destructive">{formatINR(fin?.payablesPaise)}</p>
+                </div>
+              </div>
+            </Panel>
+          </div>
+        </div>
+      )}
+
+      {/* FINANCE & LIQUIDITY REPORTS: Visible under 'All' or 'Finance' */}
+      {(filter === 'All' || filter === 'Finance') && fin && (
+        <div className="space-y-4">
+          <div>
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card/90 backdrop-blur-sm border border-border shadow-xs text-xs font-semibold text-foreground tracking-wider uppercase">
+              <Wallet size={14} className="text-sky-500" /> Finance & Working Capital Reports
+            </span>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Panel
+              title="Working Capital & Liquidity Overview"
+              action={
+                <Link to="/reports/finance/cash-book" className="text-xs text-primary hover:underline flex items-center gap-1">
+                  Cash Book <ArrowUpRight size={13} />
+                </Link>
+              }
+            >
+              <Suspense fallback={<ChartFallback />}>
+                <LiquidityOverviewChart
+                  cash={fin.cashBalancePaise}
+                  bank={fin.bankBalancePaise}
+                  receivables={fin.receivablesPaise}
+                  payables={fin.payablesPaise}
+                  height={240}
+                />
+              </Suspense>
+            </Panel>
+
+            <Panel
+              title="Receivables Ageing & Overdue Risk"
+              action={
+                <Link to="/reports/finance/party-ageing" className="text-xs text-primary hover:underline flex items-center gap-1">
+                  Debtor Ageing <ArrowUpRight size={13} />
+                </Link>
+              }
+            >
+              <Suspense fallback={<ChartFallback />}>
+                <ReceivablesAgeingBarChart ageing={ageing} total={fin.receivablesPaise} height={240} />
+              </Suspense>
+            </Panel>
+          </div>
+        </div>
+      )}
+
+      {/* INVENTORY REPORTS: Visible under 'All' or 'Inventory' */}
+      {(filter === 'All' || filter === 'Inventory') && (
+        <div className="space-y-4">
+          <div>
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card/90 backdrop-blur-sm border border-border shadow-xs text-xs font-semibold text-foreground tracking-wider uppercase">
+              <Boxes size={14} className="text-emerald-500" /> Inventory & Stock Reports
+            </span>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Panel
+              title={fin ? 'Stock Valuation & Ageing Distribution' : 'Stock Ageing Breakdown (Active Lots)'}
+              action={
+                <Link to="/reports/inventory/stock-ageing" className="text-xs text-primary hover:underline flex items-center gap-1">
+                  Stock Ageing Report <ArrowUpRight size={13} />
+                </Link>
+              }
+            >
+              <Suspense fallback={<ChartFallback />}>
+                <StockAgeingDonut
+                  ageing={fin ? stockValuation : stockLots}
+                  mode={fin ? 'value' : 'lots'}
+                  height={240}
+                />
+              </Suspense>
+            </Panel>
+
+            <Panel title="Inventory Status Breakdown">
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="p-4 rounded-xl border border-border bg-card space-y-1">
+                  <p className="text-xs text-muted-foreground">Total Inventory Value</p>
+                  <p className="text-xl font-bold tabular-nums text-foreground">{fin ? formatINR(fin.inventoryValuePaise) : `${ops.deadStockLots ?? 0} lots`}</p>
+                </div>
+                <div className="p-4 rounded-xl border border-border bg-card space-y-1">
+                  <p className="text-xs text-muted-foreground">Dead Stock Valuation</p>
+                  <p className="text-xl font-bold tabular-nums text-destructive">{fin ? formatINR(fin.deadStockValuePaise) : `${ops.deadStockLots ?? 0} dead`}</p>
+                </div>
+              </div>
+            </Panel>
+          </div>
+        </div>
+      )}
+
+      {/* PRODUCTION REPORTS: Visible under 'All' or 'Production' */}
+      {(filter === 'All' || filter === 'Production') && (
+        <div className="space-y-4">
+          <div>
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card/90 backdrop-blur-sm border border-border shadow-xs text-xs font-semibold text-foreground tracking-wider uppercase">
+              <FactoryIcon size={14} className="text-violet-500" /> Production & Quality Reports
+            </span>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Panel
+              title="Production Volume History (12-Mo)"
+              action={
+                <Link to="/reports/production/production-summary" className="text-xs text-primary hover:underline flex items-center gap-1">
+                  Production Report <ArrowUpRight size={13} />
+                </Link>
+              }
+            >
+              <Suspense fallback={<ChartFallback />}>
+                <TrendArea data={trends} valueKey="production" height={240} />
+              </Suspense>
+            </Panel>
+
+            <Panel
+              title="Batch Quality & Yield Analysis (MTD)"
+              action={
+                <Link to="/reports/production/production-summary" className="text-xs text-primary hover:underline flex items-center gap-1">
+                  QC Summary <ArrowUpRight size={13} />
+                </Link>
+              }
+            >
+              <Suspense fallback={<ChartFallback />}>
+                <YieldDonut yieldPercent={ops.yieldPercent ?? 0} rejectionPercent={ops.rejectionPercent ?? 0} height={240} />
+              </Suspense>
+            </Panel>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

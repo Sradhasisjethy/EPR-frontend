@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { formatMetric } from '@/lib/report-format';
+import { useUIStore } from '@/store/ui-store';
 
 /**
  * Summary tiles above the table.
@@ -14,6 +15,7 @@ import { formatMetric } from '@/lib/report-format';
  * with the data for attention.
  */
 export function ReportSummary({ metrics, summary, trends }) {
+  const { glassMode } = useUIStore();
   if (!metrics?.length) return null;
 
   return (
@@ -22,7 +24,7 @@ export function ReportSummary({ metrics, summary, trends }) {
         {metrics.map((metric) => {
           const trend = trends?.[metric.key];
           return (
-            <div key={metric.key} className="rounded-lg border border-border bg-card px-3.5 py-3">
+            <div key={metric.key} className={cn("rounded-xl border border-border px-4 py-3.5 shadow-xs transition-all", glassMode ? "glass-card" : "bg-card")}>
               <dt className="truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground" title={metric.label}>
                 {metric.label}
               </dt>

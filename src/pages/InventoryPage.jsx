@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { useStockByMaterial, useStockLots, useStockLedger, useReleaseLotEarly, useStockAdjustments } from '@/hooks/use-inventory';
 import { useFactories } from '@/hooks/use-factory';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { useUIStore } from '@/store/ui-store';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { hasPermission } from '@/lib/permissions';
 import { trimDecimals } from '@/lib/decimal';
@@ -56,6 +57,7 @@ function AgeingBadge({ ageingClass, ageDays }) {
 }
 
 export default function InventoryPage() {
+  const { glassMode } = useUIStore();
   // Materials leads: "how much cement do we have" is asked far more often
   // than "which batches are these". Lots stays a click away.
   const [activeTab, setActiveTab] = useTabParam(['materials', 'lots', 'ledger', 'adjustments'], 'materials', 'subtab');
@@ -84,23 +86,47 @@ export default function InventoryPage() {
     <div className="space-y-6">
       
 
-      <div className="flex border-b border-border mb-6">
-        {['Materials', 'Lots', 'Ledger', 'Adjustments'].map((tab) => {
-          const key = tab.toLowerCase();
-          return (
-            <button
-              key={tab}
-              className={cn(
-                'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
-                activeTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-              )}
-              onClick={() => setActiveTab(key)}
-            >
-              {tab}
-            </button>
-          );
-        })}
-      </div>
+      {glassMode ? (
+        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
+          {['Materials', 'Lots', 'Ledger', 'Adjustments'].map((tab) => {
+            const key = tab.toLowerCase();
+            return (
+              <button
+                key={tab}
+                type="button"
+                className={cn(
+                  'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                  activeTab === key
+                    ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                    : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+                )}
+                onClick={() => setActiveTab(key)}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex border-b border-border mb-6">
+          {['Materials', 'Lots', 'Ledger', 'Adjustments'].map((tab) => {
+            const key = tab.toLowerCase();
+            return (
+              <button
+                key={tab}
+                type="button"
+                className={cn(
+                  'px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer',
+                  activeTab === key ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'
+                )}
+                onClick={() => setActiveTab(key)}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {actionError && (
         <div className="p-3 mb-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">{actionError}</div>

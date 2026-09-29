@@ -9,19 +9,24 @@ import { formatINR } from '@/lib/money';
 import { useFactories } from '@/hooks/use-factory';
 import { useGstr1, useGstr3b } from '@/hooks/use-gstr';
 import { useTabParam } from '@/hooks/use-tab-param';
+import { useUIStore } from '@/store/ui-store';
 import { DateText } from '@/components/date-text';
 import { TaxRateSummary, Gstr9 } from '@/components/gst/gst-extra-returns';
 
 const TABS = ['GSTR-1', 'GSTR-3B', 'Rate Summary', 'GSTR-9'];
 
-const StatCard = ({ label, value }) => (
-  <div className="p-4 rounded-xl border border-border bg-card">
-    <p className="text-xs text-muted-foreground">{label}</p>
-    <p className="text-lg font-semibold">{value}</p>
-  </div>
-);
+const StatCard = ({ label, value }) => {
+  const { glassMode } = useUIStore();
+  return (
+    <div className={cn("p-4 rounded-xl border border-border shadow-xs", glassMode ? "glass-card border-white/20 dark:border-white/10" : "bg-card")}>
+      <p className={cn("text-xs", glassMode ? "text-foreground/75 font-medium" : "text-muted-foreground")}>{label}</p>
+      <p className="text-lg font-semibold">{value}</p>
+    </div>
+  );
+};
 
 export default function GstrPage() {
+  const { glassMode } = useUIStore();
   const [activeTab, setActiveTab] = useTabParam(TABS, 'GSTR-1', 'subtab');
   const [factoryId, setFactoryId] = useState('');
   const [range, setRange] = useState({ fromDate: '', toDate: '' });
@@ -38,37 +43,85 @@ export default function GstrPage() {
     <div className="space-y-6">
       
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+      <div className={cn("grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl p-4 rounded-2xl border shadow-xs", glassMode ? "glass-card border-white/20 dark:border-white/10" : "bg-card border-border")}>
         <div className="space-y-1.5">
-          <Label>Factory</Label>
-          <select value={factoryId} onChange={(e) => setFactoryId(e.target.value)} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" required>
+          <Label className={cn(glassMode && "text-foreground/90 font-medium")}>Factory</Label>
+          <select
+            value={factoryId}
+            onChange={(e) => setFactoryId(e.target.value)}
+            className={cn(
+              "w-full h-9 px-3 rounded-md border text-sm transition-all",
+              glassMode ? "glass-surface border-white/25 text-foreground" : "border-input bg-background"
+            )}
+            required
+          >
             <option value="" disabled>Select factory</option>
             {(factoryData?.rows || []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label>From</Label>
-          <Input type="date" value={range.fromDate} onChange={(e) => setRange({ ...range, fromDate: e.target.value })} required />
+          <Label className={cn(glassMode && "text-foreground/90 font-medium")}>From</Label>
+          <Input
+            type="date"
+            value={range.fromDate}
+            onChange={(e) => setRange({ ...range, fromDate: e.target.value })}
+            className={cn(glassMode && "glass-surface border-white/25 text-foreground")}
+            required
+          />
         </div>
         <div className="space-y-1.5">
-          <Label>To</Label>
-          <Input type="date" value={range.toDate} onChange={(e) => setRange({ ...range, toDate: e.target.value })} required />
+          <Label className={cn(glassMode && "text-foreground/90 font-medium")}>To</Label>
+          <Input
+            type="date"
+            value={range.toDate}
+            onChange={(e) => setRange({ ...range, toDate: e.target.value })}
+            className={cn(glassMode && "glass-surface border-white/25 text-foreground")}
+            required
+          />
         </div>
       </div>
 
-      <div className="flex border-b border-border mb-6">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors', activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {glassMode ? (
+        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                activeTab === tab
+                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+              )}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex border-b border-border mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn('px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer', activeTab === tab ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground')}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {!params && <p className="text-sm text-muted-foreground">Select a factory and date range to generate the return.</p>}
+      {!params && (
+        <div className={cn(
+          "p-8 text-center rounded-2xl border transition-all",
+          glassMode ? "glass-card border-white/20 text-foreground/85 font-medium shadow-xs" : "border-border text-muted-foreground"
+        )}>
+          Select a factory and date range to generate the return.
+        </div>
+      )}
 
       {activeTab === 'GSTR-1' && params && (
         gstr1.isLoading ? <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" /> : gstr1.data && (

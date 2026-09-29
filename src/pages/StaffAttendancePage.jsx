@@ -10,6 +10,7 @@ import { useCurrentUser } from '@/hooks/use-auth';
 import { hasPermission } from '@/lib/permissions';
 import { WebPermissions } from '@/constants/enums';
 import { today } from '@/lib/date-format';
+import { useUIStore } from '@/store/ui-store';
 import { toast } from 'sonner';
 
 const STATUSES = [
@@ -24,6 +25,7 @@ const STATUSES = [
 const monthStart = (date) => `${date.slice(0, 7)}-01`;
 
 export default function StaffAttendancePage() {
+  const { glassMode } = useUIStore();
   const [date, setDate] = useState(today());
   const [factoryId, setFactoryId] = useState('');
   const [marks, setMarks] = useState({});
@@ -83,21 +85,35 @@ export default function StaffAttendancePage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end gap-3">
+      <div className={cn("flex flex-wrap items-end gap-3 p-4 rounded-2xl border shadow-xs", glassMode ? "glass-card border-white/20 dark:border-white/10" : "bg-card border-border")}>
         <div className="space-y-1.5">
-          <Label htmlFor="att-date">Date</Label>
-          <Input id="att-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-44" />
+          <Label htmlFor="att-date" className={cn(glassMode && "text-foreground/90 font-medium")}>Date</Label>
+          <Input
+            id="att-date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className={cn("w-44", glassMode && "glass-surface border-white/25 text-foreground")}
+          />
         </div>
         <div className="space-y-1.5 w-56">
-          <Label htmlFor="att-factory">Factory (optional)</Label>
-          <select id="att-factory" className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm" value={factoryId} onChange={(e) => setFactoryId(e.target.value)}>
+          <Label htmlFor="att-factory" className={cn(glassMode && "text-foreground/90 font-medium")}>Factory (optional)</Label>
+          <select
+            id="att-factory"
+            className={cn(
+              "w-full h-9 px-3 rounded-md border text-sm transition-all",
+              glassMode ? "glass-surface border-white/25 text-foreground" : "border-input bg-background"
+            )}
+            value={factoryId}
+            onChange={(e) => setFactoryId(e.target.value)}
+          >
             <option value="">Not site-specific</option>
             {factories.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
         </div>
-        <div className="ml-auto flex items-center gap-4 text-sm text-muted-foreground">
+        <div className={cn("ml-auto flex items-center gap-4 text-sm", glassMode ? "text-foreground/80 font-medium" : "text-muted-foreground")}>
           {STATUSES.filter((s) => counts[s.value]).map((s) => (
-            <span key={s.value}>{s.label}: <span className="font-medium text-foreground">{counts[s.value]}</span></span>
+            <span key={s.value}>{s.label}: <span className="font-semibold text-foreground">{counts[s.value]}</span></span>
           ))}
         </div>
         {canMark && (
@@ -110,7 +126,7 @@ export default function StaffAttendancePage() {
       {roster.isLoading ? (
         <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" />
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
+        <div className={cn("rounded-xl border border-border overflow-hidden shadow-xs", glassMode ? "glass-card" : "bg-card")}>
           <table className="w-full text-sm">
             <thead className="bg-muted/30 text-xs text-muted-foreground">
               <tr>
@@ -167,7 +183,7 @@ export default function StaffAttendancePage() {
       )}
 
       {summary.data && summary.data.rows.length > 0 && (
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className={cn("rounded-xl border border-border p-4 shadow-xs", glassMode ? "glass-card" : "bg-card")}>
           <h3 className="text-sm font-semibold mb-2">This month so far</h3>
           <table className="w-full text-sm">
             <thead>
