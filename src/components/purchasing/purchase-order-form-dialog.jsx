@@ -19,11 +19,12 @@ import { toast } from 'sonner';
 const emptyLine = { productId: '', orderedQty: '', rateRupees: '' };
 
 /**
- * Create and edit in one dialog. Editing is DRAFT-only, matching the API: once
- * a purchase order is confirmed the vendor is committed and goods may already
- * be arriving against its lines.
+ * Create, edit, and view purchase orders in one dialog. Editing is DRAFT-only,
+ * matching the API: once a purchase order is confirmed the vendor is committed
+ * and goods may already be arriving against its lines. Read-only mode provides
+ * full inspection of confirmed, received, or cancelled purchase orders.
  */
-export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
+export function PurchaseOrderFormDialog({ open, onOpenChange, order, readOnly = false }) {
   const [form, setForm] = useState({ factoryId: '', vendorPartyId: '', orderDate: '' });
   const [lines, setLines] = useState([{ ...emptyLine }]);
   const [error, setError] = useState('');
@@ -34,23 +35,30 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
 
   const createMutation = useCreatePurchaseOrder();
   const updateMutation = useUpdatePurchaseOrder();
-  const isEditing = !!order;
+  const isEditing = !!order && !readOnly;
   const saving = createMutation.isPending || updateMutation.isPending;
 
+  const target = fullOrder || order;
+
   const productMap = new Map((productData?.rows || []).map((p) => [p.id, p]));
+  // If target order has lines with populated product details, ensure they are in productMap
+  (target?.lines || []).forEach((l) => {
+    if (l.product && !productMap.has(l.productId)) {
+      productMap.set(l.productId, l.product);
+    }
+  });
 
   useEffect(() => {
     if (!open) return;
 
     if (order) {
-      const target = fullOrder || order;
       setForm({
-        factoryId: target.factoryId || '',
-        vendorPartyId: target.vendorPartyId || '',
-        orderDate: target.orderDate || '',
+        factoryId: target?.factoryId || '',
+        vendorPartyId: target?.vendorPartyId || target?.vendor?.id || '',
+        orderDate: target?.orderDate || '',
       });
 
-      if (target.lines && target.lines.length > 0) {
+      if (target?.lines && target.lines.length > 0) {
         setLines(
           target.lines.map((l) => ({
             productId: l.productId,
@@ -58,7 +66,7 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
             rateRupees: l.ratePaise === null || l.ratePaise === undefined ? '' : String(Number(l.ratePaise) / 100),
           }))
         );
-      } else if (!loadingOrder && (!target.lines || target.lines.length === 0)) {
+      } else if (!loadingOrder && (!target?.lines || target.lines.length === 0)) {
         setLines([{ ...emptyLine }]);
       }
     } else {
@@ -66,7 +74,7 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
       setLines([{ ...emptyLine }]);
     }
     setError('');
-  }, [open, order, fullOrder, loadingOrder]);
+  }, [open, order, target?.factoryId, target?.vendorPartyId, target?.orderDate, target?.lines, loadingOrder]);
 
   const updateLine = (i, field, value) => setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, [field]: value } : l)));
   const addLine = () => setLines((prev) => [...prev, { ...emptyLine }]);
@@ -91,6 +99,7 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (readOnly) return;
     setError('');
 
     if (!form.factoryId) {
@@ -148,10 +157,16 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
             </div>
             <div>
               <DialogTitle className="text-xl font-bold">
-                {isEditing ? `Edit Purchase Order #${order.poNumber}` : 'New Purchase Order'}
+                {readOnly
+                  ? `Purchase Order #${order?.poNumber || ''}`
+                  : isEditing
+                  ? `Edit Purchase Order #${order?.poNumber}`
+                  : 'New Purchase Order'}
               </DialogTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {isEditing
+                {readOnly
+                  ? 'View purchase order details, quantities, and vendor pricing.'
+                  : isEditing
                   ? 'Update draft order details, quantities, and vendor pricing.'
                   : 'Create a direct purchase order with contracted vendor pricing.'}
               </p>
@@ -182,7 +197,7 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
                   id="po-factory"
                   value={form.factoryId}
                   onChange={(e) => setForm({ ...form, factoryId: e.target.value })}
-                  disabled={isEditing}
+                  disabled={isEditing || readOnly}
                   className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm font-medium focus:ring-1 focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed"
                   required
                 >
@@ -205,8 +220,10 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
                   filters={{ partyType: PartyType.VENDOR, status: 'active' }}
                   getOptionLabel={(option) => option.name}
                   getOptionHint={(option) => option.code}
+                  initialOption={target?.vendor || order?.vendor || null}
                   placeholder="Select vendor"
                   searchPlaceholder="Type a name or code…"
+                  disabled={readOnly}
                 />
               </div>
 
@@ -220,6 +237,7 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
                   value={form.orderDate}
                   onChange={(e) => setForm({ ...form, orderDate: e.target.value })}
                   className="h-9 text-sm font-medium"
+                  disabled={readOnly}
                   required
                 />
               </div>
@@ -237,28 +255,33 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
                   Specify products, order quantities, and agreed unit purchase rates.
                 </p>
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={addLine} className="h-8 gap-1.5 text-xs font-medium">
-                <Plus size={14} /> Add Line
-              </Button>
+              {!readOnly && (
+                <Button type="button" variant="outline" size="sm" onClick={addLine} className="h-8 gap-1.5 text-xs font-medium">
+                  <Plus size={14} /> Add Line
+                </Button>
+              )}
             </div>
 
             <div className="border border-border rounded-xl overflow-hidden bg-card/40 shadow-sm">
               <div className="overflow-x-auto">
                 <div className="min-w-[700px]">
                   {/* Table Column Headers */}
-                  <div className="grid grid-cols-[44px_1fr_100px_130px_140px_130px_44px] gap-3 px-4 py-2.5 bg-muted/60 border-b border-border text-xs font-semibold text-muted-foreground items-center">
+                  <div className={cn(
+                    "grid gap-3 px-4 py-2.5 bg-muted/60 border-b border-border text-xs font-semibold text-muted-foreground items-center",
+                    readOnly ? "grid-cols-[44px_1fr_100px_130px_140px_130px]" : "grid-cols-[44px_1fr_100px_130px_140px_130px_44px]"
+                  )}>
                     <div className="text-center">#</div>
                     <div>Product / Material <span className="text-destructive">*</span></div>
                     <div className="text-center">UoM</div>
                     <div className="text-right">Ordered Qty <span className="text-destructive">*</span></div>
                     <div className="text-right">Rate (₹) <span className="text-destructive">*</span></div>
                     <div className="text-right">Line Total</div>
-                    <div className="text-center"></div>
+                    {!readOnly && <div className="text-center"></div>}
                   </div>
 
                   {/* Rows */}
                   <div className="divide-y divide-border/60">
-                    {isEditing && loadingOrder && (!fullOrder?.lines || fullOrder.lines.length === 0) ? (
+                    {(isEditing || readOnly) && loadingOrder && (!fullOrder?.lines || fullOrder.lines.length === 0) ? (
                       <div className="p-8 text-center text-xs text-muted-foreground animate-pulse">
                         Loading order line items...
                       </div>
@@ -272,90 +295,103 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
 
                         return (
                           <div key={i} className="p-2.5 px-4 hover:bg-muted/20 transition-colors">
-                          <div className="grid grid-cols-[44px_1fr_100px_130px_140px_130px_44px] gap-3 items-center">
-                            {/* Row Index */}
-                            <div className="text-center text-xs font-mono font-medium text-muted-foreground">
-                              {i + 1}
-                            </div>
+                            <div className={cn(
+                              "grid gap-3 items-center",
+                              readOnly ? "grid-cols-[44px_1fr_100px_130px_140px_130px]" : "grid-cols-[44px_1fr_100px_130px_140px_130px_44px]"
+                            )}>
+                              {/* Row Index */}
+                              <div className="text-center text-xs font-mono font-medium text-muted-foreground">
+                                {i + 1}
+                              </div>
 
-                            {/* Product Select */}
-                            <div>
-                              <select
-                                value={line.productId}
-                                onChange={(e) => updateLine(i, 'productId', e.target.value)}
-                                className="w-full h-9 px-3 rounded-md border border-input bg-background text-xs sm:text-sm font-medium focus:ring-1 focus:ring-primary truncate"
-                                required
-                              >
-                                <option value="" disabled>Select product...</option>
-                                {(productData?.rows || []).map((p) => (
-                                  <option key={p.id} value={p.id}>
-                                    {p.code ? `[${p.code}] ` : ''}{p.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
+                              {/* Product Select */}
+                              <div>
+                                <select
+                                  value={line.productId}
+                                  onChange={(e) => updateLine(i, 'productId', e.target.value)}
+                                  disabled={readOnly}
+                                  className="w-full h-9 px-3 rounded-md border border-input bg-background text-xs sm:text-sm font-medium focus:ring-1 focus:ring-primary truncate disabled:opacity-80 disabled:cursor-not-allowed"
+                                  required
+                                >
+                                  <option value="" disabled>Select product...</option>
+                                  {(productData?.rows || []).map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.code ? `[${p.code}] ` : ''}{p.name}
+                                    </option>
+                                  ))}
+                                  {line.productId && !productData?.rows?.some((p) => p.id === line.productId) && prod && (
+                                    <option value={line.productId}>
+                                      {prod.code ? `[${prod.code}] ` : ''}{prod.name}
+                                    </option>
+                                  )}
+                                </select>
+                              </div>
 
-                            {/* UoM Pill */}
-                            <div className="text-center">
-                              <span className={cn(
-                                "inline-flex items-center justify-center px-2 py-1 rounded text-xs font-mono border border-border/60 w-full truncate",
-                                prod ? "bg-muted/80 text-foreground font-medium" : "bg-muted/30 text-muted-foreground"
-                              )}>
-                                {uomCode}
-                              </span>
-                            </div>
+                              {/* UoM Pill */}
+                              <div className="text-center">
+                                <span className={cn(
+                                  "inline-flex items-center justify-center px-2 py-1 rounded text-xs font-mono border border-border/60 w-full truncate",
+                                  prod ? "bg-muted/80 text-foreground font-medium" : "bg-muted/30 text-muted-foreground"
+                                )}>
+                                  {uomCode}
+                                </span>
+                              </div>
 
-                            {/* Quantity Input */}
-                            <div>
-                              <Input
-                                type="number"
-                                step="any"
-                                min="0.0001"
-                                placeholder="Qty"
-                                value={line.orderedQty}
-                                onChange={(e) => updateLine(i, 'orderedQty', e.target.value)}
-                                className="h-9 text-right font-mono text-sm"
-                                required
-                              />
-                            </div>
+                              {/* Quantity Input */}
+                              <div>
+                                <Input
+                                  type="number"
+                                  step="any"
+                                  min="0.0001"
+                                  placeholder="Qty"
+                                  value={line.orderedQty}
+                                  onChange={(e) => updateLine(i, 'orderedQty', e.target.value)}
+                                  className="h-9 text-right font-mono text-sm disabled:opacity-80 disabled:cursor-not-allowed"
+                                  disabled={readOnly}
+                                  required
+                                />
+                              </div>
 
-                            {/* Rate Input */}
-                            <div>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                placeholder="0.00"
-                                value={line.rateRupees}
-                                onChange={(e) => updateLine(i, 'rateRupees', e.target.value)}
-                                className="h-9 text-right font-mono text-sm"
-                                required
-                              />
-                            </div>
+                              {/* Rate Input */}
+                              <div>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  placeholder="0.00"
+                                  value={line.rateRupees}
+                                  onChange={(e) => updateLine(i, 'rateRupees', e.target.value)}
+                                  className="h-9 text-right font-mono text-sm disabled:opacity-80 disabled:cursor-not-allowed"
+                                  disabled={readOnly}
+                                  required
+                                />
+                              </div>
 
-                            {/* Line Total */}
-                            <div className="text-right font-mono text-sm font-bold text-foreground">
-                              {qty > 0 && rate > 0 ? formatINR(lineTotalPaise) : '—'}
-                            </div>
+                              {/* Line Total */}
+                              <div className="text-right font-mono text-sm font-bold text-foreground">
+                                {qty > 0 && rate > 0 ? formatINR(lineTotalPaise) : '—'}
+                              </div>
 
-                            {/* Delete Action */}
-                            <div className="flex justify-center">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeLine(i)}
-                                disabled={lines.length === 1}
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30"
-                              >
-                                <Trash2 size={16} />
-                              </Button>
+                              {/* Delete Action */}
+                              {!readOnly && (
+                                <div className="flex justify-center">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeLine(i)}
+                                    disabled={lines.length === 1}
+                                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30"
+                                  >
+                                    <Trash2 size={16} />
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </div>
-                        </div>
-                      );
-                    })
-                  )}
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </div>
@@ -410,20 +446,32 @@ export function PurchaseOrderFormDialog({ open, onOpenChange, order }) {
 
         <DialogFooter className="px-6 py-3 border-t border-border/60 bg-background/95 backdrop-blur shrink-0 flex items-center justify-between">
           <div className="text-xs text-muted-foreground hidden sm:block">
-            <span>Orders can be edited while in DRAFT status.</span>
+            {readOnly ? (
+              <span>Order Status: <strong className="text-foreground">{order?.status}</strong></span>
+            ) : (
+              <span>Orders can be edited while in DRAFT status.</span>
+            )}
           </div>
           <div className="flex items-center gap-3">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              form="po-form"
-              disabled={saving}
-              className="font-semibold px-5"
-            >
-              {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Purchase Order'}
-            </Button>
+            {readOnly ? (
+              <Button type="button" onClick={() => onOpenChange(false)}>
+                Close
+              </Button>
+            ) : (
+              <>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  form="po-form"
+                  disabled={saving}
+                  className="font-semibold px-5"
+                >
+                  {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Purchase Order'}
+                </Button>
+              </>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>

@@ -20,11 +20,6 @@ import { DateText } from '@/components/date-text';
 import { useUIStore } from '@/store/ui-store';
 import { toast } from 'sonner';
 
-const STATUS_MAP = {
-  DRAFT: 'pending', CONFIRMED: 'active', IN_PRODUCTION: 'onboarding', PARTIALLY_DISPATCHED: 'onboarding',
-  DISPATCHED: 'active', SHORT_CLOSED: 'suspended', CANCELLED: 'terminated',
-};
-
 const STATUS_TABS = [
   { key: '', label: 'All' },
   { key: 'DRAFT', label: 'Draft' },
@@ -37,7 +32,7 @@ const STATUS_TABS = [
 ];
 
 // Must match the allow-list SalesService.listSalesOrders passes to `toOrder`.
-const SORTABLE_COLUMNS = ['orderNumber', 'orderDate', 'status', 'totalAmountPaise'];
+const SORTABLE_COLUMNS = ['orderNumber', 'orderDate', 'expectedDeliveryDate', 'status', 'totalAmountPaise'];
 
 export default function SalesOrdersPage() {
   const { glassMode } = useUIStore();
@@ -116,7 +111,7 @@ export default function SalesOrdersPage() {
                 'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
                 status === tab.key
                   ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
-                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+                  : 'text-foreground/80 hover:text-foreground hover:bg-card/90 bg-card/40'
               )}
               onClick={() => setStatus(tab.key)}
             >
@@ -156,9 +151,9 @@ export default function SalesOrdersPage() {
             { accessorKey: 'orderNumber', header: 'Order #' },
             { id: 'customer', header: 'Customer', cell: ({ row }) => row.original.customer?.name },
             { id: 'orderDate', header: 'Order Date', cell: ({ row }) => <DateText value={row.original.orderDate} /> },
-            { id: 'expected', header: 'Expected', cell: ({ row }) => row.original.expectedDeliveryDate || '—' },
+            { id: 'expected', accessorKey: 'expectedDeliveryDate', header: 'Expected', cell: ({ row }) => row.original.expectedDeliveryDate || '—' },
             ...(showRates ? [{ accessorKey: 'totalAmountPaise', header: 'Total', cell: ({ row }) => formatINR(row.original.totalAmountPaise) }] : []),
-            { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={STATUS_MAP[row.original.status] || 'pending'} /> },
+            { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
             {
               id: 'actions', header: '',
               cell: ({ row }) => {

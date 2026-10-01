@@ -53,7 +53,7 @@ export default function ProductionModulePage() {
                     'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
                     activeTab === tab.key
                       ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
-                      : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+                      : 'text-foreground/80 hover:text-foreground hover:bg-card/90 bg-card/40'
                   )}
                   onClick={() => setActiveTab(tab.key)}
                 >

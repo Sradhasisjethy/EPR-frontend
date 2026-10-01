@@ -23,6 +23,8 @@ import { toast } from 'sonner';
  * figure — goes through the same endpoints the invoice register uses. The only
  * difference is which rows are listed.
  */
+const SORTABLE_COLUMNS = ['invoiceNumber', 'invoiceDate', 'totalPaise', 'status'];
+
 export default function CounterSalesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cancelling, setCancelling] = useState(null);
@@ -31,7 +33,7 @@ export default function CounterSalesPage() {
   const canCancel = hasPermission(user, WebPermissions.SALES_MODIFY);
   const showRates = canViewRates(user);
 
-  const { query, tableProps } = usePaginated(useCounterSales);
+  const { query, tableProps } = usePaginated(useCounterSales, {}, { sortableColumns: SORTABLE_COLUMNS });
   const { isLoading, isError } = query;
   const cancelSale = useCancelCounterSale();
 
