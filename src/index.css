@@ -192,6 +192,20 @@ html:not(.dark) .glass-card {
   color: #0f172a !important;
 }
 
+html:not(.dark) .wallpaper-active .glass-card {
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+}
+
+html:not(.dark) .wallpaper-active .glass-card thead {
+  background: rgba(241, 245, 249, 0.92) !important;
+}
+
+html:not(.dark) .wallpaper-active .glass-card tbody tr:hover {
+  background: rgba(241, 245, 249, 0.65) !important;
+}
+
 html:not(.dark) .glass-card h1,
 html:not(.dark) .glass-card h2,
 html:not(.dark) .glass-card h3,
@@ -265,6 +279,20 @@ html.dark .glass-card {
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   box-shadow: 0 20px 50px 0 rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.12) !important;
   color: #f8fafc !important;
+}
+
+html.dark .wallpaper-active .glass-card {
+  background: rgba(15, 23, 42, 0.84) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+}
+
+html.dark .wallpaper-active .glass-card thead {
+  background: rgba(30, 41, 59, 0.92) !important;
+}
+
+html.dark .wallpaper-active .glass-card tbody tr:hover {
+  background: rgba(30, 41, 59, 0.50) !important;
 }
 
 html.dark .glass-card p.text-muted-foreground,

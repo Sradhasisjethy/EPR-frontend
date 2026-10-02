@@ -11,6 +11,7 @@ import { QueryState } from '@/components/query-state';
 import { cn } from '@/lib/utils';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { useQualityInspections, useHeldLots } from '@/hooks/use-quality';
+import { useUIStore } from '@/store/ui-store';
 import { InspectionFormDialog } from '@/components/quality/inspection-form-dialog';
 import { RecordResultDialog } from '@/components/quality/record-result-dialog';
 import { DateText } from '@/components/date-text';
@@ -24,6 +25,7 @@ const TYPE_LABEL = {
 };
 
 export default function QualityPage() {
+  const { glassMode } = useUIStore();
   const { data: user } = useCurrentUser();
   const canRaiseInspection = hasPermission(user, WebPermissions.QUALITY_CREATE);
   const [activeTab, setActiveTab] = useTabParam(TABS, 'Awaiting Clearance', 'subtab');
@@ -41,27 +43,51 @@ export default function QualityPage() {
 
   return (
     <div className="space-y-6">
-
-
-      <div className="flex border-b border-border">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            className={cn(
-              'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
-              activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-            )}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-            {tab === 'Awaiting Clearance' && heldQuery.query.data?.count > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] h-4 min-w-4 px-1">
-                {heldQuery.query.data.count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      {glassMode ? (
+        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5',
+                activeTab === tab
+                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                  : 'text-foreground/80 hover:text-foreground hover:bg-card/90 bg-card/40'
+              )}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+              {tab === 'Awaiting Clearance' && heldQuery.query.data?.count > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] h-4 min-w-4 px-1">
+                  {heldQuery.query.data.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex border-b border-border mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={cn(
+                'px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer',
+                activeTab === tab ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+              {tab === 'Awaiting Clearance' && heldQuery.query.data?.count > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] h-4 min-w-4 px-1">
+                  {heldQuery.query.data.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       {activeTab === 'Awaiting Clearance' && (
         <QueryState query={heldQuery.query} label="lots awaiting clearance">

@@ -11,6 +11,7 @@ import { hasPermission } from '@/lib/permissions';
 import { trimDecimals } from '@/lib/decimal';
 import { StockAdjustmentDialog } from '@/components/inventory/stock-adjustment-dialog';
 import { ReasonDialog } from '@/components/ui/reason-dialog';
+import { StatusBadge } from '@/components/status-badge';
 import { DateText } from '@/components/date-text';
 import { toast } from 'sonner';
 
@@ -21,20 +22,8 @@ const SORTABLE = {
   adjustments: ['adjustmentNumber', 'adjustmentDate', 'adjustmentQty'],
 };
 
-const LOT_STATUS_STYLES = {
-  CURING: 'bg-amber-500/10 text-amber-600',
-  AVAILABLE: 'bg-emerald-500/10 text-emerald-600',
-  WITH_CONTRACTOR: 'bg-blue-500/10 text-blue-600',
-  IN_TRANSIT: 'bg-violet-500/10 text-violet-600',
-  CONSUMED: 'bg-slate-500/10 text-slate-600',
-};
-
 function LotStatusBadge({ status }) {
-  return (
-    <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', LOT_STATUS_STYLES[status] || '')}>
-      {status}
-    </span>
-  );
+  return <StatusBadge status={status} />;
 }
 
 // AC-13.1's dashboard colours: green fresh, yellow slow-moving, red dead.
@@ -98,7 +87,7 @@ export default function InventoryPage() {
                   'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
                   activeTab === key
                     ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
-                    : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+                    : 'text-foreground/80 hover:text-foreground hover:bg-card/90 bg-card/40'
                 )}
                 onClick={() => setActiveTab(key)}
               >
@@ -204,16 +193,28 @@ export default function InventoryPage() {
                buttons plus the search box pushed the table halfway down the
                screen, and the filter is not worth that much vertical space. */
             filtersNode={
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="h-9 w-44 px-3 rounded-lg border border-input bg-background text-sm shrink-0"
-              >
-                <option value="">All types</option>
-                <option value="RAW_MATERIAL">Raw material</option>
-                <option value="FINISHED_GOOD">Finished goods</option>
-                <option value="ACCESSORY">Accessories</option>
-              </select>
+              <div className="flex items-center gap-2">
+                <select
+                  value={factoryFilter}
+                  onChange={(e) => setFactoryFilter(e.target.value)}
+                  className="h-9 px-3 rounded-lg border border-input bg-background text-sm shrink-0"
+                >
+                  <option value="">All Factories</option>
+                  {(factoryData?.rows || []).map((f) => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="h-9 w-44 px-3 rounded-lg border border-input bg-background text-sm shrink-0"
+                >
+                  <option value="">All types</option>
+                  <option value="RAW_MATERIAL">Raw material</option>
+                  <option value="FINISHED_GOOD">Finished goods</option>
+                  <option value="ACCESSORY">Accessories</option>
+                </select>
+              </div>
             }
           />
         )

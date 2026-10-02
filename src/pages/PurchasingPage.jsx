@@ -31,6 +31,7 @@ const TABS = ['Indents', 'Orders', 'Receipts', 'Invoices'];
 
 // Each must match the allow-list the matching service passes to `toOrder`.
 const SORTABLE = {
+  indents: ['indentNumber', 'indentDate', 'requiredByDate', 'status'],
   orders: ['poNumber', 'orderDate', 'status', 'totalAmountPaise'],
   receipts: ['grnNumber', 'receiptDate', 'status'],
   invoices: ['vendorInvoiceNumber', 'invoiceDate', 'amountPaise', 'paymentStatus', 'status'],
@@ -58,10 +59,11 @@ export default function PurchasingPage() {
   // the router — these unwind stock and the ledger, not just a draft.
   const canReverse = hasPermission(user, 'PURCHASE_DELETE');
   const [editingPo, setEditingPo] = useState(null);
+  const [viewingPo, setViewingPo] = useState(null);
   const [actionError, setActionError] = useState('');
   const [reasonPrompt, setReasonPrompt] = useState(null);
 
-  const indentQuery = usePaginated(useIndents);
+  const indentQuery = usePaginated(useIndents, {}, { sortableColumns: SORTABLE.indents });
   const approveIndent = useApproveIndent();
   const rejectIndent = useRejectIndent();
   const poQuery = usePaginated(usePurchaseOrders, {}, { sortableColumns: SORTABLE.orders });
@@ -96,7 +98,7 @@ export default function PurchasingPage() {
 
   const addHandlers = {
     Indents: () => setIndentDialogOpen(true),
-    Orders: () => { setEditingPo(null); setPoDialogOpen(true); },
+    Orders: () => { setEditingPo(null); setViewingPo(null); setPoDialogOpen(true); },
     Receipts: () => setGrnDialogOpen(true),
     Invoices: () => setInvoiceDialogOpen(true),
   };
@@ -117,7 +119,7 @@ export default function PurchasingPage() {
                 'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
                 activeTab === tab
                   ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
-                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+                  : 'text-foreground/80 hover:text-foreground hover:bg-card/90 bg-card/40'
               )}
               onClick={() => setActiveTab(tab)}
             >
@@ -217,13 +219,20 @@ export default function PurchasingPage() {
               {
                 id: 'actions', header: '',
                 cell: ({ row }) => (
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-end gap-2 items-center">
+                    <button
+                      className="text-xs text-muted-foreground hover:text-foreground hover:underline flex items-center gap-1 font-medium"
+                      title="View purchase order"
+                      onClick={() => { setViewingPo(row.original); setEditingPo(null); setPoDialogOpen(true); }}
+                    >
+                      <Eye size={13} /> View
+                    </button>
                     {/* Only a DRAFT is editable — a confirmed order may already have goods against it. */}
                     {row.original.status === 'DRAFT' && canModify && (
                       <button
                         className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
                         title="Edit draft"
-                        onClick={() => { setEditingPo(row.original); setPoDialogOpen(true); }}
+                        onClick={() => { setEditingPo(row.original); setViewingPo(null); setPoDialogOpen(true); }}
                       >
                         <Pencil size={14} />
                       </button>
@@ -402,7 +411,18 @@ export default function PurchasingPage() {
       />
       <ConvertIndentDialog open={!!convertingIndent} onOpenChange={(v) => !v && setConvertingIndent(null)} indent={convertingIndent} />
       <ThreeWayMatchDialog open={!!matchingInvoice} onOpenChange={(v) => !v && setMatchingInvoice(null)} invoice={matchingInvoice} />
-      <PurchaseOrderFormDialog open={poDialogOpen} onOpenChange={setPoDialogOpen} order={editingPo} />
+      <PurchaseOrderFormDialog
+        open={poDialogOpen}
+        onOpenChange={(open) => {
+          setPoDialogOpen(open);
+          if (!open) {
+            setEditingPo(null);
+            setViewingPo(null);
+          }
+        }}
+        order={viewingPo || editingPo}
+        readOnly={!!viewingPo && !editingPo}
+      />
       <GoodsReceiptFormDialog open={grnDialogOpen} onOpenChange={setGrnDialogOpen} />
       <PurchaseInvoiceFormDialog open={invoiceDialogOpen} onOpenChange={setInvoiceDialogOpen} />
 

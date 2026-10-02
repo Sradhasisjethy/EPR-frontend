@@ -87,7 +87,7 @@ export default function ProductionPage() {
                 'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5',
                 activeTab === tab
                   ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
-                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+                  : 'text-foreground/80 hover:text-foreground hover:bg-card/90 bg-card/40'
               )}
               onClick={() => setActiveTab(tab)}
             >
@@ -124,6 +124,15 @@ export default function ProductionPage() {
         planQuery.query.isLoading ? <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" /> : (
           <DataTable
             columns={[
+              {
+                id: 'planNumber',
+                header: 'Plan #',
+                cell: ({ row }) => (
+                  <span className="font-mono text-xs font-semibold text-primary">
+                    {row.original.planNumber || `PP-${String(row.original.id).slice(0, 8).toUpperCase()}`}
+                  </span>
+                ),
+              },
               { id: 'planDate', header: 'Plan Date', cell: ({ row }) => <DateText value={row.original.planDate} /> },
               {
                 id: 'lines',
@@ -198,7 +207,16 @@ export default function ProductionPage() {
         orderQuery.query.isLoading ? <div className="w-full h-96 rounded-xl border border-border bg-card animate-pulse" /> : (
           <DataTable
             columns={[
-              { id: 'plan', header: 'Plan #', cell: ({ row }) => row.original.productionPlan?.planNumber || '—' },
+              {
+                id: 'plan',
+                header: 'Plan #',
+                cell: ({ row }) => {
+                  const plan = row.original.productionPlan;
+                  if (!plan) return '—';
+                  const ref = plan.planNumber || `PP-${String(plan.id).slice(0, 8).toUpperCase()}`;
+                  return <span className="font-mono text-xs font-semibold text-primary">{ref}</span>;
+                },
+              },
               { id: 'planDate', header: 'Plan Date', cell: ({ row }) => row.original.productionPlan?.planDate },
               { id: 'product', header: 'Product', cell: ({ row }) => row.original.product?.name },
               { accessorKey: 'targetQty', header: 'To Make' },
