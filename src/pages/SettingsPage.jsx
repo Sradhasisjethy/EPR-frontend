@@ -130,7 +130,7 @@ export default function SettingsPage() {
             <div className="glass-card p-6 rounded-xl flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium">Glassmorphism</h3>
-                <p className="text-sm text-muted-foreground">Enable modern translucent frosted glass UI effects</p>
+                <p className="text-sm text-muted-foreground">Liquid glass surfaces that refract the wallpaper, catch the light along their edges and follow your pointer</p>
               </div>
               <button
                 className={cn(

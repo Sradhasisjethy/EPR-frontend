@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { useUIStore } from '@/store/ui-store';
+import { useLiquidGlass } from '@/hooks/use-liquid-glass';
+import { LiquidGlassFilters } from '@/components/layout/liquid-glass-filters';
 
 export const WALLPAPERS = {
   cement: '/cement-factory-bg.png',
@@ -12,6 +14,10 @@ export const WALLPAPERS = {
 
 export function UIProvider({ children }) {
   const { colorScheme, glassMode, bgWallpaper, customWallpaperUrl } = useUIStore();
+
+  // Pointer-tracked sheen and the Chromium refraction flag. Only while glass
+  // is on: the flat theme has no surface for either to act on.
+  useLiquidGlass(glassMode);
 
   useEffect(() => {
     // Apply color scheme as a data attribute to the html tag
@@ -48,5 +54,12 @@ export function UIProvider({ children }) {
     }
   }, [colorScheme, glassMode, bgWallpaper, customWallpaperUrl]);
 
-  return <>{children}</>;
+  return (
+    <>
+      {/* The SVG <filter> the rail and top bar refract through. Mounted only in
+          glass mode so the flat theme carries no extra node. */}
+      {glassMode && <LiquidGlassFilters />}
+      {children}
+    </>
+  );
 }

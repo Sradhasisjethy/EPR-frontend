@@ -167,43 +167,116 @@ html.dark[data-color-scheme="slate"] {
   }
 }
 
-/* Adaptive Glassmorphism Design System (Light vs Dark Mode) */
+/* ============================================================================
+   LIQUID GLASS  —  the glassmorphism toggle, in the macOS / iOS idiom
+   ----------------------------------------------------------------------------
+   Frosted glass was a milky white sheet with a blur behind it. Liquid glass is
+   a slab with thickness: light bends at its edges, catches on its top rim, and
+   pools under the pointer. Five layers make that, cheapest first:
 
-/* LIGHT MODE GLASS */
+   1. Fill + blur    — the surface itself, less opaque than before so the
+                       wallpaper's colour actually reads through. Saturation is
+                       pushed instead, which is what keeps text legible.
+   2. Lens shadows   — inset shadows: a bright bloom along the top edge and a
+                       shaded band along the bottom, which is what makes a flat
+                       rectangle read as a convex slab.
+   3. Rim (::before) — a one-pixel conic highlight around the perimeter,
+                       brightest top-left and bottom-right where a lens catches
+                       light, with faint cyan / magenta fringes in between: the
+                       chromatic edge real glass shows.
+   4. Sheen (::after)— a soft specular that follows the pointer. The hook in
+                       use-liquid-glass.js writes --id-mx / --id-my on whichever
+                       glass surface the pointer is over; nothing else moves.
+   5. Refraction     — on Chromium only (html[data-liquid-refract]), the rail
+                       and the top bar filter their backdrop through an SVG
+                       displacement map (#id-liquid-refract) so the wallpaper
+                       and the page content visibly warp through them like
+                       water. Other engines keep the plain blur.
+
+   Plus one ambient layer under everything: body::after drifts a few soft
+   caustic pools of light across the wallpaper so the glass has something that
+   moves to refract. Transform only, so it costs nothing on the main thread,
+   and it is off under prefers-reduced-motion.
+
+   Scope: .glass-card is only rendered by components while glassMode is on, and
+   .wallpaper-active only exists while a wallpaper is on top of that, so none
+   of this touches the flat theme.
+   ========================================================================== */
+
+:root {
+  --lg-blur: 36px;
+  --lg-blur-chrome: 44px;
+  --lg-sat: 1.9;
+}
+
+/* Both pseudo-layers are absolutely positioned; the card needs to be their
+   containing block. :where() so an explicit `absolute`/`fixed`/`sticky`
+   utility on the same element still wins. */
+:where(.glass-card, .glass-surface) {
+  position: relative;
+}
+
+/* ---------------------------------------------------------- LIGHT ----------
+   The light fill is a layered background: a diagonal reflection streak over a
+   translucent white. The streak is the "glass" part — a flat tint, however
+   translucent, always reads as plastic. */
 html:not(.dark) body.wallpaper-active {
-  background-color: #f1f5f9 !important;
+  background-color: #eef2f7 !important;
 }
 
 html:not(.dark) body.wallpaper-active::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(241, 245, 249, 0.45) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(241, 245, 249, 0.30) 100%);
   pointer-events: none;
   z-index: -1;
 }
 
 html:not(.dark) .glass-card {
-  background: rgba(255, 255, 255, 0.72) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.9) !important;
-  box-shadow: 0 16px 40px 0 rgba(15, 23, 42, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.95) !important;
+  background:
+    linear-gradient(118deg,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.10) 32%,
+      rgba(255, 255, 255, 0.00) 55%,
+      rgba(255, 255, 255, 0.18) 100%),
+    rgba(255, 255, 255, 0.60) !important;
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(1.06) !important;
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(1.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.35),
+    inset 0 14px 28px -14px rgba(255, 255, 255, 0.85),
+    inset 0 -22px 36px -28px rgba(15, 23, 42, 0.22),
+    0 1px 2px -1px rgba(15, 23, 42, 0.10),
+    0 24px 56px -18px rgba(15, 23, 42, 0.30) !important;
   color: #0f172a !important;
+  isolation: isolate;
 }
 
+/* With a wallpaper there is colour to let through, so the fill drops further
+   and the blur rises to keep tables readable over a photograph. */
 html:not(.dark) .wallpaper-active .glass-card {
-  background: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(28px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  background:
+    linear-gradient(118deg,
+      rgba(255, 255, 255, 0.58) 0%,
+      rgba(255, 255, 255, 0.12) 32%,
+      rgba(255, 255, 255, 0.00) 55%,
+      rgba(255, 255, 255, 0.20) 100%),
+    rgba(255, 255, 255, 0.54) !important;
+  backdrop-filter: blur(var(--lg-blur-chrome)) saturate(var(--lg-sat)) brightness(1.08) !important;
+  -webkit-backdrop-filter: blur(var(--lg-blur-chrome)) saturate(var(--lg-sat)) brightness(1.08) !important;
 }
 
 html:not(.dark) .wallpaper-active .glass-card thead {
-  background: rgba(241, 245, 249, 0.92) !important;
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 html:not(.dark) .wallpaper-active .glass-card tbody tr:hover {
-  background: rgba(241, 245, 249, 0.65) !important;
+  background: rgba(255, 255, 255, 0.45) !important;
 }
 
 html:not(.dark) .glass-card h1,
@@ -227,12 +300,29 @@ html:not(.dark) .glass-card .text-slate-400 {
   color: #334155 !important;
 }
 
+/* The rail: the thickest slab on screen, and the one that refracts. */
 html:not(.dark) .wallpaper-active aside {
-  background: rgba(255, 255, 255, 0.62) !important;
-  backdrop-filter: blur(28px) saturate(160%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
-  border: 1px solid hsl(var(--nav-from) / 0.30) !important;
+  background:
+    linear-gradient(165deg,
+      rgba(255, 255, 255, 0.50) 0%,
+      rgba(255, 255, 255, 0.08) 40%,
+      rgba(255, 255, 255, 0.00) 70%,
+      rgba(255, 255, 255, 0.16) 100%),
+    rgba(255, 255, 255, 0.46) !important;
+  backdrop-filter: blur(var(--lg-blur-chrome)) saturate(var(--lg-sat)) brightness(1.08) !important;
+  -webkit-backdrop-filter: blur(var(--lg-blur-chrome)) saturate(var(--lg-sat)) brightness(1.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.60) !important;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+    inset 1px 0 0 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.30),
+    inset 0 18px 36px -18px rgba(255, 255, 255, 0.90),
+    inset 0 -30px 48px -36px rgba(15, 23, 42, 0.26),
+    0 1px 2px -1px rgba(15, 23, 42, 0.12),
+    0 30px 70px -22px rgba(15, 23, 42, 0.35),
+    0 12px 36px -14px hsl(var(--nav-from) / 0.30) !important;
   color: #0f172a !important;
+  isolation: isolate;
 }
 
 html:not(.dark) .wallpaper-active aside a,
@@ -245,7 +335,8 @@ html:not(.dark) .wallpaper-active aside span {
   html:not(.dark) .wallpaper-active aside a:hover,
   html:not(.dark) .wallpaper-active aside button:hover {
     color: #0f172a !important;
-    background-color: rgba(241, 245, 249, 0.8) !important;
+    background-color: rgba(255, 255, 255, 0.55) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.35);
   }
 }
 
@@ -258,54 +349,94 @@ html:not(.dark) .wallpaper-active header {
   color: #0f172a !important;
 }
 
-/* DARK MODE GLASS */
+/* ----------------------------------------------------------- DARK ----------
+   Dark glass is smoked rather than frosted: a deep slate fill, the same
+   reflection streak at a quarter of the strength, and a rim that is mostly
+   the palette's own glow. */
 html.dark body.wallpaper-active {
-  background-color: #090d16 !important;
+  background-color: #070b14 !important;
 }
 
 html.dark body.wallpaper-active::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.80) 0%, rgba(15, 23, 42, 0.95) 100%);
+  background: linear-gradient(180deg, rgba(7, 11, 20, 0.62) 0%, rgba(7, 11, 20, 0.82) 100%);
   pointer-events: none;
   z-index: -1;
 }
 
 html.dark .glass-card {
-  background: rgba(15, 23, 42, 0.66) !important;
-  backdrop-filter: blur(24px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  background:
+    linear-gradient(118deg,
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.03) 32%,
+      rgba(255, 255, 255, 0.00) 55%,
+      rgba(255, 255, 255, 0.05) 100%),
+    rgba(13, 19, 33, 0.58) !important;
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) !important;
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 0 20px 50px 0 rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.12) !important;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.06),
+    inset 0 14px 28px -14px rgba(255, 255, 255, 0.16),
+    inset 0 -22px 36px -28px rgba(0, 0, 0, 0.55),
+    0 1px 2px -1px rgba(0, 0, 0, 0.6),
+    0 28px 64px -20px rgba(0, 0, 0, 0.70) !important;
   color: #f8fafc !important;
+  isolation: isolate;
 }
 
 html.dark .wallpaper-active .glass-card {
-  background: rgba(15, 23, 42, 0.84) !important;
-  backdrop-filter: blur(28px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  background:
+    linear-gradient(118deg,
+      rgba(255, 255, 255, 0.16) 0%,
+      rgba(255, 255, 255, 0.04) 32%,
+      rgba(255, 255, 255, 0.00) 55%,
+      rgba(255, 255, 255, 0.06) 100%),
+    rgba(13, 19, 33, 0.56) !important;
+  backdrop-filter: blur(var(--lg-blur-chrome)) saturate(var(--lg-sat)) !important;
+  -webkit-backdrop-filter: blur(var(--lg-blur-chrome)) saturate(var(--lg-sat)) !important;
 }
 
 html.dark .wallpaper-active .glass-card thead {
-  background: rgba(30, 41, 59, 0.92) !important;
+  background: rgba(30, 41, 59, 0.55) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 html.dark .wallpaper-active .glass-card tbody tr:hover {
-  background: rgba(30, 41, 59, 0.50) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
 }
 
 html.dark .glass-card p.text-muted-foreground,
 html.dark .glass-card span.text-muted-foreground {
-  color: rgba(226, 232, 240, 0.75) !important;
+  color: rgba(226, 232, 240, 0.78) !important;
 }
 
 html.dark .wallpaper-active aside {
-  background: rgba(15, 23, 42, 0.55) !important;
-  backdrop-filter: blur(28px) saturate(160%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
-  border: 1px solid hsl(var(--nav-from) / 0.28) !important;
+  background:
+    linear-gradient(165deg,
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.03) 40%,
+      rgba(255, 255, 255, 0.00) 70%,
+      rgba(255, 255, 255, 0.05) 100%),
+    rgba(13, 19, 33, 0.50) !important;
+  backdrop-filter: blur(var(--lg-blur-chrome)) saturate(var(--lg-sat)) !important;
+  -webkit-backdrop-filter: blur(var(--lg-blur-chrome)) saturate(var(--lg-sat)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.30),
+    inset 1px 0 0 0 rgba(255, 255, 255, 0.10),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.06),
+    inset 0 18px 36px -18px rgba(255, 255, 255, 0.18),
+    inset 0 -30px 48px -36px rgba(0, 0, 0, 0.60),
+    0 1px 2px -1px rgba(0, 0, 0, 0.6),
+    0 30px 70px -22px rgba(0, 0, 0, 0.75),
+    0 12px 36px -14px hsl(var(--nav-from) / 0.35) !important;
   color: #ffffff !important;
+  isolation: isolate;
 }
 
 html.dark .wallpaper-active header {
@@ -314,6 +445,256 @@ html.dark .wallpaper-active header {
 
 .wallpaper-active main {
   background-color: transparent !important;
+}
+
+/* ------------------------------------------------------ LENS RIM -----------
+   One pixel of conic highlight, cut to the border with a mask so it never
+   overlaps content. The highlights sit at ~330° (top-left) and ~150°
+   (bottom-right): a convex lens lit from the top-left is brightest on the rim
+   facing the light AND on the far rim, where light exits. Between them the
+   rim carries a whisper of cyan and magenta — dispersion, the thing that
+   separates glass from frosted plastic. */
+body.glass-mode-active .glass-card::before,
+body.wallpaper-active aside::before,
+body.glass-mode-active .glass-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  z-index: -1;
+  background: conic-gradient(from 150deg at 50% 50%,
+    rgba(255, 255, 255, 0.85) 0deg,
+    rgba(255, 255, 255, 0.30) 40deg,
+    rgba(120, 220, 255, 0.45) 80deg,
+    rgba(255, 255, 255, 0.10) 130deg,
+    rgba(255, 255, 255, 1.00) 180deg,
+    rgba(255, 255, 255, 0.45) 220deg,
+    rgba(255, 150, 230, 0.42) 265deg,
+    rgba(255, 255, 255, 0.12) 310deg,
+    rgba(255, 255, 255, 0.85) 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.9;
+}
+
+html.dark body.glass-mode-active .glass-card::before,
+html.dark body.wallpaper-active aside::before,
+html.dark body.glass-mode-active .glass-surface::before {
+  opacity: 0.55;
+}
+
+/* --------------------------------------------------------- SHEEN -----------
+   A specular pool that follows the pointer, plus a faint ring around it
+   that reads as the surface bulging toward the cursor. Hidden until the hook
+   marks the surface with data-liquid-hover; positioned by the two custom
+   properties the hook writes. Painted between the fill and the content, so
+   it never washes text out. */
+body.glass-mode-active .glass-card::after,
+body.wallpaper-active aside::after,
+body.glass-mode-active .glass-surface::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(240px circle at var(--id-mx, 50%) var(--id-my, 0%),
+      rgba(255, 255, 255, 0.42) 0%,
+      rgba(255, 255, 255, 0.14) 32%,
+      rgba(255, 255, 255, 0.00) 62%),
+    radial-gradient(420px circle at var(--id-mx, 50%) var(--id-my, 0%),
+      rgba(255, 255, 255, 0.00) 44%,
+      rgba(255, 255, 255, 0.10) 52%,
+      rgba(255, 255, 255, 0.00) 60%);
+  opacity: 0;
+  transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.glass-mode-active .glass-card[data-liquid-hover]::after,
+body.wallpaper-active aside[data-liquid-hover]::after,
+body.glass-mode-active .glass-surface[data-liquid-hover]::after {
+  opacity: 1;
+}
+
+html.dark body.glass-mode-active .glass-card[data-liquid-hover]::after,
+html.dark body.wallpaper-active aside[data-liquid-hover]::after,
+html.dark body.glass-mode-active .glass-surface[data-liquid-hover]::after {
+  opacity: 0.6;
+}
+
+/* Pressing pushes the light into the slab: the top bloom dims and the
+   bottom shade deepens for as long as the button is held. */
+body.glass-mode-active .glass-card[data-liquid-press],
+body.glass-mode-active .glass-surface[data-liquid-press] {
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.45),
+    inset 0 2px 10px -2px rgba(15, 23, 42, 0.18),
+    inset 0 -14px 28px -24px rgba(15, 23, 42, 0.30),
+    0 10px 30px -14px rgba(15, 23, 42, 0.25) !important;
+}
+
+/* --------------------------------------------------- REFRACTION ------------
+   Chromium can run an SVG filter as a backdrop-filter, so on that engine the
+   two chrome surfaces displace their backdrop through a low-frequency noise
+   field before blurring it. Everything behind the rail and the top bar
+   wobbles as it scrolls past, which is the effect that sells "liquid".
+   use-liquid-glass.js sets the attribute only where it will actually render;
+   anywhere else the plain blur above stands. The filter chain includes its own
+   blur and saturation, because url() replaces the whole filter list. */
+html[data-liquid-refract] body.wallpaper-active aside,
+html[data-liquid-refract] body.wallpaper-active header.glass-card {
+  backdrop-filter: url('#id-liquid-refract') !important;
+  -webkit-backdrop-filter: url('#id-liquid-refract') !important;
+}
+
+/* ------------------------------------------------- GLASS SURFACE -----------
+   Inputs and buttons in glass mode (data-table search, pager). Thin glass:
+   a lighter fill and a shorter blur so the field reads as a control, not as
+   another card. */
+.glass-surface {
+  background:
+    linear-gradient(118deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.15) 100%),
+    rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(18px) saturate(1.7);
+  -webkit-backdrop-filter: blur(18px) saturate(1.7);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+    inset 0 -8px 16px -12px rgba(15, 23, 42, 0.18),
+    0 4px 14px -6px rgba(15, 23, 42, 0.18);
+  isolation: isolate;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 160ms ease;
+}
+
+.dark .glass-surface {
+  background:
+    linear-gradient(118deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(255, 255, 255, 0.04) 100%),
+    rgba(13, 19, 33, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
+    inset 0 -8px 16px -12px rgba(0, 0, 0, 0.5),
+    0 4px 14px -6px rgba(0, 0, 0, 0.5);
+}
+
+button.glass-surface:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* The active rail row becomes a lit pill set into the slab rather than a
+   flat tint laid on top of it. */
+body.wallpaper-active aside a.id-nav-active {
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.70),
+    inset 0 0 0 1px hsl(var(--nav-from) / 0.30),
+    inset 0 -8px 16px -12px hsl(var(--nav-from) / 0.35),
+    0 6px 18px -6px hsl(var(--nav-from) / 0.45);
+}
+
+/* -------------------------------------------------- CARD TOKENS ------------
+   Dashboard panels and KPI tiles use `bg-card`, an opaque token, so they
+   get the same slab treatment here under a wallpaper. `aside` has its own
+   stronger rule above; `bg-popover` is left alone — a dropdown over a
+   photograph has to stay readable. */
+.wallpaper-active .bg-card {
+  backdrop-filter: blur(28px) saturate(1.8) brightness(1.04);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8) brightness(1.04);
+  isolation: isolate;
+}
+
+html:not(.dark) .wallpaper-active .bg-card {
+  background-image: linear-gradient(118deg,
+    rgba(255, 255, 255, 0.50) 0%,
+    rgba(255, 255, 255, 0.08) 35%,
+    rgba(255, 255, 255, 0.00) 60%,
+    rgba(255, 255, 255, 0.16) 100%);
+  background-color: rgb(255 255 255 / 0.56);
+  border-color: rgba(255, 255, 255, 0.60);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+    inset 0 -18px 30px -24px rgba(15, 23, 42, 0.20),
+    0 1px 2px -1px rgba(15, 23, 42, 0.10),
+    0 20px 48px -18px rgba(15, 23, 42, 0.28);
+}
+
+html.dark .wallpaper-active .bg-card {
+  background-image: linear-gradient(118deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.03) 35%,
+    rgba(255, 255, 255, 0.00) 60%,
+    rgba(255, 255, 255, 0.05) 100%);
+  background-color: rgb(13 19 33 / 0.56);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.26),
+    inset 0 -18px 30px -24px rgba(0, 0, 0, 0.55),
+    0 1px 2px -1px rgba(0, 0, 0, 0.6),
+    0 20px 48px -18px rgba(0, 0, 0, 0.65);
+}
+
+/* ------------------------------------------------- CAUSTICS ----------------
+   Four soft pools of light drifting over the wallpaper, under every glass
+   surface. Two are white, two follow the palette, so the shimmer that comes
+   through the glass matches the active colour scheme. It sits oversize and
+   moves by transform alone, so the drift is composited; what the glass does
+   with it is the same backdrop work it already does on scroll. */
+body.wallpaper-active::after {
+  content: '';
+  position: fixed;
+  inset: -22%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(34% 28% at 22% 28%, rgba(255, 255, 255, 0.60) 0%, rgba(255, 255, 255, 0) 70%),
+    radial-gradient(28% 34% at 76% 18%, hsl(var(--nav-to) / 0.42) 0%, hsl(var(--nav-to) / 0) 70%),
+    radial-gradient(32% 28% at 62% 78%, hsl(var(--nav-from) / 0.42) 0%, hsl(var(--nav-from) / 0) 70%),
+    radial-gradient(24% 24% at 14% 84%, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0) 70%);
+  mix-blend-mode: soft-light;
+  opacity: 0.9;
+  will-change: transform;
+  animation: id-caustic-drift 46s ease-in-out infinite alternate;
+}
+
+html.dark body.wallpaper-active::after {
+  mix-blend-mode: screen;
+  opacity: 0.35;
+}
+
+@keyframes id-caustic-drift {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(5%, -4%, 0) rotate(4deg) scale(1.08); }
+  100% { transform: translate3d(-4%, 5%, 0) rotate(-3deg) scale(1.03); }
+}
+
+/* Glass is a treat, not a vestibular test. */
+@media (prefers-reduced-motion: reduce) {
+  body.wallpaper-active::after {
+    animation: none;
+  }
+  body.glass-mode-active .glass-card::after,
+  body.wallpaper-active aside::after,
+  body.glass-mode-active .glass-surface::after,
+  .glass-surface {
+    transition: none;
+  }
+}
+
+/* Phones get the same look at a lower price: shorter blurs, no displacement. */
+@media (max-width: 1023px) {
+  :root {
+    --lg-blur: 22px;
+    --lg-blur-chrome: 28px;
+  }
+  html[data-liquid-refract] body.wallpaper-active aside,
+  html[data-liquid-refract] body.wallpaper-active header.glass-card {
+    backdrop-filter: blur(var(--lg-blur-chrome)) saturate(var(--lg-sat)) !important;
+    -webkit-backdrop-filter: blur(var(--lg-blur-chrome)) saturate(var(--lg-sat)) !important;
+  }
 }
 
 /* WebKit Chrome Autofill Dark Glass Override */
@@ -621,26 +1002,8 @@ html.dark .wallpaper-active aside a.id-nav-active span {
     inset 0 1px 0 0 rgb(255 255 255 / 0.06);
 }
 
-/* Glass mode: card surfaces let the wallpaper through.
-   The dashboard panels and tiles use `bg-card`, which is an opaque token, so
-   they stayed solid while the sidebar and the settings panels went
-   translucent. Scoped to .wallpaper-active, so nothing changes when glass is
-   off. Left alone deliberately: `aside`, which has its own stronger rule, and
-   `bg-popover` — a dropdown over a photograph has to stay readable. */
-.wallpaper-active .bg-card {
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-}
-
-html:not(.dark) .wallpaper-active .bg-card {
-  background-color: rgb(255 255 255 / 0.72);
-  border-color: hsl(var(--nav-from) / 0.22);
-}
-
-html.dark .wallpaper-active .bg-card {
-  background-color: rgb(15 23 42 / 0.66);
-  border-color: hsl(var(--nav-from) / 0.24);
-}
+/* Glass-mode card surfaces (`.wallpaper-active .bg-card`) live in the LIQUID
+   GLASS block above, beside the rest of the glass system. */
 
 /* Logo motion.
    Animation is spent where it means something, not left looping in the chrome.
