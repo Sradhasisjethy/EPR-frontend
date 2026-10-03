@@ -72,14 +72,14 @@ export function BundlePreviewNote({
 
   return (
     <div className="mt-1 space-y-1">
-    <p className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+    <div className="text-[11px] text-muted-foreground flex items-start gap-1.5">
       <PackagePlus size={12} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
       <span className="flex flex-wrap items-center gap-x-1 gap-y-1">
         {kept.length > 0 && (
           <>
             Brings{' '}
             {kept.map((c, i) => (
-              <span key={c.componentProductId} className="inline-flex items-center gap-1 align-middle">
+              <span key={c.componentProductId || c.productId || c.productName || i} className="inline-flex items-center gap-1 align-middle">
                 {i > 0 && <span className="mr-0.5">,</span>}
                 {editable && onQuantity ? (
                   <>
@@ -128,7 +128,7 @@ export function BundlePreviewNote({
           </>
         )}
       </span>
-    </p>
+    </div>
 
       {(unpriced.length > 0 || untaxed.length > 0) && (
         <p className="text-[11px] text-amber-600 dark:text-amber-400 flex items-start gap-1.5">
@@ -154,9 +154,9 @@ export function BundlePreviewNote({
       {removed.length > 0 && (
         <p className="text-[11px] text-muted-foreground flex items-start gap-1.5 flex-wrap">
           <span>Left off:</span>
-          {removed.map((c) => (
+          {removed.map((c, i) => (
             <button
-              key={c.componentProductId}
+              key={c.componentProductId || c.productId || c.productName || i}
               type="button"
               className="inline-flex items-center gap-1 text-primary hover:underline"
               onClick={() => onRestore?.(c.componentProductId)}

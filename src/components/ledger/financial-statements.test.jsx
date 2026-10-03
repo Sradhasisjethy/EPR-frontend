@@ -54,7 +54,7 @@ beforeEach(() => {
 describe('ProfitAndLoss', () => {
   it('lays out the trading account and the net result', async () => {
     renderWithQuery(<ProfitAndLoss />);
-    expect(await screen.findByText('Net profit')).toBeInTheDocument();
+    expect(await screen.findByText(/Net Profit/i)).toBeInTheDocument();
     expect(screen.getByText('Opening stock')).toBeInTheDocument();
     expect(screen.getByText('Closing stock')).toBeInTheDocument();
     expect(screen.getByText('Gross profit')).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('ProfitAndLoss', () => {
   it('asks the server for a range only once both ends are set', async () => {
     const user = userEvent.setup();
     renderWithQuery(<ProfitAndLoss />);
-    await screen.findByText('Net profit');
+    await screen.findByText(/Net Profit/i);
     await user.type(screen.getByLabelText('From'), '2026-05-01');
     const calls = () => apiClient.get.mock.calls.filter(([u]) => u.includes('profit-and-loss'));
     expect(calls().every(([, cfg]) => !cfg.params.from)).toBe(true);
