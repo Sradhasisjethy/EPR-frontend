@@ -38,12 +38,14 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'https://erp-backend-df15.onrender.com',
         changeOrigin: true,
+        secure: false,
       },
       '/uploads': {
-        target: 'http://localhost:3001',
+        target: 'https://erp-backend-df15.onrender.com',
         changeOrigin: true,
+        secure: false,
       },
     },
   },
