@@ -12,7 +12,6 @@ import { KeyRound, Mail, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react
 export function ForgotPasswordDialog({ open, onOpenChange }) {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [devResetUrl, setDevResetUrl] = useState('');
   const forgotPasswordMutation = useForgotPassword();
   const isLoading = forgotPasswordMutation.isPending;
 
@@ -23,12 +22,9 @@ export function ForgotPasswordDialog({ open, onOpenChange }) {
     forgotPasswordMutation.mutate(
       { email },
       {
-        onSuccess: (data) => {
-          setSubmitted(true);
-          if (data?.data?.resetUrl) {
-            setDevResetUrl(data.data.resetUrl);
-          }
-        },
+        // The API answers the same way whether or not the account exists, and
+        // never returns the link itself — it goes only to the mailbox.
+        onSuccess: () => setSubmitted(true),
       }
     );
   };
@@ -41,7 +37,6 @@ export function ForgotPasswordDialog({ open, onOpenChange }) {
       setTimeout(() => {
         setEmail('');
         setSubmitted(false);
-        setDevResetUrl('');
         forgotPasswordMutation.reset();
       }, 300);
     }
@@ -68,27 +63,13 @@ export function ForgotPasswordDialog({ open, onOpenChange }) {
           <div className="space-y-5 pt-2">
             <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 space-y-2">
               <div className="flex items-center gap-2 text-emerald-400 font-semibold text-[14px]">
-                <CheckCircle2 size={18} aria-hidden="true" /> Email sent
+                <CheckCircle2 size={18} aria-hidden="true" /> Check your inbox
               </div>
               <p className="text-[13px] leading-[20px] text-infideep-on-surface/90">
-                We have sent password reset instructions to <strong>{email}</strong>. Please check
-                your inbox.
+                If an account exists for <strong>{email}</strong>, we have sent it a password reset
+                link. It expires in 15 minutes.
               </p>
             </div>
-
-            {devResetUrl && (
-              <div className="p-3 rounded-lg bg-infideep-surface-high border border-infideep-outline-variant/40 space-y-1">
-                <span className="block text-[12px] font-semibold uppercase tracking-[0.05em] text-infideep-secondary">
-                  Local dev quick reset link
-                </span>
-                <a
-                  href={devResetUrl}
-                  className="text-infideep-primary hover:underline break-all font-mono text-[11px]"
-                >
-                  {devResetUrl}
-                </a>
-              </div>
-            )}
 
             <button
               type="button"

@@ -72,7 +72,7 @@ export function VouchersList() {
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
   const canCreate = hasPermission(user, WebPermissions.JOURNAL_CREATE);
-  const canCancel = hasPermission(user, WebPermissions.JOURNAL_MODIFY);
+  const canCancel = hasPermission(user, WebPermissions.JOURNAL_CANCEL);
 
   const { query, tableProps } = usePaginated(useVouchers, typeFilter ? { voucherType: typeFilter } : {});
   const cancel = useCancelVoucher();

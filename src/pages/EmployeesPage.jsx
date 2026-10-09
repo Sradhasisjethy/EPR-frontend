@@ -124,13 +124,16 @@ export default function EmployeesPage() {
       header: '',
       cell: ({ row }) => (
         <div className="flex items-center justify-end gap-1">
-          <button
-            onClick={() => setDocsDialogFor(row.original)}
-            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title="View Documents"
-          >
-            <FileText size={16} />
-          </button>
+          {/* Same grant the API asks for: a colleague's documents are HR's. */}
+          {canModify && (
+            <button
+              onClick={() => setDocsDialogFor(row.original)}
+              className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="View Documents"
+            >
+              <FileText size={16} />
+            </button>
+          )}
           {canModify && (
             <button
               onClick={() => { setEditingEmployee(row.original); setDialogOpen(true); }}

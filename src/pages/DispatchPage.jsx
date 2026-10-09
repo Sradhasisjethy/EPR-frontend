@@ -18,7 +18,7 @@ import { DateText } from '@/components/date-text';
 export default function DispatchPage() {
   const { data: user } = useCurrentUser();
   const canCreate = hasPermission(user, WebPermissions.DISPATCH_CREATE);
-  const canCancel = hasPermission(user, WebPermissions.DISPATCH_MODIFY);
+  const canCancel = hasPermission(user, WebPermissions.DISPATCH_CANCEL);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cancellingChallan, setCancellingChallan] = useState(null);
   const { query, tableProps } = usePaginated(useDeliveryChallans);

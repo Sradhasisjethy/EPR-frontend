@@ -80,3 +80,36 @@ export function useResetPassword() {
     },
   });
 }
+
+/**
+ * Both of these end every session the user has — the backend revokes all
+ * refresh tokens and retires access tokens — so this device signs out too.
+ */
+const endLocalSession = (queryClient) => {
+  localStorage.removeItem('infideep-access-token');
+  localStorage.removeItem('infideep-refresh-token');
+  queryClient.clear();
+  window.location.href = '/login';
+};
+
+export function useChangePassword() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ currentPassword, newPassword }) => {
+      const response = await apiClient.post('/auth/change-password', { currentPassword, newPassword });
+      return response.data;
+    },
+    onSuccess: () => endLocalSession(queryClient),
+  });
+}
+
+export function useLogoutAll() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const response = await apiClient.post('/auth/logout-all');
+      return response.data;
+    },
+    onSuccess: () => endLocalSession(queryClient),
+  });
+}

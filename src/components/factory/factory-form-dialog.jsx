@@ -6,6 +6,15 @@ import { Label } from '@/components/ui/label';
 import { useCreateFactory, useUpdateFactory } from '@/hooks/use-factory';
 import { useOrganizations } from '@/hooks/use-organization';
 import { toast } from 'sonner';
+import { usePermissions } from '@/hooks/use-permissions';
+import { WebPermissions } from '@/constants/enums';
+
+// Mirrors the server: the code goes into every document number and GST
+// invoice number, so only A-Z, 0-9 and '-', at most 10. The hyphen is escaped
+// because browsers compile `pattern` with the `v` flag, where a bare one in a
+// class is a syntax error and the check is silently skipped.
+const CODE_PATTERN = '[A-Z0-9\\-]{1,10}';
+const CODE_MAX_LENGTH = 10;
 
 const emptyForm = {
   organizationId: '',
@@ -21,6 +30,10 @@ const emptyForm = {
 };
 
 export function FactoryFormDialog({ open, onOpenChange, factory }) {
+  // Policy switches turn controls off for the whole plant, so they are their
+  // own grant. Without it they show, read-only, and save unchanged.
+  const { hasPermission } = usePermissions();
+  const canEditPolicy = hasPermission(WebPermissions.FACTORY_POLICY_MODIFY);
   const isEditing = !!factory;
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
@@ -51,13 +64,17 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
     }
   }, [open, factory, orgData]);
 
+  // A plant saved before the code rule may hold a code the rule now rejects.
+  // Left untouched it is not sent, so the rest of the form still saves.
+  const codeChanged = !isEditing || form.code !== (factory.code || '');
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
     const payload = {
       organizationId: form.organizationId,
       name: form.name,
-      code: form.code,
+      ...(codeChanged ? { code: form.code.trim().toUpperCase() } : {}),
       address: form.address || undefined,
       city: form.city || undefined,
       state: form.state || undefined,
@@ -108,7 +125,17 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="factory-code">Code</Label>
-              <Input id="factory-code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required />
+              <Input
+                id="factory-code"
+                value={form.code}
+                onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+                pattern={codeChanged ? CODE_PATTERN : undefined}
+                maxLength={codeChanged ? CODE_MAX_LENGTH : undefined}
+                title="Up to 10 characters: capital letters, digits or hyphen"
+                autoCapitalize="characters"
+                required
+              />
+              <p className="text-xs text-muted-foreground">Up to 10 letters, digits or hyphens, e.g. PL-01. Used in document numbers.</p>
             </div>
           </div>
 
@@ -128,8 +155,13 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="flex items-center gap-2 text-sm">
+          <fieldset className="flex flex-col gap-2" disabled={!canEditPolicy}>
+            {!canEditPolicy && (
+              <p className="text-xs text-muted-foreground">
+                Plant policy can only be changed by someone with the Factory policy permission.
+              </p>
+            )}
+            <label className={`flex items-center gap-2 text-sm ${!canEditPolicy ? 'opacity-60' : ''}`}>
               <input
                 type="checkbox"
                 checked={form.allowNegativeStock}
@@ -137,7 +169,7 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
               />
               Allow negative stock (BR-04 override)
             </label>
-            <label className="flex items-center gap-2 text-sm">
+            <label className={`flex items-center gap-2 text-sm ${!canEditPolicy ? 'opacity-60' : ''}`}>
               <input
                 type="checkbox"
                 checked={form.allowNegativeCash}
@@ -145,7 +177,7 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
               />
               Allow negative cash balance (BR-21 override)
             </label>
-            <label className="flex items-start gap-2 text-sm">
+            <label className={`flex items-start gap-2 text-sm ${!canEditPolicy ? 'opacity-60' : ''}`}>
               <input
                 type="checkbox"
                 className="mt-1"
@@ -160,7 +192,7 @@ export function FactoryFormDialog({ open, onOpenChange, factory }) {
                 </span>
               </span>
             </label>
-          </div>
+          </fieldset>
 
           {isEditing && (
             <div className="space-y-1.5">

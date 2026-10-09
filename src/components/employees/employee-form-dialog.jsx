@@ -135,12 +135,10 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
       const url = res.data?.data?.url || res.data?.url;
       setForm((prev) => ({ ...prev, avatar: url }));
     } catch (err) {
-      console.warn('Server upload failed, storing image preview directly:', err);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setForm((prev) => ({ ...prev, avatar: reader.result }));
-      };
-      reader.readAsDataURL(file);
+      // No fallback to storing the image inline as a data: URL. The server only
+      // accepts avatar paths it issued, and a file it just refused (wrong type,
+      // not really an image) must not reach the profile by another route.
+      toast.error(err.response?.data?.message || 'Could not upload the photo. Please try another image.');
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -167,7 +165,10 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
         resignationDate: form.resignationDate || null,
         assetName: form.assetName || null,
         assetCode: form.assetCode || null,
-        avatar: form.avatar || null,
+        // Sent only when changed: an employee saved before the server checked
+        // avatar paths may still hold a data: URL, and re-sending it untouched
+        // would make every other edit to that employee fail validation.
+        ...(form.avatar !== (employee.avatar || '') ? { avatar: form.avatar || null } : {}),
         status: form.status,
         roleId: form.roleId || null,
         address: form.address || null,

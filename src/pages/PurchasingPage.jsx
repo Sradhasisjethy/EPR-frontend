@@ -53,6 +53,9 @@ export default function PurchasingPage() {
   const { data: user } = useCurrentUser();
   const showRates = canViewRates(user);
   const canCreate = hasPermission(user, 'PURCHASE_CREATE');
+  // Posting a vendor bill is its own grant (the API checks it on POST
+  // /purchasing/invoices): stores book receipts, accounts book the payable.
+  const canCreateInvoice = hasPermission(user, 'PURCHASE_INVOICE_CREATE');
   const canModify = hasPermission(user, 'PURCHASE_MODIFY');
   const canApprove = hasPermission(user, 'PURCHASE_APPROVE');
   // Reversing a posted receipt or a booked payable is gated on DELETE, matching
@@ -379,7 +382,7 @@ export default function PurchasingPage() {
             ]}
             {...invoiceQuery.tableProps}
             emptyMessage="No vendor bills yet. Raise one against a goods receipt to book the payable."
-          actionsNode={canCreate && (
+          actionsNode={canCreateInvoice && (
           <Button onClick={addHandlers[activeTab]}><Plus size={16} /> New {activeTab.replace(/s$/, '')}</Button>
         )}
             searchPlaceholder="Search vendor invoice…"

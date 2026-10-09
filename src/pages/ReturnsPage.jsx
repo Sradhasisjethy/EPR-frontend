@@ -33,6 +33,9 @@ export default function ReturnsPage() {
 
   const { data: user } = useCurrentUser();
   const canCreate = hasPermission(user, WebPermissions.RETURN_CREATE);
+  // Cancels are named grants: returns on RETURN_CANCEL, notes on FINANCE_ADJUSTMENT_CANCEL.
+  const canCancelReturn = hasPermission(user, WebPermissions.RETURN_CANCEL);
+  const canCancelNote = hasPermission(user, WebPermissions.FINANCE_ADJUSTMENT_CANCEL);
   const showRates = canViewRates(user);
 
   const salesReturns = usePaginated(useSalesReturns);
@@ -107,7 +110,7 @@ export default function ReturnsPage() {
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
-                cell: ({ row }) => row.original.status === 'POSTED' && (
+                cell: ({ row }) => canCancelReturn && row.original.status === 'POSTED' && (
                   <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelSalesReturn, row.original.id, `Cancel Sales Return — ${row.original.returnNumber}`)}>Cancel</button></div>
                 ),
               },
@@ -133,7 +136,7 @@ export default function ReturnsPage() {
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
-                cell: ({ row }) => row.original.status === 'POSTED' && (
+                cell: ({ row }) => canCancelReturn && row.original.status === 'POSTED' && (
                   <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelPurchaseReturn, row.original.id, `Cancel Purchase Return — ${row.original.returnNumber}`)}>Cancel</button></div>
                 ),
               },
@@ -159,7 +162,7 @@ export default function ReturnsPage() {
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
-                cell: ({ row }) => row.original.status === 'POSTED' && (
+                cell: ({ row }) => canCancelNote && row.original.status === 'POSTED' && (
                   <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelCreditNote, row.original.id, `Cancel Credit Note — ${row.original.noteNumber}`)}>Cancel</button></div>
                 ),
               },
@@ -185,7 +188,7 @@ export default function ReturnsPage() {
               { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status.toLowerCase()} /> },
               {
                 id: 'actions', header: '',
-                cell: ({ row }) => row.original.status === 'POSTED' && (
+                cell: ({ row }) => canCancelNote && row.original.status === 'POSTED' && (
                   <div className="flex justify-end"><button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelDebitNote, row.original.id, `Cancel Debit Note — ${row.original.noteNumber}`)}>Cancel</button></div>
                 ),
               },

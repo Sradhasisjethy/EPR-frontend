@@ -38,6 +38,9 @@ import { FinancialYearCloseWizardDialog } from '@/components/factory/financial-y
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTabParam } from '@/hooks/use-tab-param';
 import { useUIStore } from '@/store/ui-store';
+import { usePermissions } from '@/hooks/use-permissions';
+import { WebPermissions } from '@/constants/enums';
+import { needsCloseGrant } from '@/lib/financial-year-rules';
 import { DateText } from '@/components/date-text';
 import { toast } from 'sonner';
 
@@ -92,6 +95,7 @@ function FinancialYearStatusBadge({ status, isCurrent }) {
 
 function FinancialYearRowActions({
   fy,
+  canMoveTo,
   onEdit,
   onViewPeriods,
   onOpenCloseWizard,
@@ -117,28 +121,28 @@ function FinancialYearRowActions({
           <span>View Periods (Months 1–12)</span>
         </DropdownMenuItem>
 
-        {!isClosed && (
+        {!isClosed && canMoveTo('CLOSED') && (
           <DropdownMenuItem onClick={onOpenCloseWizard} className="gap-2 cursor-pointer">
             <Zap size={15} className="text-amber-500" />
             <span>Year-End Close Wizard</span>
           </DropdownMenuItem>
         )}
 
-        {isActive && (
+        {isActive && canMoveTo('SOFT_CLOSED') && (
           <DropdownMenuItem onClick={() => onTogglePostings('SOFT_CLOSED')} className="gap-2 cursor-pointer">
             <Lock size={15} className="text-amber-600" />
             <span>Lock Operational Postings</span>
           </DropdownMenuItem>
         )}
 
-        {isSoftClosed && (
+        {isSoftClosed && canMoveTo('ACTIVE') && (
           <DropdownMenuItem onClick={() => onTogglePostings('ACTIVE')} className="gap-2 cursor-pointer text-emerald-600">
             <Unlock size={15} />
             <span>Reopen Postings (Active)</span>
           </DropdownMenuItem>
         )}
 
-        {isPlanned && (
+        {isPlanned && canMoveTo('ACTIVE') && (
           <DropdownMenuItem onClick={() => onTogglePostings('ACTIVE')} className="gap-2 cursor-pointer text-emerald-600">
             <CheckCircle2 size={15} />
             <span>Activate Financial Year</span>
@@ -190,6 +194,11 @@ export default function FactoriesPage() {
   const [periodsDialogOpen, setPeriodsDialogOpen] = useState(false);
   const [selectedCloseFy, setSelectedCloseFy] = useState(null);
   const [closeWizardOpen, setCloseWizardOpen] = useState(false);
+
+  // Closing, reopening and rolling over a year are their own grant; the menu
+  // offers only the moves the API will accept (lib/financial-year-rules.js).
+  const { hasPermission } = usePermissions();
+  const canCloseYears = hasPermission(WebPermissions.FINANCIAL_YEAR_CLOSE);
 
   // Confirmation dialogs
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -358,6 +367,11 @@ export default function FactoriesPage() {
                   <div className="flex justify-end">
                     <FinancialYearRowActions
                       fy={row.original}
+                      canMoveTo={(to) => {
+                        const from = row.original.status || (row.original.isCurrent ? 'ACTIVE' : 'PLANNED');
+                        const otherCurrent = (fyData?.rows || []).some((y) => y.isCurrent && y.id !== row.original.id);
+                        return canCloseYears || !needsCloseGrant(from, to, otherCurrent, row.original.isCurrent);
+                      }}
                       onEdit={() => {
                         setEditingFy(row.original);
                         setFyDialogOpen(true);
@@ -392,7 +406,12 @@ export default function FactoriesPage() {
       )}
 
       <FactoryFormDialog open={factoryDialogOpen} onOpenChange={setFactoryDialogOpen} factory={editingFactory} />
-      <FinancialYearFormDialog open={fyDialogOpen} onOpenChange={setFyDialogOpen} financialYear={editingFy} />
+      <FinancialYearFormDialog
+        open={fyDialogOpen}
+        onOpenChange={setFyDialogOpen}
+        financialYear={editingFy}
+        otherYearIsCurrent={(fyData?.rows || []).some((y) => y.isCurrent && y.id !== editingFy?.id)}
+      />
 
       <FinancialYearPeriodsDialog
         open={periodsDialogOpen}

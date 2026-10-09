@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,23 @@ import { PartyType } from '@/constants/enums';
 import { toPaise, fromPaise } from '@/lib/money';
 import { toInput } from '@/lib/decimal';
 import { today } from '@/lib/date-format';
+
+// Identity and bank fields the server masks ('••••••••1234') for a user
+// without PARTY_SENSITIVE_READ. Mirrors SENSITIVE_FIELDS in backend
+// src/api/parties/partySensitive.js.
+const SENSITIVE_FIELDS = [
+  'aadhaarNumber', 'pan', 'bankAccountNumber', 'bankIfsc', 'beneficiaryName',
+  'esicNumber', 'esicIpNumber', 'uanNumber', 'dateOfBirth',
+  'emergencyContactName', 'emergencyContactPhone',
+];
+const isMasked = (value) => typeof value === 'string' && value.includes('•');
+
+// A masked value is a placeholder for one this user may not see. Saving the
+// form unchanged keeps the real value; typing over it replaces it.
+function MaskedHint({ value }) {
+  if (!isMasked(value)) return null;
+  return <p className="text-[11px] text-muted-foreground">Hidden — enter a new value to replace it</p>;
+}
 
 // Mirrors GSTIN_PATTERN in backend src/api/parties/parties.schema.js.
 const GSTIN_PATTERN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
@@ -123,7 +140,37 @@ const PARTY_TYPE_LABELS = {
   [PartyType.SALES_REF]: 'Sales Reference / Broker',
 };
 
+/**
+ * Fields the API guards behind a named grant on update — credit terms behind
+ * the Credit override permission, bank/identity/commission details behind
+ * PARTY_SENSITIVE_MODIFY — mapped to the form inputs that produce them.
+ *
+ * The form rebuilds every field on save: credit ageing is derived from the
+ * credit period, a masked credit limit comes back as 0, a blank beneficiary is
+ * filled with the party name. Sent as-is, any edit by someone without those
+ * grants — a phone number, say — would be refused. So on an edit a guarded
+ * field is sent only when one of its inputs actually changed.
+ */
+const GATED_SOURCES = {
+  creditLimitPaise: ['creditLimitRupees'],
+  creditAgeingDays: ['creditPeriodDays', 'creditAgeingDays'],
+  creditAction: ['creditAction'],
+  bankAccountNumber: ['bankAccountNumber', 'paymentMode'],
+  bankIfsc: ['bankIfsc', 'paymentMode'],
+  bankName: ['bankName', 'paymentMode'],
+  bankBranch: ['bankBranch', 'paymentMode'],
+  beneficiaryName: ['beneficiaryName', 'paymentMode', 'name'],
+  pan: ['pan'],
+  aadhaarNumber: ['aadhaarNumber'],
+  esicNumber: ['esicNumber'],
+  esicIpNumber: ['esicIpNumber'],
+  uanNumber: ['uanNumber'],
+  commissionType: ['commissionType'],
+  commissionValue: ['commissionValue'],
+};
+
 export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType }) {
+  const initialFormRef = useRef(null);
   const isEditing = !!party;
   const [form, setForm] = useState(emptyForm());
   const [error, setError] = useState('');
@@ -148,7 +195,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
       const isSalesRefInit = initialType === PartyType.SALES_REF;
       const isContractorInit = initialType === PartyType.CONTRACTOR;
 
-      setForm(
+      const next = (
         party
           ? {
               partyType: party.partyType,
@@ -221,6 +268,10 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
               retentionPercent: isContractorInit ? '5' : '0',
             }
       );
+      setForm(next);
+      // What was loaded, so a save can tell an edited field from one the form
+      // merely re-sends (see GATED_SOURCES below).
+      initialFormRef.current = next;
       setError('');
     }
   }, [open, party, defaultPartyType]);
@@ -430,7 +481,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
     }
 
     // PAN format check
-    if (form.pan && form.pan.length !== 10) {
+    if (form.pan && !isMasked(form.pan) && form.pan.length !== 10) {
       setError('PAN must be exactly 10 alphanumeric characters (e.g. ABCDE1234F).');
       return;
     }
@@ -443,7 +494,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
 
     // Labour specific validations
     if (isLabour) {
-      if (form.aadhaarNumber) {
+      if (form.aadhaarNumber && !isMasked(form.aadhaarNumber)) {
         const cleanAadhaar = form.aadhaarNumber.replace(/\s+/g, '');
         if (!/^\d{12}$/.test(cleanAadhaar)) {
           setError('Aadhaar Number must be a valid 12-digit numeric identifier.');
@@ -451,7 +502,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
         }
       }
 
-      if (form.dateOfBirth) {
+      if (form.dateOfBirth && !isMasked(form.dateOfBirth)) {
         const age = calculateLabourAge(form.dateOfBirth);
         if (age !== null && age < 18) {
           setError('Worker must be at least 18 years old under the Factories Act & Child Labour (Prohibition) Act.');
@@ -561,12 +612,29 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
         : {}),
     };
 
+    // An untouched masked field is not sent at all: the server would ignore it
+    // anyway, and leaving it out keeps bullets from ever reaching a request.
+    SENSITIVE_FIELDS.forEach((field) => {
+      if (isMasked(payload[field])) delete payload[field];
+    });
+
+    const initial = initialFormRef.current;
+    const untouched = (inputs) => initial && inputs.every((key) => String(form[key] ?? '') === String(initial[key] ?? ''));
+    if (isEditing && initial) {
+      Object.entries(GATED_SOURCES).forEach(([field, inputs]) => {
+        if (field in payload && untouched(inputs)) delete payload[field];
+      });
+    }
+    // The wage profile is its own guarded write (Labour edit permission); an
+    // unchanged one is not re-sent.
+    const wageChanged = !isEditing || !untouched(['dailyWageRupees', 'overtimeRateMultiplier']);
+
     try {
       const saved = isEditing
         ? await updateMutation.mutateAsync({ id: party.id, ...payload, status: form.status })
         : await createMutation.mutateAsync(payload);
 
-      if (form.partyType === PartyType.LABOUR && form.dailyWageRupees) {
+      if (form.partyType === PartyType.LABOUR && form.dailyWageRupees && wageChanged) {
         await wageMutation.mutateAsync({
           partyId: saved.id,
           dailyWagePaise: toPaise(form.dailyWageRupees),
@@ -734,8 +802,9 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                     value={form.pan}
                     onChange={(e) => handlePanChange(e.target.value)}
                     placeholder="10-char PAN"
-                    maxLength={10}
+                    maxLength={isMasked(form.pan) ? undefined : 10}
                   />
+                  <MaskedHint value={form.pan} />
                 </div>
               </div>
 
@@ -823,6 +892,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                         placeholder="Name as per Bank Account"
                         className="h-8 text-xs"
                       />
+                      <MaskedHint value={form.beneficiaryName} />
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="vendor-bank-acc" className="text-xs font-medium">Bank Account Number</Label>
@@ -833,6 +903,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                         placeholder="Account Number for NEFT / RTGS"
                         className="h-8 text-xs"
                       />
+                      <MaskedHint value={form.bankAccountNumber} />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -843,9 +914,10 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                         value={form.bankIfsc}
                         onChange={(e) => setForm({ ...form, bankIfsc: e.target.value.toUpperCase() })}
                         placeholder="e.g. SBIN0001234"
-                        maxLength={11}
+                        maxLength={isMasked(form.bankIfsc) ? undefined : 11}
                         className="h-8 text-xs"
                       />
+                      <MaskedHint value={form.bankIfsc} />
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="vendor-bank-name" className="text-xs font-medium">Bank Name</Label>
@@ -978,9 +1050,10 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                     value={form.pan}
                     onChange={(e) => handlePanChange(e.target.value)}
                     placeholder="10-char PAN"
-                    maxLength={10}
+                    maxLength={isMasked(form.pan) ? undefined : 10}
                     required
                   />
+                  <MaskedHint value={form.pan} />
                 </div>
               </div>
 
@@ -1011,6 +1084,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                         placeholder="e.g. 51001234560001001"
                         className="h-8 text-xs"
                       />
+                      <MaskedHint value={form.esicNumber} />
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="contractor-license" className="text-xs font-medium">Labor License #</Label>
@@ -1110,6 +1184,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                         placeholder="Payee name as per Bank A/C"
                         className="h-8 text-xs"
                       />
+                      <MaskedHint value={form.beneficiaryName} />
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="contractor-bank-acc" className="text-xs font-medium">Bank Account Number</Label>
@@ -1120,6 +1195,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                         placeholder="Bank Account Number"
                         className="h-8 text-xs"
                       />
+                      <MaskedHint value={form.bankAccountNumber} />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -1130,9 +1206,10 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                         value={form.bankIfsc}
                         onChange={(e) => setForm({ ...form, bankIfsc: e.target.value.toUpperCase() })}
                         placeholder="e.g. SBIN0001234"
-                        maxLength={11}
+                        maxLength={isMasked(form.bankIfsc) ? undefined : 11}
                         className="h-8 text-xs"
                       />
+                      <MaskedHint value={form.bankIfsc} />
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="contractor-bank-name" className="text-xs font-medium">Bank Name</Label>
@@ -1244,8 +1321,9 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                     value={form.pan}
                     onChange={(e) => handlePanChange(e.target.value)}
                     placeholder="10-char PAN"
-                    maxLength={10}
+                    maxLength={isMasked(form.pan) ? undefined : 10}
                   />
+                  <MaskedHint value={form.pan} />
                 </div>
               </div>
             </div>
@@ -1304,10 +1382,13 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                   <Input
                     id="labour-dob"
                     type="date"
-                    value={form.dateOfBirth}
+                    // A date input cannot show the mask, and `required` would
+                    // then block saving a form whose date was never touched.
+                    value={isMasked(form.dateOfBirth) ? '' : form.dateOfBirth}
                     onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
-                    required
+                    required={!isMasked(form.dateOfBirth)}
                   />
+                  <MaskedHint value={form.dateOfBirth} />
                 </div>
 
                 <div className="space-y-1.5">
@@ -1319,9 +1400,10 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                     value={form.aadhaarNumber}
                     onChange={(e) => setForm({ ...form, aadhaarNumber: e.target.value })}
                     placeholder="12-digit Aadhaar for biometric"
-                    maxLength={12}
+                    maxLength={isMasked(form.aadhaarNumber) ? undefined : 12}
                     required
                   />
+                  <MaskedHint value={form.aadhaarNumber} />
                 </div>
               </div>
 
@@ -1338,6 +1420,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                     placeholder="Kin / Guardian Name"
                     required
                   />
+                  <MaskedHint value={form.emergencyContactName} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="labour-emergency-phone">
@@ -1350,6 +1433,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                     placeholder="Emergency Mobile #"
                     required
                   />
+                  <MaskedHint value={form.emergencyContactPhone} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="labour-pan">PAN / Form 60 (Optional)</Label>
@@ -1358,8 +1442,9 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                     value={form.pan}
                     onChange={(e) => setForm({ ...form, pan: e.target.value.toUpperCase() })}
                     placeholder="10-char PAN (Optional)"
-                    maxLength={10}
+                    maxLength={isMasked(form.pan) ? undefined : 10}
                   />
+                  <MaskedHint value={form.pan} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="labour-contractor">Associated Contractor (Optional)</Label>
@@ -1521,6 +1606,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                             placeholder="Name as per Passbook"
                             className="h-8 text-xs"
                           />
+                          <MaskedHint value={form.beneficiaryName} />
                         </div>
                         <div className="space-y-1">
                           <Label htmlFor="labour-bank-acc" className="text-xs font-medium">Account Number</Label>
@@ -1531,6 +1617,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                             placeholder="Bank Account Number"
                             className="h-8 text-xs"
                           />
+                          <MaskedHint value={form.bankAccountNumber} />
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1541,9 +1628,10 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                             value={form.bankIfsc}
                             onChange={(e) => setForm({ ...form, bankIfsc: e.target.value.toUpperCase() })}
                             placeholder="e.g. SBIN0001234"
-                            maxLength={11}
+                            maxLength={isMasked(form.bankIfsc) ? undefined : 11}
                             className="h-8 text-xs"
                           />
+                          <MaskedHint value={form.bankIfsc} />
                         </div>
                         <div className="space-y-1">
                           <Label htmlFor="labour-bank-name" className="text-xs font-medium">Bank Name</Label>
@@ -1574,6 +1662,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                         placeholder="12-digit UAN"
                         className="h-8 text-xs"
                       />
+                      <MaskedHint value={form.uanNumber} />
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="labour-esic" className="text-xs font-medium">ESIC IP Number</Label>
@@ -1584,6 +1673,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                         placeholder="17-digit ESIC IP #"
                         className="h-8 text-xs"
                       />
+                      <MaskedHint value={form.esicIpNumber} />
                     </div>
                   </div>
                 </div>
@@ -1766,10 +1856,11 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                           value={form.pan}
                           onChange={(e) => handlePanChange(e.target.value)}
                           placeholder="10-char PAN (Mandatory)"
-                          maxLength={10}
+                          maxLength={isMasked(form.pan) ? undefined : 10}
                           required
                           className="h-8 text-xs uppercase"
                         />
+                        <MaskedHint value={form.pan} />
                       </div>
 
                       <div className="space-y-1">
@@ -1808,6 +1899,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                         placeholder="Payee name as per Bank A/C"
                         className="h-8 text-xs"
                       />
+                      <MaskedHint value={form.beneficiaryName} />
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="salesref-bank-acc" className="text-xs font-medium">Bank Account Number</Label>
@@ -1818,6 +1910,7 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                         placeholder="Account Number for NEFT / RTGS"
                         className="h-8 text-xs"
                       />
+                      <MaskedHint value={form.bankAccountNumber} />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -1828,9 +1921,10 @@ export function PartyFormDialog({ open, onOpenChange, party, defaultPartyType })
                         value={form.bankIfsc}
                         onChange={(e) => setForm({ ...form, bankIfsc: e.target.value.toUpperCase() })}
                         placeholder="e.g. SBIN0001234"
-                        maxLength={11}
+                        maxLength={isMasked(form.bankIfsc) ? undefined : 11}
                         className="h-8 text-xs"
                       />
+                      <MaskedHint value={form.bankIfsc} />
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="salesref-bank-name" className="text-xs font-medium">Bank Name</Label>

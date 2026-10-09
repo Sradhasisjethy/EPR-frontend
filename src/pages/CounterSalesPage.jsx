@@ -30,7 +30,9 @@ export default function CounterSalesPage() {
   const [cancelling, setCancelling] = useState(null);
   const { data: user } = useCurrentUser();
   const canCreate = hasPermission(user, WebPermissions.SALES_CREATE);
-  const canCancel = hasPermission(user, WebPermissions.SALES_MODIFY);
+  // Same grant the API checks: a counter sale is an invoice, and cancelling
+  // one is INVOICE_CANCEL (it was SALES_MODIFY here, which the API never used).
+  const canCancel = hasPermission(user, WebPermissions.INVOICE_CANCEL);
   const showRates = canViewRates(user);
 
   const { query, tableProps } = usePaginated(useCounterSales, {}, { sortableColumns: SORTABLE_COLUMNS });

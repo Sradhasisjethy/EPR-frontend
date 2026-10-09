@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Lock, Loader2, CheckCircle2, AlertCircle, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { useResetPassword } from '@/hooks/use-auth';
 
 export default function ResetPasswordPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const token = searchParams.get('token') || '';
+  // Read once, then taken out of the address bar. A token left in the URL ends
+  // up in browser history, in screenshots, and in the Referer header of any
+  // request the page makes — and an access log records that header.
+  const [token] = useState(() => searchParams.get('token') || '');
+  useEffect(() => {
+    if (searchParams.has('token')) setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -27,8 +33,8 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters long.');
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters long.');
       return;
     }
 

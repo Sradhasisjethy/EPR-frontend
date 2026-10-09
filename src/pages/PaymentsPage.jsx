@@ -35,6 +35,9 @@ export default function PaymentsPage() {
   const { data: user } = useCurrentUser();
   const canCreateReceipt = hasPermission(user, WebPermissions.RECEIPT_CREATE);
   const canCreatePayment = hasPermission(user, WebPermissions.PAYMENT_CREATE);
+  // Cancelling reverses posted money, a named grant apart from editing.
+  const canCancelReceipt = hasPermission(user, WebPermissions.RECEIPT_CANCEL);
+  const canCancelPayment = hasPermission(user, WebPermissions.PAYMENT_CANCEL);
   const showRates = canViewRates(user);
 
   const receipts = usePaginated(useReceipts);
@@ -119,7 +122,7 @@ export default function PaymentsPage() {
                     >
                       View
                     </button>
-                    {row.original.status === 'POSTED' && (
+                    {canCancelReceipt && row.original.status === 'POSTED' && (
                       <button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelReceipt, row.original.id, `Cancel Receipt — ${row.original.receiptNumber}`)}>Cancel</button>
                     )}
                   </div>
@@ -160,7 +163,7 @@ export default function PaymentsPage() {
                     >
                       View
                     </button>
-                    {row.original.status === 'POSTED' && (
+                    {canCancelPayment && row.original.status === 'POSTED' && (
                       <button className="text-xs text-destructive hover:underline" onClick={() => cancelWithReason(cancelPayment, row.original.id, `Cancel Payment — ${row.original.paymentNumber}`)}>Cancel</button>
                     )}
                   </div>

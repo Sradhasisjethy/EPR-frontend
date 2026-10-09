@@ -18,8 +18,40 @@ import { apiClient } from '@/lib/api-client';
 /** The filename the server chose, out of its Content-Disposition header. */
 function filenameFrom(headers, fallback) {
   const disposition = headers?.['content-disposition'] || '';
-  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
-  return match ? decodeURIComponent(match[1]) : fallback;
+  // RFC 6266: the UTF-8 `filename*` wins when both are present; the plain
+  // `filename` is an ASCII fallback and may hold a literal % that is no escape.
+  const extended = /filename\*=UTF-8''([^;]+)/i.exec(disposition);
+  if (extended) {
+    try {
+      return decodeURIComponent(extended[1].trim());
+    } catch {
+      // Malformed escape — fall through to the plain name.
+    }
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(disposition);
+  if (!plain) return fallback;
+  try {
+    return decodeURIComponent(plain[1]);
+  } catch {
+    return plain[1];
+  }
+}
+
+/**
+ * Types a browser renders without running anything. A blob: URL inherits this
+ * app's origin, and a tab navigated to one ignores the server's `attachment`
+ * and `nosniff` — so an HTML or SVG file opened that way would run as the app
+ * itself, with the user's session. Anything else is saved, never shown.
+ */
+const INLINE_TYPES = new Set(['application/pdf', 'image/png', 'image/jpeg', 'image/webp']);
+
+function saveBlobUrl(url, name) {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
 
 /**
@@ -66,16 +98,22 @@ export async function openApiDocument(path, { params } = {}) {
 
   try {
     const response = await apiClient.get(path, { params, responseType: 'blob' });
-    const url = URL.createObjectURL(response.data);
+    const declared = String(response.data?.type || '').split(';')[0].trim().toLowerCase();
+    const inline = INLINE_TYPES.has(declared);
+    // Re-wrapped with a type chosen here, so the tab renders exactly what was
+    // checked above and nothing the browser might sniff it into.
+    const blob = new Blob([response.data], { type: inline ? declared : 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
 
-    if (tab) {
+    if (tab && inline) {
+      // The new tab gets no handle back on this page.
+      tab.opener = null;
       tab.location = url;
     } else {
-      // Popup blocked: fall back to a download so the document is not simply lost.
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = '';
-      link.click();
+      // Not safe to render, or the popup was blocked: save it instead, so the
+      // document is not simply lost, and leave no empty tab behind.
+      tab?.close();
+      saveBlobUrl(url, filenameFrom(response.headers, 'document'));
     }
 
     // Long enough for the tab to have loaded it; the blob would otherwise be

@@ -6,6 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Lock, Sparkles } from 'lucide-react';
 import { useCreateFinancialYear, useUpdateFinancialYear } from '@/hooks/use-factory';
 import { toast } from 'sonner';
+import { usePermissions } from '@/hooks/use-permissions';
+import { WebPermissions } from '@/constants/enums';
+import { needsCloseGrant } from '@/lib/financial-year-rules';
 
 const computeEndDate = (start) => {
   if (!start) return '';
@@ -28,8 +31,15 @@ const suggestCode = (start) => {
 
 const emptyForm = { code: '', startDate: '', endDate: '', status: 'PLANNED' };
 
-export function FinancialYearFormDialog({ open, onOpenChange, financialYear }) {
+export function FinancialYearFormDialog({ open, onOpenChange, financialYear, otherYearIsCurrent = false }) {
   const isEditing = !!financialYear;
+  // Lifecycle moves the API reserves for FINANCIAL_YEAR_CLOSE are shown but
+  // disabled for everyone else, so the choice is visible and the reason is too.
+  const { hasPermission } = usePermissions();
+  const canCloseYears = hasPermission(WebPermissions.FINANCIAL_YEAR_CLOSE);
+  const savedStatus = financialYear ? financialYear.status || (financialYear.isCurrent ? 'ACTIVE' : 'PLANNED') : null;
+  const locked = (to) =>
+    !canCloseYears && needsCloseGrant(savedStatus, to, otherYearIsCurrent, financialYear ? !!financialYear.isCurrent : false);
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
   const createMutation = useCreateFinancialYear();
@@ -167,15 +177,20 @@ export function FinancialYearFormDialog({ open, onOpenChange, financialYear }) {
               onChange={(e) => setForm({ ...form, status: e.target.value })}
               className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm font-medium"
             >
-              <option value="PLANNED">🟣 Draft / Planned (Configuring sequence & periods)</option>
-              <option value="ACTIVE">🟢 Open / Active (Accepting general ledger postings)</option>
+              <option value="PLANNED" disabled={locked('PLANNED')}>🟣 Draft / Planned (Configuring sequence & periods)</option>
+              <option value="ACTIVE" disabled={locked('ACTIVE')}>🟢 Open / Active (Accepting general ledger postings)</option>
               {isEditing && (
                 <>
-                  <option value="SOFT_CLOSED">🟡 Closing in Progress (Operational AP/AR frozen)</option>
-                  <option value="CLOSED">🔒 Closed / Audited (Permanent read-only lock)</option>
+                  <option value="SOFT_CLOSED" disabled={locked('SOFT_CLOSED')}>🟡 Closing in Progress (Operational AP/AR frozen)</option>
+                  <option value="CLOSED" disabled={locked('CLOSED')}>🔒 Closed / Audited (Permanent read-only lock)</option>
                 </>
               )}
             </select>
+            {!canCloseYears && (
+              <p className="text-xs text-muted-foreground">
+                Closing, reopening or rolling over a year needs the financial-year close permission.
+              </p>
+            )}
           </div>
 
           <DialogFooter className="pt-2">

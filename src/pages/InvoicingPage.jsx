@@ -21,7 +21,7 @@ export default function InvoicingPage() {
   const [cancellingInvoice, setCancellingInvoice] = useState(null);
   const { data: user } = useCurrentUser();
   const canCreate = hasPermission(user, WebPermissions.INVOICE_CREATE);
-  const canCancel = hasPermission(user, WebPermissions.INVOICE_MODIFY);
+  const canCancel = hasPermission(user, WebPermissions.INVOICE_CANCEL);
   const showRates = canViewRates(user);
 
   const { query, tableProps } = usePaginated(useSalesInvoices);
