@@ -94,3 +94,22 @@ describe('RequirePermission', () => {
     expect(screen.getByText('Access Denied')).toBeInTheDocument();
   });
 });
+
+/**
+ * The DPDP privacy desk belongs to the application owner. TENANT_OWNER and
+ * PLATFORM_ADMIN pass every permission check, which is exactly why the desk is
+ * gated on the server's isPlatformOwner flag instead.
+ */
+describe('RequirePermission platformOwner', () => {
+  it('turns away an organisation\'s own owner, who passes every permission', () => {
+    asUser({ role: 'TENANT_OWNER', permissions: [], isPlatformOwner: false });
+    renderAt('/roles', <RequirePermission platformOwner />);
+    expect(screen.queryByText('role admin screen')).not.toBeInTheDocument();
+  });
+
+  it('admits the application owner whatever their role', () => {
+    asUser({ role: 'EMPLOYEE', permissions: [], isPlatformOwner: true });
+    renderAt('/roles', <RequirePermission platformOwner />);
+    expect(screen.getByText('role admin screen')).toBeInTheDocument();
+  });
+});

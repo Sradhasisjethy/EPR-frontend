@@ -97,6 +97,11 @@ const handleRateLimited = async (error) => {
   return apiClient(request);
 };
 
+const PUBLIC_PAGE = /^\/privacy(\/|$)/;
+const isPublicCall = (request) =>
+  String(request?.url || '').startsWith('/public/') ||
+  (typeof window !== 'undefined' && PUBLIC_PAGE.test(window.location.pathname));
+
 // Handle auth redirects and token refresh
 apiClient.interceptors.response.use(
   (response) => response,
@@ -104,6 +109,11 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 429) return handleRateLimited(error);
+
+    // A page anyone may open without signing in (the DPDP privacy notice) has no
+    // session to refresh. Treating its 401 as an expired session sent the visitor
+    // to /login — the Privacy Policy link on the login page bounced straight back.
+    if (isPublicCall(originalRequest)) return Promise.reject(error);
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       // If the refresh or login itself fails with 401, clear tokens and redirect to login
@@ -181,4 +191,19 @@ apiClient.interceptors.response.use(
   }
 );
 
-export { apiClient };
+/**
+ * For pages anyone may open without signing in (the DPDP privacy notice). No
+ * token, no cookies, none of the interceptors above: a public call has no
+ * session to refresh, and sending one anyway routed it through the server's
+ * session checks and the client's refresh queue. The timeout is there because
+ * a sleeping free-tier host can take most of a minute to answer, and a public
+ * page that waits silently for ever looks broken.
+ */
+const publicClient = axios.create({
+  baseURL: apiClient.defaults.baseURL,
+  withCredentials: false,
+  timeout: 30_000,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+export { apiClient, publicClient };

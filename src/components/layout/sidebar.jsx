@@ -43,6 +43,8 @@ export function Sidebar() {
   // Hide what the user cannot reach, then drop any group left with nothing in it.
   const navigation = useMemo(() => {
     const allowed = (item) => {
+      // The application owner's desks: decided by who you are, not by a grant.
+      if (item.platformOwner) return Boolean(user?.isPlatformOwner);
       if (item.anyPermissions) return hasAnyPermission(item.anyPermissions);
       if (item.permission) return hasPermission(item.permission);
       return true;

@@ -88,7 +88,8 @@ const SSO_PROVIDERS = [
 ];
 
 const FOOTER_LINKS = [
-  { label: 'Privacy Policy', feature: 'The privacy policy page' },
+  // DPDP Act: the application owner's published privacy notice.
+  { label: 'Privacy Policy', href: '/privacy' },
   { label: 'Terms of Service', feature: 'The terms of service page' },
   { label: 'Contact Support', feature: 'Support contact' },
 ];
@@ -401,11 +402,11 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-6 tall:mt-10 flex flex-wrap justify-center gap-4 tall:gap-6 text-[13px] 2xl:text-[17px]">
-            {FOOTER_LINKS.map(({ label, feature }) => (
+            {FOOTER_LINKS.map(({ label, feature, href }) => (
               <button
                 key={label}
                 type="button"
-                onClick={() => notConfigured(feature)}
+                onClick={() => (href ? navigate(href) : notConfigured(feature))}
                 className="opacity-80 hover:opacity-100 hover:text-infideep-primary transition-colors focus:outline-none focus-visible:underline"
               >
                 {label}

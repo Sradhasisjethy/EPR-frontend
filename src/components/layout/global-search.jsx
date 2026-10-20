@@ -25,6 +25,7 @@ const SEARCH_LINKS = NAVIGATION.flatMap((item) => {
       path: child.href,
       permission: child.permission ?? item.permission,
       anyPermissions: child.anyPermissions ?? item.anyPermissions,
+      platformOwner: child.platformOwner ?? item.platformOwner,
     }));
   }
   return [{
@@ -32,6 +33,7 @@ const SEARCH_LINKS = NAVIGATION.flatMap((item) => {
     path: item.href,
     permission: item.permission,
     anyPermissions: item.anyPermissions,
+    platformOwner: item.platformOwner,
   }];
 });
 
@@ -39,18 +41,19 @@ export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
-  const { hasPermission, hasAnyPermission } = usePermissions();
+  const { hasPermission, hasAnyPermission, user } = usePermissions();
   const { glassMode } = useUIStore();
 
   // Same rule the sidebar applies, so the two agree on what exists.
   const visibleLinks = useMemo(
     () =>
       SEARCH_LINKS.filter((link) => {
+        if (link.platformOwner) return Boolean(user?.isPlatformOwner);
         if (link.anyPermissions) return hasAnyPermission(link.anyPermissions);
         if (link.permission) return hasPermission(link.permission);
         return true;
       }),
-    [hasPermission, hasAnyPermission]
+    [hasPermission, hasAnyPermission, user]
   );
 
   useEffect(() => {

@@ -24,11 +24,15 @@ import { AccessDenied } from './access-denied';
  *     <Route path="/roles" element={<RolesPage />} />
  *   </Route>
  *
+ * `platformOwner` admits only the application owner's accounts (the
+ * isPlatformOwner flag the API sets from PLATFORM_OWNER_EMAILS), whatever the
+ * user's role — organisation administrators included.
+ *
  * `anyPermissions` mirrors the sidebar's rule for hub pages that show whichever
  * tabs the user can see: entry needs only one of them, and the page then filters
  * its own tabs.
  */
-export function RequirePermission({ permission, anyPermissions, children }) {
+export function RequirePermission({ permission, anyPermissions, platformOwner, children }) {
   const { hasPermission, hasAnyPermission, isLoading, user } = usePermissions();
 
   // DashboardLayout already blocks rendering until the session resolves, but a
@@ -36,7 +40,9 @@ export function RequirePermission({ permission, anyPermissions, children }) {
   // deny-by-default would otherwise flash Access Denied on every reload.
   if (isLoading || !user) return null;
 
-  const allowed = anyPermissions
+  const allowed = platformOwner
+    ? Boolean(user.isPlatformOwner)
+    : anyPermissions
     ? hasAnyPermission(anyPermissions)
     : permission
       ? hasPermission(permission)

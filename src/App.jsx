@@ -30,6 +30,8 @@ const FactoriesPage = lazy(pageLoaders.FactoriesPage);
 const ProductsPage = lazy(pageLoaders.ProductsPage);
 const PartiesPage = lazy(pageLoaders.PartiesPage);
 const AuditLogPage = lazy(pageLoaders.AuditLogPage);
+const PrivacyPage = lazy(pageLoaders.PrivacyPage);
+const PublicPrivacyPage = lazy(pageLoaders.PublicPrivacyPage);
 const MyProfilePage = lazy(pageLoaders.MyProfilePage);
 const PriceListsPage = lazy(pageLoaders.PriceListsPage);
 const InventoryPage = lazy(pageLoaders.InventoryPage);
@@ -69,6 +71,8 @@ export default function App() {
         {/* Login owns the full viewport (split brand panel + form), so it sits
             outside AuthLayout's centred-card shell rather than inside it. */}
         <Route path="/login" element={<LoginPage />} />
+        {/* DPDP Act: the application owner's notice and request form, for anyone, signed in or not. */}
+        <Route path="/privacy" element={<PublicPrivacyPage />} />
 
         <Route element={<AuthLayout />}>
           <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -154,6 +158,9 @@ export default function App() {
           </Route>
           <Route element={<RequirePermission permission={P.AUDIT_READ} />}>
             <Route path="/audit-log" element={<AuditLogPage />} />
+          </Route>
+          <Route element={<RequirePermission {...NAV_GATE['/data-protection']} />}>
+            <Route path="/data-protection" element={<PrivacyPage />} />
           </Route>
 
           {/* Masters leaves */}

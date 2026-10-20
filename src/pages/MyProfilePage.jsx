@@ -3,6 +3,7 @@ import { useUIStore } from '@/store/ui-store';
 import { cn } from '@/lib/utils';
 import { EmployeeDocumentsTab } from '@/components/employees/employee-documents-tab';
 import { AccountSecurityCard } from '@/components/auth/account-security-card';
+import { MyPrivacyCard } from '@/components/privacy/my-privacy-card';
 import { User, Mail, Shield, Building2, MapPin, Laptop, Calendar } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { DateText } from '@/components/date-text';
@@ -98,6 +99,8 @@ export default function MyProfilePage() {
       </div>
 
       <AccountSecurityCard />
+
+      <MyPrivacyCard />
     </div>
   );
 }

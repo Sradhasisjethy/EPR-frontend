@@ -107,6 +107,9 @@ export function LeadDetailDialog({ id, onOpenChange, onEdit, onQuote }) {
             {lead.requirement && <p>{lead.requirement}</p>}
             {lead.lostReason && <p className="text-rose-600 text-xs">Lost: {lead.lostReason}</p>}
             {lead.customer && <p className="text-emerald-600 text-xs">Now a customer: {lead.customer.name}</p>}
+            {lead.erasedAt && (
+              <p className="text-xs text-muted-foreground">Personal details erased on <DateText value={lead.erasedAt} /> (DPDP).</p>
+            )}
 
             {canModify && lead.isOpen && (
               <form onSubmit={logActivity} className="flex flex-wrap items-end gap-2 border-t border-border pt-3">

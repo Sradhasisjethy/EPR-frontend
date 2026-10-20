@@ -15,6 +15,7 @@ import {
   FolderOpen,
   Settings,
   Gauge,
+  Lock,
 } from 'lucide-react';
 import { WebPermissions } from './enums';
 
@@ -29,6 +30,9 @@ import { WebPermissions } from './enums';
  *   title       label in the sidebar
  *   href        route (omit for a group)
  *   children    leaves of a group
+ *   platformOwner  true for the application owner's own desks (the DPDP privacy
+ *               desk): shown only to accounts the server names in
+ *               PLATFORM_OWNER_EMAILS, never to an organisation's admins
  *   permission  optional gate; items without one are always visible, and a group
  *               disappears once every one of its children is hidden
  *   soon        true for a screen that does not exist yet — rendered disabled
@@ -171,6 +175,13 @@ export const NAVIGATION = [
     permission: WebPermissions.AUDIT_READ,
   },
   {
+    title: 'Data Protection',
+    icon: Lock,
+    href: '/data-protection',
+    // The DPDP desk belongs to the application owner, not to any organisation.
+    platformOwner: true,
+  },
+  {
     title: 'Documents',
     icon: FolderOpen,
     href: '/reports/saved?tab=document-search',
@@ -198,8 +209,8 @@ export const NAVIGATION = [
  * here to derive them from.
  */
 export const NAV_GATE = Object.fromEntries(
-  NAVIGATION.filter((item) => item.href && (item.permission || item.anyPermissions)).map((item) => [
+  NAVIGATION.filter((item) => item.href && (item.permission || item.anyPermissions || item.platformOwner)).map((item) => [
     item.href,
-    { permission: item.permission, anyPermissions: item.anyPermissions },
+    { permission: item.permission, anyPermissions: item.anyPermissions, platformOwner: item.platformOwner },
   ])
 );

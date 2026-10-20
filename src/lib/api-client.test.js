@@ -104,3 +104,31 @@ describe('rateLimitDelayMs', () => {
     expect(rateLimitDelayMs({}, now)).toBe(2_000);
   });
 });
+
+/**
+ * The DPDP privacy notice is opened from the login page by someone with no
+ * session. A 401 there used to start a token refresh, fail it, and send the
+ * visitor straight back to /login.
+ */
+describe('api-client on a public call', () => {
+  const originalAdapter = apiClient.defaults.adapter;
+  afterEach(() => {
+    apiClient.defaults.adapter = originalAdapter;
+    localStorage.clear();
+  });
+
+  it('passes a 401 from /public/* back to the page instead of refreshing or redirecting', async () => {
+    const adapter = vi.fn((config) => reply(config, 401));
+    apiClient.defaults.adapter = adapter;
+    const post = vi.spyOn(axios, 'post');
+    localStorage.setItem('infideep-refresh-token', 'refresh');
+
+    const err = await apiClient.get('/public/privacy').catch((e) => e);
+
+    expect(err.response.status).toBe(401);
+    expect(adapter).toHaveBeenCalledTimes(1);
+    expect(post).not.toHaveBeenCalled();
+    expect(localStorage.getItem('infideep-refresh-token')).toBe('refresh');
+    post.mockRestore();
+  });
+});

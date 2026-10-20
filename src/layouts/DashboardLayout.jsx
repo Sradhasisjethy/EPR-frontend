@@ -7,6 +7,7 @@ import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
 import { usePenHover } from '@/hooks/use-pen-hover';
 import { InfideepLogo } from '@/components/auth/infideep-logo';
 import { TableSkeleton } from '@/components/ui/skeleton';
+import { NoticeAckDialog } from '@/components/privacy/notice-ack-dialog';
 import { preloadPages } from '@/pages/page-loaders';
 import { loadListHooks, prefetchLists } from '@/lib/list-prefetch';
 
@@ -52,6 +53,8 @@ export function DashboardLayout() {
 
   return (
     <AppShell>
+      {/* DPDP s.5: each user is shown the privacy notice once per version. */}
+      <NoticeAckDialog />
       {/* Pages are code-split (see App.jsx). While a page's chunk downloads the
           shell stays and the content area shows the same skeleton the page
           itself shows while its first query is in flight, so the two waits
