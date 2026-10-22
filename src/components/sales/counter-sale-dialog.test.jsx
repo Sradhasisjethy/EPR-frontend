@@ -485,4 +485,94 @@ describe('CounterSaleDialog', () => {
     // The grand total still reads as the amount to collect.
     expect(screen.getByText('₹63,720.00')).toBeInTheDocument();
   });
+
+  it('splits one sale across cash and UPI, and sends both tenders on one invoice', async () => {
+    const user = userEvent.setup();
+    open();
+    await fillBasket(user);
+    await user.type(screen.getByPlaceholderText('Buyer’s name'), 'Ramesh Sahoo');
+    await waitFor(() => expect(screen.getByRole('button', { name: /Take ₹11,800.00/ })).toBeEnabled());
+
+    // Half in cash, half by UPI — ₹5,900 each against the ₹11,800 bill.
+    await user.click(screen.getByRole('button', { name: /Split payment/ }));
+    const cashAmount = screen.getByLabelText('Amount (payment 1)');
+    await user.clear(cashAmount);
+    await user.type(cashAmount, '5900');
+    await user.selectOptions(screen.getByLabelText('Payment method 2'), 'UPI');
+    await user.type(screen.getByLabelText('Amount (payment 2)'), '5900');
+    await user.type(screen.getByLabelText('Reference (payment 2)'), 'UPI-UTR-42');
+
+    // Settled exactly, so the button asks for the full figure again.
+    const takeButton = await screen.findByRole('button', { name: /^Take ₹11,800.00$/ });
+    await user.click(takeButton);
+
+    await waitFor(() => {
+      const sale = apiClient.post.mock.calls.find(([url]) => url === '/retail/counter-sales');
+      expect(sale).toBeTruthy();
+      expect(sale[1].payment.modes).toEqual([
+        { mode: 'CASH', amountPaise: 590000 },
+        { mode: 'UPI', amountPaise: 590000, reference: 'UPI-UTR-42' },
+      ]);
+    });
+  });
+
+  it('takes a part-payment and says how much goes on credit', async () => {
+    const user = userEvent.setup();
+    open();
+    await fillBasket(user);
+    await user.type(screen.getByPlaceholderText('Buyer’s name'), 'Ramesh Sahoo');
+    await waitFor(() => expect(screen.getByRole('button', { name: /Take ₹11,800.00/ })).toBeEnabled());
+
+    const amount = screen.getByLabelText('Amount (payment 1)');
+    await user.clear(amount);
+    await user.type(amount, '5000');
+
+    // The live figures and the button both state the shortfall.
+    expect(screen.getByText(/Remaining due/i)).toBeInTheDocument();
+    const takeButton = screen.getByRole('button', { name: /Take ₹5,000.00 — ₹6,800.00 on credit/ });
+    await user.click(takeButton);
+
+    await waitFor(() => {
+      const sale = apiClient.post.mock.calls.find(([url]) => url === '/retail/counter-sales');
+      expect(sale[1].payment.modes).toEqual([{ mode: 'CASH', amountPaise: 500000 }]);
+    });
+  });
+
+  it('refuses to collect more than the bill', async () => {
+    const user = userEvent.setup();
+    open();
+    await fillBasket(user);
+    await user.type(screen.getByPlaceholderText('Buyer’s name'), 'Ramesh Sahoo');
+    await waitFor(() => expect(screen.getByRole('button', { name: /Take ₹11,800.00/ })).toBeEnabled());
+
+    const amount = screen.getByLabelText('Amount (payment 1)');
+    await user.clear(amount);
+    await user.type(amount, '20000');
+
+    expect(screen.getByText(/Over by/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Take ₹20,000.00/ })).toBeDisabled();
+    expect(apiClient.post.mock.calls.find(([url]) => url === '/retail/counter-sales')).toBeUndefined();
+  });
+
+  it('will not send a cheque without its number', async () => {
+    const user = userEvent.setup();
+    open();
+    await fillBasket(user);
+    await user.type(screen.getByPlaceholderText('Buyer’s name'), 'Ramesh Sahoo');
+    await waitFor(() => expect(screen.getByRole('button', { name: /Take ₹11,800.00/ })).toBeEnabled());
+
+    await user.selectOptions(screen.getByLabelText('Payment method 1'), 'CHEQUE');
+    await user.click(screen.getByRole('button', { name: /Take ₹11,800.00/ }));
+
+    expect(await screen.findByText(/cheque payment needs the cheque number/i)).toBeInTheDocument();
+    expect(apiClient.post.mock.calls.find(([url]) => url === '/retail/counter-sales')).toBeUndefined();
+
+    // With the number given, the sale goes through and carries it.
+    await user.type(screen.getByLabelText('Cheque number (payment 1)'), '000417');
+    await user.click(screen.getByRole('button', { name: /Take ₹11,800.00/ }));
+    await waitFor(() => {
+      const sale = apiClient.post.mock.calls.find(([url]) => url === '/retail/counter-sales');
+      expect(sale[1].payment.modes[0]).toEqual({ mode: 'CHEQUE', amountPaise: 1180000, chequeNumber: '000417' });
+    });
+  });
 });

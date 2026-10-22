@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,14 +11,18 @@ import { PartyType } from '@/constants/enums';
 import { toPaise, formatINR, fromPaise } from '@/lib/money';
 import { today } from '@/lib/date-format';
 import { toast } from 'sonner';
-import { MoneyAccountSelect } from '@/components/ledger/money-account-select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
-
-const emptyMode = { mode: 'CASH', amountRupees: '' };
+import {
+  PaymentModesEditor,
+  emptyPaymentMode,
+  paymentModesTotalPaise,
+  paymentModesError,
+  paymentModesToPayload,
+} from '@/components/payments/payment-modes-editor';
 
 export function ReceiptFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState({ factoryId: '', customerPartyId: '', receiptDate: '' });
-  const [modes, setModes] = useState([{ ...emptyMode }]);
+  const [modes, setModes] = useState([emptyPaymentMode()]);
   const [allocations, setAllocations] = useState({}); // invoiceId -> amountRupees
   const [error, setError] = useState('');
 
@@ -30,7 +33,7 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
   useEffect(() => {
     if (open) {
       setForm({ factoryId: '', customerPartyId: '', receiptDate: today() });
-      setModes([{ ...emptyMode }]);
+      setModes([emptyPaymentMode()]);
       setAllocations({});
       setError('');
     }
@@ -38,9 +41,14 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
 
   useEffect(() => setAllocations({}), [form.customerPartyId]);
 
-  const updateMode = (i, field, value) => setModes((prev) => prev.map((m, idx) => (idx === i ? { ...m, [field]: value } : m)));
-  const addMode = () => setModes((prev) => [...prev, { ...emptyMode }]);
-  const removeMode = (i) => setModes((prev) => prev.filter((_, idx) => idx !== i));
+  const updateFirstModeAmount = (amountRupees) =>
+    setModes((prev) => prev.map((m, idx) => (idx === 0 ? { ...m, amountRupees } : m)));
+
+  // Live reconciliation the server will enforce again: the receipt's total is
+  // the sum of its modes, and no more than that may be allocated to invoices.
+  const receivedPaise = paymentModesTotalPaise(modes);
+  const allocatedPaise = Object.values(allocations).reduce((sum, amountRupees) => sum + toPaise(amountRupees || 0), 0);
+  const onAccountPaise = receivedPaise - allocatedPaise;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -49,14 +57,19 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
       setError('Choose the customer this money came from.');
       return;
     }
-    if (modes.some((m) => !m.amountRupees)) {
-      setError('Every payment mode needs an amount.');
+    const modesProblem = paymentModesError(modes);
+    if (modesProblem) {
+      setError(modesProblem);
+      return;
+    }
+    if (allocatedPaise > receivedPaise) {
+      setError(`You have allocated ${formatINR(allocatedPaise)} but only received ${formatINR(receivedPaise)}.`);
       return;
     }
 
     const payload = {
       ...form,
-      modes: modes.map((m) => ({ mode: m.mode, amountPaise: toPaise(m.amountRupees), ...(m.accountId ? { accountId: m.accountId } : {}) })),
+      modes: paymentModesToPayload(modes),
       allocations: Object.entries(allocations)
         .filter(([, amountRupees]) => amountRupees)
         .map(([invoiceId, amountRupees]) => ({ invoiceId, allocatedAmountPaise: toPaise(amountRupees) })),
@@ -103,27 +116,20 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Payment Modes</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addMode}><Plus size={14} /> Add Mode</Button>
+          <PaymentModesEditor modes={modes} onChange={setModes} label="Payment Modes" addLabel="Add Mode" />
+
+          {(receivedPaise > 0 || allocatedPaise > 0) && (
+            <div className="flex flex-wrap gap-x-5 gap-y-0.5 text-xs text-muted-foreground px-0.5">
+              <span>Received: <span className="font-medium text-foreground tabular-nums">{formatINR(receivedPaise)}</span></span>
+              <span>Allocated to invoices: <span className="font-medium text-foreground tabular-nums">{formatINR(allocatedPaise)}</span></span>
+              {onAccountPaise > 0 && (
+                <span>On account (unallocated): <span className="font-medium text-foreground tabular-nums">{formatINR(onAccountPaise)}</span></span>
+              )}
+              {onAccountPaise < 0 && (
+                <span className="text-destructive font-medium">Allocated {formatINR(-onAccountPaise)} more than received</span>
+              )}
             </div>
-            {modes.map((m, i) => (
-              <div key={i} className="flex gap-2 items-center [&>input]:flex-1 [&>select:first-child]:w-[140px]">
-                <select value={m.mode} onChange={(e) => setModes((prev) => prev.map((x, idx) => (idx === i ? { ...x, mode: e.target.value, accountId: undefined } : x)))} className="h-9 px-2 rounded-md border border-input bg-background text-sm">
-                  <option value="CASH">Cash</option>
-                  <option value="UPI">UPI</option>
-                  <option value="BANK">Bank Transfer</option>
-                  <option value="CHEQUE">Cheque</option>
-                </select>
-                <Input type="number" step="0.01" min="0" placeholder="Amount (₹)" value={m.amountRupees} onChange={(e) => updateMode(i, 'amountRupees', e.target.value)} required />
-                <MoneyAccountSelect mode={m.mode} value={m.accountId} onChange={(v) => updateMode(i, 'accountId', v)} aria-label={`Deposited to (mode ${i + 1})`} />
-                <button type="button" onClick={() => removeMode(i)} disabled={modes.length === 1} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive disabled:opacity-30">
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
+          )}
 
           {form.customerPartyId && (invoicesData?.rows || []).length > 0 && (
             <div className="space-y-2">
@@ -161,7 +167,7 @@ export function ReceiptFormDialog({ open, onOpenChange }) {
                           const amt = fromPaise(inv.outstandingPaise ?? inv.totalPaise);
                           setAllocations((prev) => ({ ...prev, [inv.id]: amt }));
                           if (!modes[0]?.amountRupees) {
-                            updateMode(0, 'amountRupees', amt);
+                            updateFirstModeAmount(amt);
                           }
                         }}
                       >

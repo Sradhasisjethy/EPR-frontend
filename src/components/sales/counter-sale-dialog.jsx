@@ -12,20 +12,24 @@ import { useParties } from '@/hooks/use-parties';
 import { useCounterSaleQuote, useCreateCounterSale } from '@/hooks/use-counter-sales';
 import { useOverrideReasonCodes } from '@/hooks/use-bundles';
 import { PartyType, ProductType } from '@/constants/enums';
-import { formatINR, toPaise } from '@/lib/money';
+import { formatINR, toPaise, fromPaise } from '@/lib/money';
 import { today } from '@/lib/date-format';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import {
+  PaymentModesEditor,
+  emptyPaymentMode,
+  paymentModesTotalPaise,
+  paymentModesError,
+  paymentModesToPayload,
+} from '@/components/payments/payment-modes-editor';
 
 const emptyLine = { productId: '', quantity: '', rateRupees: '', discountPercent: '' };
 const WALK_IN = '__walk_in__';
 
-/** Every way a counter sale can be settled, including not yet. */
-const PAYMENT_OPTIONS = [
-  { value: 'CASH', label: 'Cash' },
-  { value: 'UPI', label: 'UPI' },
-  { value: 'BANK', label: 'Bank' },
-  { value: 'CHEQUE', label: 'Cheque' },
+/** Collect now, or raise the invoice and leave the whole amount outstanding. */
+const SETTLEMENT_OPTIONS = [
+  { value: 'COLLECT', label: 'Collect payment' },
   { value: 'CREDIT', label: 'On credit' },
 ];
 
@@ -51,7 +55,12 @@ export function CounterSaleDialog({ open, onOpenChange }) {
   const [lines, setLines] = useState([{ ...emptyLine }]);
   const [delivering, setDelivering] = useState(false);
   const [delivery, setDelivery] = useState({ vehicleNumber: '', driverName: '' });
-  const [paymentMode, setPaymentMode] = useState('CASH');
+  const [settlement, setSettlement] = useState('COLLECT');
+  // The split payment: one row per method. Until the clerk touches an amount,
+  // the single row follows the quoted total, so the common case — full payment
+  // by one method — needs no typing at all.
+  const [payModes, setPayModes] = useState([emptyPaymentMode()]);
+  const [payTouched, setPayTouched] = useState(false);
   const [error, setError] = useState('');
   // Which accessory is being taken off, and on what grounds. Asked inline
   // rather than in a second modal — a dialog on top of a dialog at a till is
@@ -66,7 +75,7 @@ export function CounterSaleDialog({ open, onOpenChange }) {
   const reasonCodes = (Array.isArray(reasonCodesData) ? reasonCodesData : []).filter((r) => r.isActive !== false);
 
   const isWalkIn = form.customerPartyId === WALK_IN;
-  const collecting = paymentMode !== 'CREDIT';
+  const collecting = settlement === 'COLLECT';
   const factories = factoryData?.rows || [];
 
   useEffect(() => {
@@ -76,7 +85,9 @@ export function CounterSaleDialog({ open, onOpenChange }) {
     setLines([{ ...emptyLine }]);
     setDelivering(false);
     setDelivery({ vehicleNumber: '', driverName: '' });
-    setPaymentMode('CASH');
+    setSettlement('COLLECT');
+    setPayModes([emptyPaymentMode()]);
+    setPayTouched(false);
     setError('');
     setRemoving(null);
     setRemoveForm({ reasonCode: '', reasonNote: '' });
@@ -136,6 +147,19 @@ export function CounterSaleDialog({ open, onOpenChange }) {
   });
 
   const totalPaise = quote ? Number(quote.totalPaise) : null;
+
+  // Until an amount is typed, the single payment row tracks the quoted total,
+  // so "Take ₹X" works straight away and keeps up as items change. The first
+  // manual edit (or added row) hands control to the clerk — a split in
+  // progress must not be overwritten by a re-quote.
+  useEffect(() => {
+    if (!payTouched && totalPaise !== null) {
+      setPayModes((prev) => [{ ...prev[0], amountRupees: String(fromPaise(totalPaise)) }]);
+    }
+  }, [totalPaise, payTouched]);
+
+  const receivedPaise = paymentModesTotalPaise(payModes);
+  const remainingPaise = totalPaise === null ? null : totalPaise - receivedPaise;
 
   /**
    * The priced lines, with each accessory attached to the product that brought
@@ -210,6 +234,16 @@ export function CounterSaleDialog({ open, onOpenChange }) {
     if (isWalkIn && !walkIn.name.trim()) return setError('Enter the buyer’s name, or pick an existing customer.');
     if (delivering && !delivery.vehicleNumber.trim()) return setError('A vehicle number is required for a delivery.');
     if (collecting && totalPaise === null) return setError('Waiting for the total — try again in a moment.');
+    if (collecting) {
+      const modesProblem = paymentModesError(payModes);
+      if (modesProblem) return setError(modesProblem);
+      // Over the total is refused here as it is on the server — the counter has
+      // no advance flow, so the difference is change, not a recordable receipt.
+      if (receivedPaise > totalPaise) {
+        return setError(`That takes ${formatINR(receivedPaise)} against a bill of ${formatINR(totalPaise)} — give change instead of over-collecting.`);
+      }
+      if (receivedPaise === 0) return setError('Enter the amount received, or switch to "On credit".');
+    }
 
     try {
       const sale = await createSale.mutateAsync({
@@ -220,15 +254,19 @@ export function CounterSaleDialog({ open, onOpenChange }) {
         delivery: delivering
           ? { vehicleNumber: delivery.vehicleNumber.trim(), driverName: delivery.driverName.trim() || undefined }
           : null,
-        // The server's own quoted total, not a figure retyped here — a counter
-        // sale is settled in full or it is a credit sale.
-        payment: collecting ? { modes: [{ mode: paymentMode, amountPaise: totalPaise }] } : null,
+        // The split as entered. Anything short of the server's own total stays
+        // outstanding against the buyer — the server allocates exactly what was
+        // tendered and refuses anything over.
+        payment: collecting ? { modes: paymentModesToPayload(payModes) } : null,
       });
 
+      const owed = Number(sale.invoice.totalPaise) - (collecting ? receivedPaise : 0);
       toast.success(`Sale complete — ${sale.invoice.invoiceNumber}`, {
-        description: collecting
-          ? `${formatINR(sale.invoice.totalPaise)} received from ${sale.customer.name}`
-          : `${formatINR(sale.invoice.totalPaise)} outstanding from ${sale.customer.name}`,
+        description: !collecting
+          ? `${formatINR(sale.invoice.totalPaise)} outstanding from ${sale.customer.name}`
+          : owed > 0
+            ? `${formatINR(receivedPaise)} received from ${sale.customer.name} — ${formatINR(owed)} still due`
+            : `${formatINR(sale.invoice.totalPaise)} received from ${sale.customer.name}`,
       });
       onOpenChange(false);
     } catch (err) {
@@ -517,21 +555,22 @@ export function CounterSaleDialog({ open, onOpenChange }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
             <div className="space-y-3">
-              {/* One control instead of a checkbox plus a dropdown: at a till
-                  every option should be one tap away, including not taking the
-                  money at all. */}
+              {/* Collect or credit first; the split editor below says how the
+                  money arrives. Several methods can settle one bill — cash and
+                  UPI for the same invoice is one sale, one invoice, one receipt
+                  with two tenders. */}
               <div className="space-y-1.5">
                 <Label>Payment</Label>
                 <div className="flex flex-wrap gap-1.5" role="group" aria-label="Payment">
-                  {PAYMENT_OPTIONS.map((opt) => (
+                  {SETTLEMENT_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
-                      aria-pressed={paymentMode === opt.value}
-                      onClick={() => setPaymentMode(opt.value)}
+                      aria-pressed={settlement === opt.value}
+                      onClick={() => setSettlement(opt.value)}
                       className={cn(
                         'px-3 h-9 rounded-md border text-sm transition-colors',
-                        paymentMode === opt.value
+                        settlement === opt.value
                           ? 'border-primary bg-primary/10 text-primary font-medium'
                           : 'border-input hover:bg-muted/60'
                       )}
@@ -546,6 +585,19 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                   </p>
                 )}
               </div>
+
+              {collecting && (
+                <PaymentModesEditor
+                  modes={payModes}
+                  onChange={(next) => {
+                    setPayModes(next);
+                    setPayTouched(true);
+                  }}
+                  duePaise={totalPaise}
+                  label="Received as"
+                  addLabel="Split payment"
+                />
+              )}
 
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
@@ -602,14 +654,19 @@ export function CounterSaleDialog({ open, onOpenChange }) {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={createSale.isPending || (collecting && totalPaise === null)}>
+            <Button
+              type="submit"
+              disabled={createSale.isPending || (collecting && (totalPaise === null || receivedPaise > totalPaise))}
+            >
               {createSale.isPending
                 ? 'Completing…'
                 : !collecting
                   ? 'Complete on credit'
-                  : totalPaise !== null
-                    ? `Take ${formatINR(totalPaise)}`
-                    : 'Complete Sale'}
+                  : totalPaise === null
+                    ? 'Complete Sale'
+                    : remainingPaise > 0 && receivedPaise > 0
+                      ? `Take ${formatINR(receivedPaise)} — ${formatINR(remainingPaise)} on credit`
+                      : `Take ${formatINR(receivedPaise || totalPaise)}`}
             </Button>
           </DialogFooter>
         </form>

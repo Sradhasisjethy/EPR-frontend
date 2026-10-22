@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreateEmployee, useUpdateEmployee } from '@/hooks/use-employees';
 import { useOrganizations, useOffices, useDepartments } from '@/hooks/use-organization';
+import { useFactories } from '@/hooks/use-factory';
 import { useRoles } from '@/hooks/use-roles';
 import { EmployeeType, EmployeeStatus, SystemRoles } from '@/constants/enums';
 import { toast } from 'sonner';
@@ -24,6 +25,7 @@ const emptyForm = {
   firstName: '',
   lastName: '',
   organizationId: '',
+  factoryIds: [],
   officeId: '',
   departmentId: '',
   employeeType: EmployeeType.FULL_TIME,
@@ -63,6 +65,13 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
   const [error, setError] = useState('');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const { data: orgData } = useOrganizations({ page: 1, limit: 100 }, { enabled: open });
+  // Only the selected organisation's plants are offered, and the server
+  // additionally restricts the list to plants the current administrator may
+  // act on — a plant-scoped admin cannot hand out plants beyond their own.
+  const { data: factoryData } = useFactories(
+    { page: 1, limit: 100, organizationId: form.organizationId },
+    { enabled: open && !!form.organizationId }
+  );
   const { data: offData } = useOffices({ page: 1, limit: 100 }, { enabled: open });
   const { data: deptData } = useDepartments({ page: 1, limit: 100 }, { enabled: open });
   const { data: rolesData } = useRoles({ page: 1, limit: 100 }, { enabled: open });
@@ -80,6 +89,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
               firstName: employee.firstName || '',
               lastName: employee.lastName || '',
               organizationId: employee.organizationId || '',
+              factoryIds: (employee.UserFactories || []).map((uf) => uf.factoryId),
               officeId: employee.officeId || '',
               departmentId: employee.departmentId || '',
               employeeType: employee.employeeType || EmployeeType.FULL_TIME,
@@ -154,6 +164,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
         firstName: form.firstName,
         lastName: form.lastName,
         organizationId: form.organizationId || null,
+        factoryIds: form.factoryIds,
         officeId: form.officeId || null,
         departmentId: form.departmentId || null,
         employeeType: form.employeeType,
@@ -188,6 +199,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
         firstName: form.firstName,
         lastName: form.lastName,
         organizationId: form.organizationId || null,
+        factoryIds: form.factoryIds,
         officeId: form.officeId || null,
         departmentId: form.departmentId || null,
         employeeType: form.employeeType,
@@ -215,8 +227,29 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
   };
 
   const organizations = orgData?.rows || [];
+  const factories = factoryData?.rows || [];
   const offices = offData?.rows || [];
   const departments = deptData?.rows || [];
+
+  // A different organisation means a different set of plants, so the previous
+  // selection cannot carry over — the server refuses a factory outside the
+  // selected organisation in any case.
+  const handleOrganizationChange = (organizationId) =>
+    setForm((prev) => ({ ...prev, organizationId, factoryIds: organizationId === prev.organizationId ? prev.factoryIds : [] }));
+
+  const toggleFactory = (factoryId) =>
+    setForm((prev) => ({
+      ...prev,
+      factoryIds: prev.factoryIds.includes(factoryId)
+        ? prev.factoryIds.filter((id) => id !== factoryId)
+        : [...prev.factoryIds, factoryId],
+    }));
+
+  // Assignments the current administrator cannot see (plants outside their own
+  // scope) are preserved rather than silently dropped from the submission.
+  const hiddenAssignments = isEditing && factoryData
+    ? form.factoryIds.filter((id) => !factories.some((f) => f.id === id)).length
+    : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -403,7 +436,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
               <select
                 id="emp-org"
                 value={form.organizationId}
-                onChange={(e) => setForm({ ...form, organizationId: e.target.value })}
+                onChange={(e) => handleOrganizationChange(e.target.value)}
                 className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
               >
                 <option value="">None</option>
@@ -440,6 +473,48 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }) {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Factory / plant scope (BR-29): which plants this user may see and act on */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label>Factory / Plant Access</Label>
+              <span className="text-[10px] text-muted-foreground">Data scope</span>
+            </div>
+            {!form.organizationId ? (
+              <p className="text-xs text-muted-foreground border border-dashed border-border rounded-md px-3 py-2.5">
+                Select an organization to choose the plants this employee can access.
+              </p>
+            ) : factories.length === 0 ? (
+              <p className="text-xs text-muted-foreground border border-dashed border-border rounded-md px-3 py-2.5">
+                No plants are available for this organization (or none within your own plant access).
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2 border border-input rounded-md px-3 py-2.5 bg-background">
+                {factories.map((factory) => (
+                  <label
+                    key={factory.id}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs cursor-pointer transition-colors ${
+                      form.factoryIds.includes(factory.id)
+                        ? 'bg-primary/10 border-primary/40 text-primary font-medium'
+                        : 'border-input text-muted-foreground hover:bg-accent'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="accent-current"
+                      checked={form.factoryIds.includes(factory.id)}
+                      onChange={() => toggleFactory(factory.id)}
+                    />
+                    {factory.name}
+                  </label>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              The employee sees only data for the selected plants. Leaving all unchecked means no plant data is visible.
+              {hiddenAssignments > 0 && ` ${hiddenAssignments} existing assignment(s) outside your own access are kept unchanged.`}
+            </p>
           </div>
 
           <div className={`grid grid-cols-1 gap-4 ${isEditing ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
