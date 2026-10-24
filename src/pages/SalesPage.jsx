@@ -42,9 +42,10 @@ export default function SalesPage() {
   });
 
   const tabKeys = tabs.map((tab) => tab.key);
-  // Sales Orders stays the landing tab even though Quotations is listed first:
-  // the tab order follows the flow, the default follows what people open.
-  const [activeTab, setActiveTab] = useTabParam(tabKeys, tabKeys.includes('sales-orders') ? 'sales-orders' : tabKeys[0] || 'sales-orders');
+  // Counter Sales is the landing tab even though the flow tabs are listed
+  // first: the tab order follows the flow, the default follows what people
+  // open.
+  const [activeTab, setActiveTab] = useTabParam(tabKeys, tabKeys.includes('counter-sales') ? 'counter-sales' : tabKeys[0] || 'counter-sales');
 
   return (
     <div className="space-y-6">

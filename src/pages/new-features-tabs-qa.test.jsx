@@ -72,11 +72,11 @@ describe('Sales tabs', () => {
     }
   });
 
-  it('still lands on Sales Orders, as it always did', async () => {
-    routes['/sales/orders'] = list([]);
+  it('lands on Counter Sales', async () => {
+    routes['/counter-sales'] = list([]);
     render(<SalesPage />);
     await waitFor(() => {
-      const tab = screen.getByRole('button', { name: 'Sales Orders' });
+      const tab = screen.getByRole('button', { name: 'Counter Sales' });
       expect(tab.className).toMatch(/bg-primary/);
     });
   });
