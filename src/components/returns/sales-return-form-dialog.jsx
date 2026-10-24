@@ -18,7 +18,10 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const SELECT = 'w-full min-w-0 h-9 px-3 rounded-md border border-input bg-background text-sm';
-const ROW = 'grid grid-cols-[minmax(0,1fr)_80px_110px_90px_110px] gap-2';
+// Two-up below sm — the fixed columns need ~420px before the item name gets
+// any, which on a phone squeezed the name to nothing. The header only exists
+// where the columns do; each cell carries its own mini-label instead.
+const ROW = 'grid grid-cols-2 sm:grid-cols-[minmax(0,1fr)_80px_110px_90px_110px] gap-2';
 
 /** What this customer bought at this factory, and how much of it can still come back. */
 function useReturnableItems({ factoryId, customerPartyId }) {
@@ -213,7 +216,7 @@ export function SalesReturnFormDialog({ open, onOpenChange }) {
 
               {invoice && (
                 <div className="rounded-lg border border-border overflow-hidden">
-                  <div className={cn(ROW, 'px-3 py-2 bg-muted/40 text-xs font-medium text-muted-foreground')}>
+                  <div className={cn(ROW, 'hidden sm:grid px-3 py-2 bg-muted/40 text-xs font-medium text-muted-foreground')}>
                     <span>Item</span>
                     <span className="text-right">Sold</span>
                     <span className="text-right">Rate / unit</span>
@@ -225,24 +228,36 @@ export function SalesReturnFormDialog({ open, onOpenChange }) {
                     const tooMany = Number(value || 0) > line.returnableQty;
                     return (
                       <div key={line.salesInvoiceLineId} className={cn(ROW, 'px-3 py-1.5 items-center border-t border-border/50 text-sm')}>
-                        <span className="truncate">
+                        <span className="col-span-2 sm:col-span-1 truncate">
                           {line.productName}
                           <span className="block text-xs text-muted-foreground">
                             invoiced {line.soldQty} × {formatINR(line.ratePaise)} = {formatINR(line.soldValuePaise ?? Math.round(line.soldQty * line.ratePaise))}
                             {line.returnedQty > 0 && ` · ${line.returnedQty} already back`}
                           </span>
                         </span>
-                        <span className="text-right tabular-nums">{line.soldQty}</span>
-                        <span className="text-right tabular-nums">{formatINR(line.ratePaise)}</span>
-                        <span className={cn('text-right tabular-nums', line.returnableQty === 0 && 'text-muted-foreground')}>{line.returnableQty}</span>
-                        <Input
-                          aria-label={`Quantity returned of ${line.productName}`}
-                          type="number" step="0.01" min="0" max={line.returnableQty}
-                          disabled={line.returnableQty === 0}
-                          className={cn('h-8 text-right', tooMany && 'border-destructive text-destructive')}
-                          value={value}
-                          onChange={(e) => setPick(line.salesInvoiceLineId, e.target.value)}
-                        />
+                        <span className="text-right tabular-nums">
+                          <span className="sm:hidden block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Sold</span>
+                          {line.soldQty}
+                        </span>
+                        <span className="text-right tabular-nums">
+                          <span className="sm:hidden block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Rate / unit</span>
+                          {formatINR(line.ratePaise)}
+                        </span>
+                        <span className={cn('text-right tabular-nums', line.returnableQty === 0 && 'text-muted-foreground')}>
+                          <span className="sm:hidden block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Returnable</span>
+                          {line.returnableQty}
+                        </span>
+                        <span className="text-right">
+                          <span className="sm:hidden mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Coming back</span>
+                          <Input
+                            aria-label={`Quantity returned of ${line.productName}`}
+                            type="number" step="0.01" min="0" max={line.returnableQty}
+                            disabled={line.returnableQty === 0}
+                            className={cn('h-8 text-right', tooMany && 'border-destructive text-destructive')}
+                            value={value}
+                            onChange={(e) => setPick(line.salesInvoiceLineId, e.target.value)}
+                          />
+                        </span>
                       </div>
                     );
                   })}
@@ -278,10 +293,10 @@ export function SalesReturnFormDialog({ open, onOpenChange }) {
               <>
                 <Label>Items not on an invoice (creates a new stock lot — BR-01)</Label>
                 {manualLines.map((line, index) => (
-                  <div key={line.key} className="grid grid-cols-[minmax(0,1fr)_90px_120px_32px] gap-2 items-center">
+                  <div key={line.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_32px] sm:grid-cols-[minmax(0,1fr)_90px_120px_32px] gap-2 items-center">
                     <select
                       aria-label={`Product for extra line ${index + 1}`}
-                      className="h-9 w-full min-w-0 px-2 rounded-md border border-input bg-background text-sm truncate"
+                      className="col-span-2 sm:col-span-1 h-9 w-full min-w-0 px-2 rounded-md border border-input bg-background text-sm truncate"
                       value={line.productId} onChange={(e) => setManual(line.key, { productId: e.target.value })}
                     >
                       <option value="" disabled>Product</option>
@@ -292,7 +307,7 @@ export function SalesReturnFormDialog({ open, onOpenChange }) {
                     <button
                       type="button" aria-label={`Remove extra line ${index + 1}`}
                       onClick={() => setManualLines((ls) => ls.filter((l) => l.key !== line.key))}
-                      className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                      className="col-start-3 row-start-1 sm:col-start-auto sm:row-start-auto p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 size={16} />
                     </button>

@@ -367,7 +367,13 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                 invisible below the fold. The header's corners are rounded
                 directly instead, which is all overflow-hidden was buying. */}
             <div className="rounded-lg border border-border">
-              <div className="grid grid-cols-[minmax(0,1fr)_80px_104px_76px_116px_36px] gap-2 px-3 py-2 rounded-t-lg bg-muted/50 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              {/* The six fixed columns need ~450px before the product column
+                  gets anything, so on a phone the picker collapsed to its
+                  icon and Taxable fell off-screen. Below sm each line wraps
+                  instead — product + remove, then the numbers two-up with
+                  their own mini-labels — and this header only exists where
+                  the columns do. */}
+              <div className="hidden sm:grid grid-cols-[minmax(0,1fr)_80px_104px_76px_116px_36px] gap-2 px-3 py-2 rounded-t-lg bg-muted/50 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 <span>Product</span>
                 <span className="text-right">Qty</span>
                 <span className="text-right">Rate</span>
@@ -381,45 +387,63 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                   const group = pricedFor(line.productId);
                   return (
                     <div key={i} className="px-3 py-2.5 space-y-1.5">
-                      <div className="grid grid-cols-[minmax(0,1fr)_80px_104px_76px_116px_36px] gap-2 items-center">
-                        <ProductPicker
-                          value={line.productId}
-                          onChange={(id) => updateLine(i, 'productId', id)}
-                          filters={{ productType: ProductType.FINISHED_GOOD, status: 'active' }}
-                          placeholder="Search products…"
-                        />
-                        <Input
-                          type="number" step="0.01" min="0" placeholder="Qty" className="text-right"
-                          value={line.quantity} onChange={(e) => updateLine(i, 'quantity', e.target.value)}
-                        />
+                      {/* Below sm: product + remove on the first line, then the
+                          numbers two-up with mini-labels. Disc % restarts the
+                          row so nothing auto-flows into the narrow remove
+                          column. */}
+                      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_36px] sm:grid-cols-[minmax(0,1fr)_80px_104px_76px_116px_36px] gap-2 items-center">
+                        <div className="col-span-2 sm:col-span-1 min-w-0">
+                          <ProductPicker
+                            value={line.productId}
+                            onChange={(id) => updateLine(i, 'productId', id)}
+                            filters={{ productType: ProductType.FINISHED_GOOD, status: 'active' }}
+                            placeholder="Search products…"
+                          />
+                        </div>
+                        <div>
+                          <span className="sm:hidden mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Qty</span>
+                          <Input
+                            type="number" step="0.01" min="0" placeholder="Qty" className="text-right"
+                            value={line.quantity} onChange={(e) => updateLine(i, 'quantity', e.target.value)}
+                          />
+                        </div>
                         {/* Blank is not zero: the server prices it from the
                             RETAIL list, then the product's selling price. */}
-                        <Input
-                          type="number" step="0.01" min="0" placeholder="Auto" className="text-right"
-                          value={line.rateRupees} onChange={(e) => updateLine(i, 'rateRupees', e.target.value)}
-                        />
+                        <div>
+                          <span className="sm:hidden mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Rate</span>
+                          <Input
+                            type="number" step="0.01" min="0" placeholder="Auto" className="text-right"
+                            value={line.rateRupees} onChange={(e) => updateLine(i, 'rateRupees', e.target.value)}
+                          />
+                        </div>
                         {/* Comes off the taxable value before GST, so the tax
                             falls with it rather than being charged on a price
                             the customer never paid. */}
-                        <Input
-                          type="number" step="0.01" min="0" max="100" placeholder="0" className="text-right"
-                          aria-label="Discount percent"
-                          value={line.discountPercent}
-                          onChange={(e) => updateLine(i, 'discountPercent', e.target.value)}
-                        />
+                        <div className="col-start-1 sm:col-start-auto">
+                          <span className="sm:hidden mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Disc %</span>
+                          <Input
+                            type="number" step="0.01" min="0" max="100" placeholder="0" className="text-right"
+                            aria-label="Discount percent"
+                            value={line.discountPercent}
+                            onChange={(e) => updateLine(i, 'discountPercent', e.target.value)}
+                          />
+                        </div>
                         {/* Ex-GST, so this column sums to the "Taxable" row in
                             the summary and the tax is added once, below —
                             the convention every GST invoice follows. Showing the
                             tax-inclusive line total here made the column add up
                             to the grand total instead, so nothing on screen
                             reconciled and the accessory looked excluded. */}
-                        <span className="text-right text-sm tabular-nums">
-                          {group ? formatINR(group.taxableAmountPaise) : <span className="text-muted-foreground">—</span>}
-                        </span>
+                        <div className="text-right">
+                          <span className="sm:hidden mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Taxable</span>
+                          <span className="text-sm tabular-nums">
+                            {group ? formatINR(group.taxableAmountPaise) : <span className="text-muted-foreground">—</span>}
+                          </span>
+                        </div>
                         <button
                           type="button" onClick={() => removeLine(i)} disabled={lines.length === 1}
                           aria-label="Remove item"
-                          className="justify-self-center p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive disabled:opacity-30"
+                          className="col-start-3 row-start-1 sm:col-start-auto sm:row-start-auto justify-self-center p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive disabled:opacity-30"
                         >
                           <Trash2 size={15} />
                         </button>
@@ -435,8 +459,8 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                         const ov = overrideFor(i, a.productId);
                         return (
                           <div key={a.productId} className="space-y-1">
-                            <div className="grid grid-cols-[minmax(0,1fr)_80px_104px_76px_116px_36px] gap-2 items-center text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1.5 pl-1">
+                            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_36px] sm:grid-cols-[minmax(0,1fr)_80px_104px_76px_116px_36px] gap-2 items-center text-xs text-muted-foreground">
+                              <span className="col-span-2 sm:col-span-1 flex items-center gap-1.5 pl-1">
                                 <CornerDownRight size={12} className="shrink-0 opacity-60" />
                                 {a.productName}
                                 <span className="px-1.5 py-0.5 rounded bg-muted text-[10px] uppercase tracking-wide">Included</span>
@@ -464,7 +488,7 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                               />
                               <Input
                                 type="number" step="0.01" min="0" max="100" aria-label={`${a.productName} discount percent`}
-                                className="h-7 text-right text-xs" placeholder="0"
+                                className="col-start-1 sm:col-start-auto h-7 text-right text-xs" placeholder="0"
                                 value={ov?.discountPercent ?? ''}
                                 onChange={(e) => setAccessoryOverride(i, a.productId, { discountPercent: e.target.value })}
                               />
@@ -477,7 +501,7 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                                   setRemoveForm({ reasonCode: reasonCodes.find((r) => !r.requiresNote)?.code || '', reasonNote: '' });
                                   setRemoveError('');
                                 }}
-                                className="justify-self-center p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                                className="col-start-3 row-start-1 sm:col-start-auto sm:row-start-auto justify-self-center p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -523,19 +547,19 @@ export function CounterSaleDialog({ open, onOpenChange }) {
                       {removedFor(i).map((ov) => (
                         <div
                           key={ov.componentProductId}
-                          className="grid grid-cols-[minmax(0,1fr)_80px_104px_76px_116px_36px] gap-2 items-center text-xs text-muted-foreground/70"
+                          className="grid grid-cols-[minmax(0,1fr)_36px] sm:grid-cols-[minmax(0,1fr)_80px_104px_76px_116px_36px] gap-2 items-center text-xs text-muted-foreground/70"
                         >
-                          <span className="flex items-center gap-1.5 pl-1">
+                          <span className="min-w-0 flex items-center gap-1.5 pl-1">
                             <CornerDownRight size={12} className="shrink-0 opacity-40" />
                             <span className="line-through">{ov.productName}</span>
                             <span className="px-1.5 py-0.5 rounded bg-muted text-[10px] uppercase tracking-wide">
                               Removed — {reasonCodes.find((r) => r.code === ov.reasonCode)?.label || ov.reasonCode}
                             </span>
                           </span>
-                          <span />
-                          <span />
-                          <span />
-                          <span />
+                          <span className="hidden sm:block" />
+                          <span className="hidden sm:block" />
+                          <span className="hidden sm:block" />
+                          <span className="hidden sm:block" />
                           <button
                             type="button"
                             aria-label={`Restore ${ov.productName}`}

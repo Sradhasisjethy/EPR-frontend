@@ -174,36 +174,48 @@ export function VoucherFormDialog({ open, onOpenChange, voucherType = 'JOURNAL' 
             </div>
           ) : (
             <div className="rounded-lg border border-border">
-              <div className="grid grid-cols-[minmax(0,1fr)_130px_130px_36px] gap-2 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border bg-muted/30 rounded-t-lg">
+              {/* The fixed columns outgrow a phone, where the account picker
+                  was squeezed to nothing — below sm each line wraps: account +
+                  remove first, then debit and credit side by side with
+                  mini-labels in the hidden header's place. */}
+              <div className="hidden sm:grid grid-cols-[minmax(0,1fr)_130px_130px_36px] gap-2 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border bg-muted/30 rounded-t-lg">
                 <span>Account</span><span className="text-right">Debit (₹)</span><span className="text-right">Credit (₹)</span><span />
               </div>
               {lines.map((line, index) => (
-                <div key={line.key} className="grid grid-cols-[minmax(0,1fr)_130px_130px_36px] gap-2 px-3 py-1.5 items-center">
-                  {accountSelect(`jv-account-${index}`, line.accountId, (v) => setLine(line.key, { accountId: v }), allOptions, 'Select account')}
-                  <Input
-                    aria-label={`Debit line ${index + 1}`} type="number" step="0.01" min="0" className="text-right"
-                    value={line.debit} onChange={(e) => setLine(line.key, { debit: e.target.value, ...(e.target.value ? { credit: '' } : {}) })}
-                  />
-                  <Input
-                    aria-label={`Credit line ${index + 1}`} type="number" step="0.01" min="0" className="text-right"
-                    value={line.credit} onChange={(e) => setLine(line.key, { credit: e.target.value, ...(e.target.value ? { debit: '' } : {}) })}
-                  />
+                <div key={line.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_36px] sm:grid-cols-[minmax(0,1fr)_130px_130px_36px] gap-2 px-3 py-1.5 items-center">
+                  <div className="col-span-2 sm:col-span-1 min-w-0">
+                    {accountSelect(`jv-account-${index}`, line.accountId, (v) => setLine(line.key, { accountId: v }), allOptions, 'Select account')}
+                  </div>
+                  <div>
+                    <span className="sm:hidden mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Debit (₹)</span>
+                    <Input
+                      aria-label={`Debit line ${index + 1}`} type="number" step="0.01" min="0" className="text-right"
+                      value={line.debit} onChange={(e) => setLine(line.key, { debit: e.target.value, ...(e.target.value ? { credit: '' } : {}) })}
+                    />
+                  </div>
+                  <div>
+                    <span className="sm:hidden mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Credit (₹)</span>
+                    <Input
+                      aria-label={`Credit line ${index + 1}`} type="number" step="0.01" min="0" className="text-right"
+                      value={line.credit} onChange={(e) => setLine(line.key, { credit: e.target.value, ...(e.target.value ? { debit: '' } : {}) })}
+                    />
+                  </div>
                   <button
                     type="button" aria-label={`Remove line ${index + 1}`} disabled={lines.length <= 2}
-                    className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive disabled:opacity-30"
+                    className="col-start-3 row-start-1 sm:col-start-auto sm:row-start-auto h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive disabled:opacity-30"
                     onClick={() => setLines((ls) => ls.filter((l) => l.key !== line.key))}
                   >
                     <Trash2 size={15} />
                   </button>
                 </div>
               ))}
-              <div className="grid grid-cols-[minmax(0,1fr)_130px_130px_36px] gap-2 px-3 py-2 border-t border-border text-sm items-center">
-                <button type="button" className="inline-flex items-center gap-1 text-primary text-sm hover:underline justify-self-start" onClick={() => setLines((ls) => [...ls, emptyLine()])}>
+              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_36px] sm:grid-cols-[minmax(0,1fr)_130px_130px_36px] gap-2 px-3 py-2 border-t border-border text-sm items-center">
+                <button type="button" className="col-span-2 sm:col-span-1 inline-flex items-center gap-1 text-primary text-sm hover:underline justify-self-start" onClick={() => setLines((ls) => [...ls, emptyLine()])}>
                   <Plus size={14} /> Add line
                 </button>
-                <span className="text-right font-medium tabular-nums">{formatINR(totals.debit)}</span>
+                <span className="col-start-1 sm:col-start-auto text-right font-medium tabular-nums">{formatINR(totals.debit)}</span>
                 <span className="text-right font-medium tabular-nums">{formatINR(totals.credit)}</span>
-                <span />
+                <span className="hidden sm:block" />
               </div>
               <div className={cn('px-3 pb-2 text-xs text-right', totals.difference === 0 ? 'text-emerald-600' : 'text-amber-600')}>
                 {totals.difference === 0 ? (totals.debit > 0 ? 'Balanced' : '') : `Difference ${formatINR(Math.abs(totals.difference))}`}

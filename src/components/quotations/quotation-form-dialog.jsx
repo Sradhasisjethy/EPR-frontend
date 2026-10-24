@@ -215,18 +215,33 @@ export function QuotationFormDialog({ open, onOpenChange, quotation = null, lead
           )}
 
           <div className="rounded-lg border border-border">
-            <div className="grid grid-cols-[minmax(0,1fr)_90px_120px_90px_36px] gap-2 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border bg-muted/30 rounded-t-lg">
+            {/* The fixed columns outgrow a phone, where the product picker was
+                squeezed to nothing — below sm each line wraps: product + remove
+                first, then the numbers two-up with mini-labels in the hidden
+                header's place. */}
+            <div className="hidden sm:grid grid-cols-[minmax(0,1fr)_90px_120px_90px_36px] gap-2 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border bg-muted/30 rounded-t-lg">
               <span>Product</span><span className="text-right">Qty</span><span className="text-right">Rate (₹)</span><span className="text-right">Disc %</span><span />
             </div>
             {lines.map((line, index) => (
-              <div key={line.key} className="grid grid-cols-[minmax(0,1fr)_90px_120px_90px_36px] gap-2 px-3 py-1.5 items-center">
-                <ProductPicker value={line.productId} onChange={(v) => setLine(line.key, { productId: v })} />
-                <Input aria-label={`Quantity line ${index + 1}`} type="number" step="0.01" min="0" className="text-right" value={line.qty} onChange={(e) => setLine(line.key, { qty: e.target.value })} />
-                <Input aria-label={`Rate line ${index + 1}`} type="number" step="0.01" min="0" className="text-right" placeholder="List price" value={line.rate} onChange={(e) => setLine(line.key, { rate: e.target.value })} />
-                <Input aria-label={`Discount line ${index + 1}`} type="number" step="0.01" min="0" max="100" className="text-right" value={line.discount} onChange={(e) => setLine(line.key, { discount: e.target.value })} />
+              <div key={line.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_36px] sm:grid-cols-[minmax(0,1fr)_90px_120px_90px_36px] gap-2 px-3 py-1.5 items-center">
+                <div className="col-span-2 sm:col-span-1 min-w-0">
+                  <ProductPicker value={line.productId} onChange={(v) => setLine(line.key, { productId: v })} />
+                </div>
+                <div>
+                  <span className="sm:hidden mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Qty</span>
+                  <Input aria-label={`Quantity line ${index + 1}`} type="number" step="0.01" min="0" className="text-right" value={line.qty} onChange={(e) => setLine(line.key, { qty: e.target.value })} />
+                </div>
+                <div>
+                  <span className="sm:hidden mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Rate (₹)</span>
+                  <Input aria-label={`Rate line ${index + 1}`} type="number" step="0.01" min="0" className="text-right" placeholder="List price" value={line.rate} onChange={(e) => setLine(line.key, { rate: e.target.value })} />
+                </div>
+                <div className="col-start-1 sm:col-start-auto">
+                  <span className="sm:hidden mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Disc %</span>
+                  <Input aria-label={`Discount line ${index + 1}`} type="number" step="0.01" min="0" max="100" className="text-right" value={line.discount} onChange={(e) => setLine(line.key, { discount: e.target.value })} />
+                </div>
                 <button
                   type="button" aria-label={`Remove line ${index + 1}`} disabled={lines.length === 1}
-                  className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive disabled:opacity-30"
+                  className="col-start-3 row-start-1 sm:col-start-auto sm:row-start-auto h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive disabled:opacity-30"
                   onClick={() => setLines((ls) => ls.filter((l) => l.key !== line.key))}
                 >
                   <Trash2 size={15} />

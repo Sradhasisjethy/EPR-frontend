@@ -228,19 +228,24 @@ export function SalesOrderFormDialog({ open, onOpenChange, order }) {
             </div>
             {lines.map((line, i) => (
               <div key={i} className="space-y-1">
-                <div className="grid grid-cols-[minmax(0,1fr)_100px_140px_120px_32px] gap-2 items-center">
-                  <ProductPicker
-                    value={line.productId}
-                    onChange={(id) => updateLine(i, 'productId', id)}
-                    filters={{ productType: ProductType.FINISHED_GOOD, status: 'active' }}
-                    placeholder="Search products…"
-                  />
+                {/* Fixed columns need ~420px before the product picker gets any,
+                    so below sm the line wraps: product + remove, then qty, rate
+                    and amount beneath. */}
+                <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_32px] sm:grid-cols-[minmax(0,1fr)_100px_140px_120px_32px] gap-2 items-center">
+                  <div className="col-span-2 sm:col-span-1 min-w-0">
+                    <ProductPicker
+                      value={line.productId}
+                      onChange={(id) => updateLine(i, 'productId', id)}
+                      filters={{ productType: ProductType.FINISHED_GOOD, status: 'active' }}
+                      placeholder="Search products…"
+                    />
+                  </div>
                   <Input type="number" step="0.01" min="0" placeholder="Qty" value={line.orderedQty} onChange={(e) => updateLine(i, 'orderedQty', e.target.value)} required />
                   <Input type="number" step="0.01" min="0" placeholder="Rate/unit (₹)" value={line.rateRupees} onChange={(e) => updateLine(i, 'rateRupees', e.target.value)} required />
-                  <span className="text-sm text-right tabular-nums text-muted-foreground truncate" aria-label={`Line ${i + 1} amount`}>
+                  <span className="col-start-1 col-span-2 sm:col-start-auto sm:col-span-1 text-sm text-right tabular-nums text-muted-foreground truncate" aria-label={`Line ${i + 1} amount`}>
                     {line.orderedQty && line.rateRupees !== '' ? formatINR(Math.round(Number(line.orderedQty) * toPaise(line.rateRupees))) : ''}
                   </span>
-                  <button type="button" onClick={() => removeLine(i)} disabled={lines.length === 1} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive disabled:opacity-30">
+                  <button type="button" onClick={() => removeLine(i)} disabled={lines.length === 1} className="col-start-3 row-start-1 sm:col-start-auto sm:row-start-auto p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive disabled:opacity-30">
                     <Trash2 size={16} />
                   </button>
                 </div>

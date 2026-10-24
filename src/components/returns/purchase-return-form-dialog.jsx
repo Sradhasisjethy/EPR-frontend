@@ -98,14 +98,14 @@ export function PurchaseReturnFormDialog({ open, onOpenChange }) {
               <Button type="button" variant="outline" size="sm" onClick={addLine}><Plus size={14} /> Add Line</Button>
             </div>
             {lines.map((line, i) => (
-              <div key={i} className="grid grid-cols-[minmax(0,1fr)_90px_120px_32px] gap-2 items-center">
-                <select value={line.productId} onChange={(e) => updateLine(i, 'productId', e.target.value)} className="h-9 w-full min-w-0 px-2 rounded-md border border-input bg-background text-sm truncate" required>
+              <div key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_32px] sm:grid-cols-[minmax(0,1fr)_90px_120px_32px] gap-2 items-center">
+                <select value={line.productId} onChange={(e) => updateLine(i, 'productId', e.target.value)} className="col-span-2 sm:col-span-1 h-9 w-full min-w-0 px-2 rounded-md border border-input bg-background text-sm truncate" required>
                   <option value="" disabled>Product</option>
                   {(productData?.rows || []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
                 <Input type="number" step="0.01" min="0" placeholder="Qty" value={line.quantity} onChange={(e) => updateLine(i, 'quantity', e.target.value)} required />
                 <Input type="number" step="0.01" min="0" placeholder="Rate (₹)" value={line.rateRupees} onChange={(e) => updateLine(i, 'rateRupees', e.target.value)} required />
-                <button type="button" onClick={() => removeLine(i)} disabled={lines.length === 1} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive disabled:opacity-30">
+                <button type="button" onClick={() => removeLine(i)} disabled={lines.length === 1} className="col-start-3 row-start-1 sm:col-start-auto sm:row-start-auto p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive disabled:opacity-30">
                   <Trash2 size={16} />
                 </button>
               </div>
