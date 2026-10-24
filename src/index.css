@@ -1193,13 +1193,28 @@ html:not(.dark) .wallpaper-active .infideep-auth span {
     min-height: 44px;
   }
 
-  /* Icon-only buttons are square, so they need the width too. */
-  :where(button:not(:has(> :not(svg))):not(:has(> *:not(svg)))) {
+  /* Icon-only buttons are square, so they need the width too.
+     The guard must REQUIRE an svg child, not merely forbid non-svg ones: a
+     text-only button has no element children at all, so the old
+     `:not(:has(> :not(svg)))` pair matched every text button in the app. An
+     explicit min-width replaces flex's automatic min-content floor, so under
+     shrink pressure every tab pill on touch screens collapsed to exactly 44px
+     and its nowrap label spilled out both sides — the "overlapping tabs" bug
+     on phones. */
+  :where(button:has(> svg):not(:has(> :not(svg)))) {
     min-width: 44px;
   }
 
   :where(input:not([type='checkbox']):not([type='radio']), select, textarea) {
     min-height: 44px;
+  }
+
+  /* A horizontal tab rail scrolls; it never crushes its pills. Insurance for
+     any future explicit min-width/min-w-0 on a tab: the automatic min-content
+     floor is the only thing standing between "scrolls sideways" and
+     "labels pile on top of each other". */
+  :where(.overflow-x-auto) > :where(button, a) {
+    flex-shrink: 0;
   }
 
   /* A checkbox cannot simply grow to 44px without looking wrong, and padding it
