@@ -49,22 +49,24 @@ export default function AdministrationPage() {
       <PageDescription>Manage organization settings, users, and core configuration</PageDescription>
 
       {glassMode ? (
-        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              className={cn(
-                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
-                activeTab === tab.key
-                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
-                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
-              )}
-              onClick={() => setActiveTab(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="glass-card p-1.5 rounded-2xl shadow-xs">
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                className={cn(
+                  'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                  activeTab === tab.key
+                    ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                    : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+                )}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="flex gap-1 overflow-x-auto pb-2 border-b border-border">

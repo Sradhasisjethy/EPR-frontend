@@ -17,30 +17,32 @@ export function ReportCategoryTabs({ categories, activeCategory }) {
 
   if (glassMode) {
     return (
-      <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-3" role="tablist" aria-label="Report categories">
-        {categories.map((category) => {
-          const active = category.id === activeCategory;
-          return (
-            <Link
-              key={category.id}
-              to={`/reports/${category.id}`}
-              role="tab"
-              aria-selected={active}
-              title={category.description}
-              className={cn(
-                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5',
-                active
-                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
-                  : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
-              )}
-            >
-              {category.name}
-              <span className={cn('ml-1 text-xs px-1.5 py-0.2 rounded-full font-bold', active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground')}>
-                {category.reports.length}
-              </span>
-            </Link>
-          );
-        })}
+      <div className="glass-card p-1.5 rounded-2xl shadow-xs mb-3" role="tablist" aria-label="Report categories">
+        <div className="flex items-center gap-1.5 overflow-x-auto">
+          {categories.map((category) => {
+            const active = category.id === activeCategory;
+            return (
+              <Link
+                key={category.id}
+                to={`/reports/${category.id}`}
+                role="tab"
+                aria-selected={active}
+                title={category.description}
+                className={cn(
+                  'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5',
+                  active
+                    ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                    : 'text-foreground/75 hover:text-foreground hover:bg-card/70'
+                )}
+              >
+                {category.name}
+                <span className={cn('ml-1 text-xs px-1.5 py-0.2 rounded-full font-bold', active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground')}>
+                  {category.reports.length}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     );
   }

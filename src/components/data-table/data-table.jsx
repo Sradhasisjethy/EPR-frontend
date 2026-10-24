@@ -111,7 +111,7 @@ export function DataTable({
   return (
     <div className="w-full space-y-4">
       {(showSearch || filtersNode || actionsNode) && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-4 flex-wrap">
             {showSearch && (
               <div className="relative w-72">
@@ -225,7 +225,10 @@ export function DataTable({
           Page {currentPage} of {lastPage} &middot; {rowCount} total
         </p>
 
-        <div className="flex items-center gap-2">
+        {/* flex-wrap: five controls are wider than a phone viewport, and an
+            unwrappable row here is what forced the whole page to pan sideways
+            on mobile — the overflow escaped the card and widened <main>. */}
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {manualPagination && (
             <select
               value={pagination.pageSize}

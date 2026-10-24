@@ -44,27 +44,29 @@ export default function QualityPage() {
   return (
     <div className="space-y-6">
       {glassMode ? (
-        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              className={cn(
-                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5',
-                activeTab === tab
-                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
-                  : 'text-foreground/80 hover:text-foreground hover:bg-card/90 bg-card/40'
-              )}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-              {tab === 'Awaiting Clearance' && heldQuery.query.data?.count > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] h-4 min-w-4 px-1">
-                  {heldQuery.query.data.count}
-                </span>
-              )}
-            </button>
-          ))}
+        <div className="glass-card p-1.5 rounded-2xl shadow-xs mb-6">
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            {TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={cn(
+                  'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5',
+                  activeTab === tab
+                    ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                    : 'text-foreground/80 hover:text-foreground hover:bg-card/90 bg-card/40'
+                )}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+                {tab === 'Awaiting Clearance' && heldQuery.query.data?.count > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] h-4 min-w-4 px-1">
+                    {heldQuery.query.data.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="flex border-b border-border mb-6">

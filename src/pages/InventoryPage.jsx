@@ -76,25 +76,27 @@ export default function InventoryPage() {
       
 
       {glassMode ? (
-        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
-          {['Materials', 'Lots', 'Ledger', 'Adjustments'].map((tab) => {
-            const key = tab.toLowerCase();
-            return (
-              <button
-                key={tab}
-                type="button"
-                className={cn(
-                  'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
-                  activeTab === key
-                    ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
-                    : 'text-foreground/80 hover:text-foreground hover:bg-card/90 bg-card/40'
-                )}
-                onClick={() => setActiveTab(key)}
-              >
-                {tab}
-              </button>
-            );
-          })}
+        <div className="glass-card p-1.5 rounded-2xl shadow-xs mb-6">
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            {['Materials', 'Lots', 'Ledger', 'Adjustments'].map((tab) => {
+              const key = tab.toLowerCase();
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  className={cn(
+                    'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                    activeTab === key
+                      ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                      : 'text-foreground/80 hover:text-foreground hover:bg-card/90 bg-card/40'
+                  )}
+                  onClick={() => setActiveTab(key)}
+                >
+                  {tab}
+                </button>
+              );
+            })}
+          </div>
         </div>
       ) : (
         <div className="flex border-b border-border mb-6">

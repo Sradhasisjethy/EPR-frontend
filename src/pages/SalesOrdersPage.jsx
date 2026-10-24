@@ -102,22 +102,24 @@ export default function SalesOrdersPage() {
       
 
       {glassMode ? (
-        <div className="glass-card flex items-center gap-1.5 p-1.5 rounded-2xl overflow-x-auto shadow-xs mb-6">
-          {STATUS_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              className={cn(
-                'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
-                status === tab.key
-                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
-                  : 'text-foreground/80 hover:text-foreground hover:bg-card/90 bg-card/40'
-              )}
-              onClick={() => setStatus(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="glass-card p-1.5 rounded-2xl shadow-xs mb-6">
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                className={cn(
+                  'px-4 py-2 text-sm font-medium rounded-xl transition-all whitespace-nowrap cursor-pointer',
+                  status === tab.key
+                    ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                    : 'text-foreground/80 hover:text-foreground hover:bg-card/90 bg-card/40'
+                )}
+                onClick={() => setStatus(tab.key)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="flex flex-wrap border-b border-border">
