@@ -135,25 +135,32 @@ export function TopNav() {
                   ))}
                 </div>
 
-                {/* Wraps rather than overflows: on a coarse pointer each swatch
-                    is forced to 44px by the hit-target rule, and seven of those
-                    do not fit one row of a dropdown. */}
-                <div className="flex flex-wrap items-center gap-1.5">
+                {/* The circle is drawn on an inner span, not on the button:
+                    the coarse-pointer hit-target rule stretches every button
+                    to 44px tall, and with the colour on the button itself each
+                    swatch rendered as a 24×44 pill on phones and iPads. The
+                    button is the (invisible) touch target; the span stays a
+                    circle whatever height the button is given. */}
+                <div className="flex flex-wrap items-center gap-1">
                   {PALETTES.map((p) => (
                     <button
                       key={p.id}
                       title={p.name}
                       aria-label={p.name}
                       onClick={() => setColorScheme(p.id)}
-                      className={cn(
-                        'relative w-6 h-6 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10 transition-transform hover:scale-110',
-                        p.color,
-                        colorScheme === p.id && 'ring-2 ring-offset-2 ring-offset-popover ring-foreground/60'
-                      )}
+                      className="group flex h-8 w-8 items-center justify-center rounded-full"
                     >
-                      {colorScheme === p.id && (
-                        <Check size={12} className="absolute inset-0 m-auto text-white drop-shadow" />
-                      )}
+                      <span
+                        className={cn(
+                          'flex h-6 w-6 items-center justify-center rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10 transition-transform group-hover:scale-110',
+                          p.color,
+                          colorScheme === p.id && 'ring-2 ring-offset-2 ring-offset-popover ring-foreground/60'
+                        )}
+                      >
+                        {colorScheme === p.id && (
+                          <Check size={12} className="text-white drop-shadow" />
+                        )}
+                      </span>
                     </button>
                   ))}
                 </div>
