@@ -68,10 +68,15 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        // right-0 alone hung most of this 384px panel past the left edge of a
-        // phone: the bell sits ~40px left of the avatar, so the panel is
-        // nudged right by that much below sm and capped to the viewport.
-        <div className="absolute -right-10 sm:right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] rounded-2xl shadow-2xl bg-popover/95 backdrop-blur-2xl border border-border z-50 animate-in fade-in slide-in-from-top-2">
+        // Below sm the panel is pinned to the screen edges, not to the bell:
+        // a 384px panel anchored right-0 on a 360-412px phone hung past the
+        // left edge, and any fixed nudge depends on how far the bell happens
+        // to sit from the edge (glass mode pads the header differently).
+        // `fixed inset-x-3` sidesteps the anchor math — and under the glass
+        // header, whose backdrop-filter makes it the containing block, those
+        // offsets resolve against the header itself, which spans the screen
+        // anyway. From sm up it anchors to the bell as before.
+        <div className="fixed left-3 right-3 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 rounded-2xl shadow-2xl bg-popover/95 backdrop-blur-2xl border border-border z-50 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center justify-between px-4 py-2 border-b border-border">
             <p className="text-sm font-medium">Notifications</p>
             {unread > 0 && (
