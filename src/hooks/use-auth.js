@@ -82,6 +82,20 @@ export function useResetPassword() {
 }
 
 /**
+ * Exchanges a platform-issued owner invitation (7-day single-use token from the
+ * central SaaS control plane) for the account's first password. A separate flow
+ * from reset-password, which deliberately refuses TENANT_OWNER accounts.
+ */
+export function useAcceptInvite() {
+  return useMutation({
+    mutationFn: async (data) => {
+      const response = await apiClient.post('/auth/accept-invite', data);
+      return response.data;
+    },
+  });
+}
+
+/**
  * Both of these end every session the user has — the backend revokes all
  * refresh tokens and retires access tokens — so this device signs out too.
  */

@@ -8,6 +8,7 @@ import { NAV_GATE } from '@/constants/navigation';
 import LoginPage from '@/pages/LoginPage';
 import DashboardPage from '@/pages/DashboardPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
+import AcceptInvitePage from '@/pages/AcceptInvitePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { pageLoaders } from '@/pages/page-loaders';
 
@@ -76,6 +77,8 @@ export default function App() {
 
         <Route element={<AuthLayout />}>
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          {/* Central platform owner invitations land here (accept-invite?token=...). */}
+          <Route path="/accept-invite" element={<AcceptInvitePage />} />
         </Route>
 
         {/* Lazy pages inside the shell suspend on DashboardLayout's own boundary,
